@@ -1,0 +1,153 @@
+/* 全局样式 */
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* 导航栏样式 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 2px solid #f0f0f0;
+    font-weight: bold;
+}
+
+/* 文章列表样式 */
+.card-title a {
+    color: #333;
+}
+
+.card-title a:hover {
+    color: #007bff;
+}
+
+.card-text {
+    color: #666;
+}
+
+/* 标签样式 */
+.badge {
+    font-weight: normal;
+    padding: 0.4em 0.8em;
+}
+
+.badge:hover {
+    opacity: 0.9;
+}
+
+/* 分页样式 */
+.pagination {
+    margin-top: 2rem;
+}
+
+.page-link {
+    color: #333;
+    border: none;
+    margin: 0 2px;
+}
+
+.page-link:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+/* 侧边栏样式 */
+.sidebar .card {
+    margin-bottom: 1.5rem;
+}
+
+.sidebar a {
+    color: #666;
+}
+
+.sidebar a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
+/* 标签云样式 */
+.tag-cloud a {
+    display: inline-block;
+    margin: 0.2rem;
+    padding: 0.3rem 0.6rem;
+    background-color: #f8f9fa;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    color: #666;
+    text-decoration: none;
+}
+
+.tag-cloud a:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* 评论样式 */
+.comment {
+    border-bottom: 1px solid #eee;
+    padding: 1rem 0;
+}
+
+.comment:last-child {
+    border-bottom: none;
+}
+
+.comment-meta {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* 页脚样式 */
+footer {
+    background-color: #343a40;
+}
+
+footer a {
+    color: #fff;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .sidebar {
+        margin-top: 2rem;
+    }
+} 

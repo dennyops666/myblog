@@ -1,0 +1,75 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}合并标签 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">合并标签</h1>
+        <a href="{{ url_for('admin.tags') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.merge_tags') }}">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    将源标签合并到目标标签后，源标签将被删除，其关联的所有文章将改为使用目标标签。此操作不可撤销，请谨慎操作。
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="source_id" class="form-label">源标签（将被删除）</label>
+                            <select class="form-select" id="source_id" name="source_id" required>
+                                <option value="">请选择源标签</option>
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}">{{ tag.name }} ({{ tag.posts|length }}篇文章)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="target_id" class="form-label">目标标签（将保留）</label>
+                            <select class="form-select" id="target_id" name="target_id" required>
+                                <option value="">请选择目标标签</option>
+                                {% for tag in tags %}
+                                <option value="{{ tag.id }}">{{ tag.name }} ({{ tag.posts|length }}篇文章)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('确定要合并这两个标签吗？此操作不可撤销。')">
+                        <i class="fas fa-object-group"></i> 合并标签
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    // 防止选择相同的标签
+    $('#source_id, #target_id').change(function() {
+        var sourceId = $('#source_id').val();
+        var targetId = $('#target_id').val();
+        
+        if (sourceId && targetId && sourceId === targetId) {
+            alert('源标签和目标标签不能相同');
+            $(this).val('');
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

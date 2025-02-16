@@ -1,0 +1,151 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}编辑文章 - MyBlog 管理后台{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+<style>
+.image-preview {
+    max-width: 200px;
+    margin: 10px 0;
+}
+.upload-area {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+.upload-area:hover {
+    border-color: #666;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">编辑文章</h1>
+        <a href="{{ url_for('admin.posts') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.edit_post', post_id=post.id) }}">
+                <div class="mb-3">
+                    <label for="title" class="form-label">标题</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ post.title }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="category" class="form-label">分类</label>
+                    <select class="form-select" id="category" name="category_id" required>
+                        <option value="">请选择分类</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id == post.category_id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="summary" class="form-label">摘要</label>
+                    <textarea class="form-control" id="summary" name="summary" rows="3">{{ post.summary }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="content" class="form-label">内容</label>
+                    <textarea class="form-control" id="content" name="content" required>{{ post.content }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="status" class="form-label">状态</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="0" {% if post.status == 0 %}selected{% endif %}>草稿</option>
+                        <option value="1" {% if post.status == 1 %}selected{% endif %}>发布</option>
+                    </select>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-zh-CN.min.js"></script>
+<script>
+$(document).ready(function() {
+    // 初始化编辑器
+    $('#content').summernote({
+        lang: 'zh-CN',
+        height: 300,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ],
+        callbacks: {
+            onImageUpload: function(files) {
+                for (let file of files) {
+                    uploadImage(file, $(this));
+                }
+            }
+        }
+    });
+    
+    // 图片上传函数
+    function uploadImage(file, editor) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        $.ajax({
+            url: '{{ url_for("admin.upload_image") }}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                editor.summernote('insertImage', response.url);
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : '上传失败';
+                alert('图片上传失败：' + error);
+            }
+        });
+    }
+    
+    // 拖放上传
+    $('.upload-area').on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('border-primary');
+    }).on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('border-primary');
+    }).on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('border-primary');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            uploadImage(files[0], $('#content'));
+        }
+    });
+});
+</script>
+{% endblock %} 

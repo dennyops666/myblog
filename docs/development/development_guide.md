@@ -48,20 +48,59 @@ pip install -r requirements-dev.txt
 
 ### 2.1 核心目录结构
 ```
-/data/myblog/
+myblog/
 ├── app/                    # 应用主目录
 │   ├── __init__.py        # 应用初始化
 │   ├── config.py          # 配置文件
 │   ├── models/            # 数据模型
-│   ├── services/          # 业务逻辑
-│   ├── controllers/       # 控制器
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── post.py
+│   │   ├── category.py
+│   │   ├── tag.py
+│   │   └── comment.py
+│   ├── services/          # 业务逻辑层
+│   │   ├── __init__.py
+│   │   ├── user_service.py
+│   │   ├── post_service.py
+│   │   ├── category_service.py
+│   │   └── comment_service.py
+│   ├── controllers/       # 控制器层
+│   │   ├── __init__.py
+│   │   ├── admin/        # 后台管理控制器
+│   │   │   ├── __init__.py
+│   │   │   ├── user.py
+│   │   │   ├── post.py
+│   │   │   └── comment.py
+│   │   └── blog/         # 前台展示控制器
+│   │       ├── __init__.py
+│   │       ├── home.py
+│   │       └── post.py
 │   ├── templates/         # 模板文件
-│   └── static/            # 静态文件
-├── tests/                 # 测试目录
-├── migrations/            # 数据库迁移
-├── requirements.txt       # 生产环境依赖
-├── requirements-dev.txt   # 开发环境依赖
-└── run.py                # 应用入口
+│   │   ├── admin/        # 后台模板
+│   │   │   ├── layout.html
+│   │   │   ├── login.html
+│   │   │   └── ...
+│   │   └── blog/         # 前台模板
+│   │       ├── layout.html
+│   │       ├── index.html
+│   │       └── ...
+│   └── static/           # 静态文件
+│       ├── css/          # 样式文件
+│       ├── js/           # JavaScript文件
+│       └── images/       # 图片资源
+├── tests/                # 测试目录
+│   ├── __init__.py
+│   ├── test_models.py
+│   └── test_views.py
+├── migrations/          # 数据库迁移
+├── instance/           # 实例配置
+├── logs/              # 日志文件
+├── uploads/           # 上传文件
+├── venv/             # 虚拟环境
+├── requirements.txt   # 生产环境依赖
+├── requirements-dev.txt # 开发环境依赖
+└── run.py            # 应用入口
 ```
 
 ### 2.2 配置文件说明

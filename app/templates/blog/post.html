@@ -1,0 +1,445 @@
+{% extends "blog/layout.html" %}
+
+{% block title %}{{ post.title }} - MyBlog{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+<style>
+.article-meta {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.article-content {
+    line-height: 1.8;
+}
+
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+.article-toc {
+    position: sticky;
+    top: 20px;
+}
+
+.article-toc .nav-link {
+    color: #666;
+    padding: 0.25rem 0;
+}
+
+.article-toc .nav-link:hover,
+.article-toc .nav-link.active {
+    color: #007bff;
+}
+
+.article-toc .nav-link.depth-2 { padding-left: 1rem; }
+.article-toc .nav-link.depth-3 { padding-left: 2rem; }
+.article-toc .nav-link.depth-4 { padding-left: 3rem; }
+
+.comment {
+    border-bottom: 1px solid #eee;
+    padding: 1rem 0;
+}
+
+.comment:last-child {
+    border-bottom: none;
+}
+
+.comment-meta {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.comment-content {
+    margin: 1rem 0;
+}
+
+.comment-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.comment-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.comment-content blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    color: #6c757d;
+}
+
+.comment-replies {
+    margin-left: 2rem;
+    border-left: 2px solid #eee;
+    padding-left: 1rem;
+}
+
+.tag-list .badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment-form {
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-lg-8">
+            <article class="card">
+                <div class="card-body">
+                    <!-- 文章标题 -->
+                    <h1 class="card-title">{{ post.title }}</h1>
+                    
+                    <!-- 文章元信息 -->
+                    <div class="article-meta mb-4">
+                        <span><i class="fas fa-user"></i> {{ post.author.username }}</span>
+                        <span class="ms-3"><i class="fas fa-calendar"></i> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
+                        <span class="ms-3"><i class="fas fa-folder"></i> 
+                            <a href="{{ url_for('blog.archive', type='category', category_id=post.category.id) }}">
+                                {{ post.category.name }}
+                            </a>
+                        </span>
+                        <span class="ms-3"><i class="fas fa-eye"></i> {{ post.view_count }}</span>
+                        <span class="ms-3"><i class="fas fa-comments"></i> {{ comments|length }}</span>
+                    </div>
+                    
+                    <!-- 文章标签 -->
+                    {% if post.tags %}
+                    <div class="tag-list mb-4">
+                        {% for tag in post.tags %}
+                        <a href="{{ url_for('blog.archive', type='tag', tag_id=tag.id) }}" 
+                           class="badge bg-secondary text-decoration-none">
+                            {{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 文章内容 -->
+                    <div class="article-content">
+                        {{ post.html_content|safe }}
+                    </div>
+                </div>
+            </article>
+
+            <!-- 上一篇/下一篇 -->
+            <div class="row mt-4">
+                <div class="col-6">
+                    {% if prev_post %}
+                    <a href="{{ url_for('blog.post', post_id=prev_post.id) }}" 
+                       class="btn btn-outline-primary w-100">
+                        <i class="fas fa-arrow-left"></i> {{ prev_post.title }}
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="col-6 text-end">
+                    {% if next_post %}
+                    <a href="{{ url_for('blog.post', post_id=next_post.id) }}" 
+                       class="btn btn-outline-primary w-100">
+                        {{ next_post.title }} <i class="fas fa-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 相关文章 -->
+            {% if related_posts %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">相关文章</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for related in related_posts %}
+                        <a href="{{ url_for('blog.post', post_id=related.id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ related.title }}</h6>
+                                <small>{{ related.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-eye"></i> {{ related.view_count }}
+                                <i class="fas fa-comments ms-2"></i> {{ related.comments|length }}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 评论区 -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">评论（{{ comments|length }}）</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 评论列表 -->
+                    {% if comments %}
+                    <div class="comments">
+                        {% for comment in comments %}
+                        <div class="comment mb-4" id="comment-{{ comment.id }}">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <img src="https://www.gravatar.com/avatar/{{ comment.author_email|gravatar }}?s=50&d=mp" 
+                                         class="rounded-circle" alt="{{ comment.author_name }}">
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="comment-meta">
+                                        <strong>{{ comment.author_name }}</strong>
+                                        <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <div class="comment-content">
+                                        {{ comment.html_content|safe }}
+                                    </div>
+                                    <div class="comment-actions">
+                                        <button class="btn btn-sm btn-link reply-btn" 
+                                                data-comment-id="{{ comment.id }}"
+                                                data-author-name="{{ comment.author_name }}">
+                                            回复
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 回复列表 -->
+                                    {% if comment.replies.count() > 0 %}
+                                    <div class="replies mt-3">
+                                        {% for reply in comment.replies %}
+                                        <div class="comment reply mb-3" id="comment-{{ reply.id }}">
+                                            <div class="d-flex">
+                                                <div class="flex-shrink-0">
+                                                    <img src="https://www.gravatar.com/avatar/{{ reply.author_email|gravatar }}?s=40&d=mp" 
+                                                         class="rounded-circle" alt="{{ reply.author_name }}">
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <div class="comment-meta">
+                                                        <strong>{{ reply.author_name }}</strong>
+                                                        <small class="text-muted">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                                    </div>
+                                                    <div class="comment-content">
+                                                        {{ reply.html_content|safe }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        暂无评论，来说两句吧~
+                    </div>
+                    {% endif %}
+
+                    <!-- 评论表单 -->
+                    <div class="comment-form">
+                        <h4>发表评论</h4>
+                        <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}" id="comment-form">
+                            <input type="hidden" name="parent_id" id="parent_id">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="nickname" class="form-label">昵称</label>
+                                    <input type="text" class="form-control" id="nickname" name="nickname" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">邮箱</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                    <div class="form-text">邮箱不会公开，用于显示头像</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="content" class="form-label">评论内容</label>
+                                <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                                <div class="form-text">支持 Markdown 格式</div>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary" id="preview-btn">预览</button>
+                                <button type="submit" class="btn btn-primary">提交评论</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 文章目录 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">目录</h5>
+                </div>
+                <div class="card-body">
+                    <nav class="article-toc" id="articleToc">
+                        <!-- 目录将由JavaScript动态生成 -->
+                    </nav>
+                </div>
+            </div>
+
+            <!-- 作者信息 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">关于作者</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://www.gravatar.com/avatar/{{ post.author.email|gravatar }}?s=80&d=mp" 
+                             class="rounded-circle me-3" alt="{{ post.author.username }}">
+                        <div>
+                            <h6 class="mb-0">{{ post.author.username }}</h6>
+                            <small class="text-muted">{{ post.author.posts.count() }} 篇文章</small>
+                        </div>
+                    </div>
+                    {% if post.author.bio %}
+                    <p class="card-text">{{ post.author.bio }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 预览模态框 -->
+<div class="modal fade" id="preview-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">预览评论</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="preview-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script>
+$(document).ready(function() {
+    // 生成文章目录
+    var headings = $('.article-content').find('h2, h3, h4');
+    var toc = '';
+    
+    headings.each(function(i) {
+        var $heading = $(this);
+        var id = 'heading-' + i;
+        $heading.attr('id', id);
+        
+        var level = parseInt($heading.prop('tagName').substr(1));
+        var className = 'nav-link depth-' + level;
+        
+        toc += `<a class="${className}" href="#${id}">${$heading.text()}</a>`;
+    });
+    
+    $('#articleToc').html(toc);
+    
+    // 代码高亮
+    Prism.highlightAll();
+    
+    // 评论回复功能
+    $('.reply-btn').click(function() {
+        const commentId = $(this).data('comment-id');
+        const authorName = $(this).data('author-name');
+        
+        $('#parent_id').val(commentId);
+        easyMDE.value(`@${authorName} `);
+        easyMDE.codemirror.focus();
+        
+        // 滚动到评论框
+        $('html, body').animate({
+            scrollTop: $('#comment-form').offset().top - 100
+        }, 500);
+    });
+    
+    // 图片点击放大
+    $('.article-content img').click(function() {
+        var $img = $(this);
+        var src = $img.attr('src');
+        
+        var $modal = $('<div>', {
+            class: 'modal fade',
+            html: `
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body p-0">
+                            <img src="${src}" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+            `
+        }).appendTo('body');
+        
+        $modal.modal('show');
+        $modal.on('hidden.bs.modal', function() {
+            $modal.remove();
+        });
+    });
+    
+    // 滚动时高亮当前标题
+    $(window).scroll(function() {
+        var scrollTop = $(this).scrollTop();
+        
+        headings.each(function() {
+            var $heading = $(this);
+            var headingTop = $heading.offset().top - 100;
+            
+            if (scrollTop >= headingTop) {
+                var id = $heading.attr('id');
+                $('.article-toc .nav-link').removeClass('active');
+                $(`.article-toc .nav-link[href="#${id}"]`).addClass('active');
+            }
+        });
+    });
+});
+
+// 初始化Markdown编辑器
+const easyMDE = new EasyMDE({
+    element: document.getElementById('content'),
+    spellChecker: false,
+    status: false,
+    toolbar: ['bold', 'italic', 'heading', '|', 
+             'quote', 'unordered-list', 'ordered-list', '|',
+             'link', 'image', '|',
+             'preview', 'guide']
+});
+
+// 处理预览按钮点击
+$('#preview-btn').click(function() {
+    const content = easyMDE.value();
+    if (!content) {
+        alert('请先输入评论内容');
+        return;
+    }
+    
+    // 发送预览请求
+    $.post('{{ url_for("blog.preview_comment") }}', {
+        content: content
+    }, function(response) {
+        $('#preview-content').html(response.html);
+        $('#preview-modal').modal('show');
+    });
+});
+</script>
+{% endblock %} 

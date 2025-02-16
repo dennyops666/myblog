@@ -1,0 +1,61 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}标签管理 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">标签管理</h1>
+        <div>
+            <a href="{{ url_for('admin.merge_tags') }}" class="btn btn-warning">
+                <i class="fas fa-object-group"></i> 合并标签
+            </a>
+            <a href="{{ url_for('admin.create_tag') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 新建标签
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>文章数量</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tag in tags %}
+                        <tr>
+                            <td>{{ tag.id }}</td>
+                            <td>{{ tag.name }}</td>
+                            <td>{{ tag.posts|length }}</td>
+                            <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.rename_tag', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> 重命名
+                                </a>
+                                <form action="{{ url_for('admin.delete_tag', tag_id=tag.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个标签吗？')">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">暂无标签</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

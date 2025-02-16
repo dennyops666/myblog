@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}创建分类 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">创建分类</h1>
+        <a href="{{ url_for('admin.categories') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.create_category') }}">
+                <div class="mb-3">
+                    <label for="name" class="form-label">分类名称</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="form-text">分类名称必须是唯一的</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">分类描述</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    <div class="form-text">可选，用于描述该分类的用途</div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

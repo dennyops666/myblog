@@ -28,7 +28,7 @@ Markdown==3.5.1
 PyYAML==6.0.1
 
 # 性能监控
-Flask-Monitor==1.1.0
+Flask-Monitor==0.2.6
 
 # 安全
 Flask-SeaSurf==1.1.1
