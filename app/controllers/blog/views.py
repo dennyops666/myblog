@@ -5,8 +5,12 @@
 创建日期：2025-02-16
 """
 
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, Blueprint, abort
 from app.services import PostService, CommentService, CategoryService, TagService
+from app.forms import CommentForm
+from sqlalchemy import or_
+from app.models import Post
+from app.utils.markdown import clean_xss
 from . import blog_bp
 
 @blog_bp.route('/')
@@ -32,53 +36,53 @@ def index():
 def post(post_id):
     """文章详情页"""
     post = PostService.get_post_by_id(post_id)
-    if not post:
-        flash('文章不存在', 'danger')
-        return redirect(url_for('blog.index'))
+    if not post or post.status != 1:
+        abort(404)
+        
+    # 获取评论
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    comments = CommentService.get_comments_by_post(post.id, page, per_page)
     
     # 获取相关文章
     related_posts = PostService.get_related_posts(post)
-    # 获取上一篇和下一篇文章
-    prev_post, next_post = PostService.get_prev_next_post(post)
-    # 获取文章评论
-    comments = CommentService.get_comments_by_post(post_id)
     
     return render_template('blog/post.html',
                          post=post,
-                         related_posts=related_posts,
-                         prev_post=prev_post,
-                         next_post=next_post,
-                         comments=comments)
+                         comments=comments.items,
+                         comment_count=comments.total,
+                         pagination=comments,
+                         related_posts=related_posts)
 
 @blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
-def create_comment(post_id):
-    """创建评论"""
+def comment(post_id):
+    """提交评论"""
     post = PostService.get_post_by_id(post_id)
-    if not post:
-        flash('文章不存在', 'danger')
-        return redirect(url_for('blog.index'))
-    
-    nickname = request.form.get('nickname')
-    email = request.form.get('email')
-    content = request.form.get('content')
-    parent_id = request.form.get('parent_id', type=int)
-    
-    if not all([nickname, email, content]):
-        flash('请填写所有必填字段', 'danger')
-    else:
+    if not post or post.status != 1:
+        abort(404)
+        
+    form = CommentForm()
+    if form.validate_on_submit():
         try:
-            CommentService.create_comment(
-                post_id=post_id,
-                nickname=nickname,
-                email=email,
-                content=content,
-                parent_id=parent_id
+            # 清理XSS
+            author_name = clean_xss(form.author_name.data)
+            content = clean_xss(form.content.data)
+            
+            comment = CommentService.create_comment(
+                post_id=post.id,
+                author_name=author_name,
+                author_email=form.author_email.data,
+                content=content
             )
-            flash('评论提交成功', 'success')
+            
+            flash('评论提交成功，等待审核', 'success')
+            return redirect(url_for('blog.post', post_id=post.id))
+        except ValueError as e:
+            flash(str(e), 'danger')
         except Exception as e:
-            flash(f'评论提交失败：{str(e)}', 'danger')
-    
-    return redirect(url_for('blog.post', post_id=post_id))
+            flash('评论提交失败，请稍后重试', 'danger')
+            
+    return redirect(url_for('blog.post', post_id=post.id))
 
 @blog_bp.route('/archive')
 def archive():
@@ -130,4 +134,41 @@ def archive():
 def about():
     """关于页面"""
     return render_template('blog/about.html')
+
+@blog_bp.route('/categories')
+def categories():
+    """分类列表页面"""
+    categories = CategoryService.get_all_categories()
+    return render_template('blog/categories.html', categories=categories)
+
+@blog_bp.route('/tags')
+def tags():
+    """标签列表页面"""
+    tags = TagService.get_all_tags()
+    return render_template('blog/tags.html', tags=tags)
+
+@blog_bp.route('/search')
+def search():
+    """搜索页面"""
+    query = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    if not query:
+        return redirect(url_for('blog.index'))
+    
+    # 使用 SQLAlchemy 的 or_ 进行多字段搜索
+    search_query = or_(
+        Post.title.ilike(f'%{query}%'),
+        Post.content.ilike(f'%{query}%')
+    )
+    
+    # 获取搜索结果
+    pagination = PostService.search_posts(search_query, page, per_page)
+    posts = pagination.items
+    
+    return render_template('blog/search.html',
+                         query=query,
+                         posts=posts,
+                         pagination=pagination)
 

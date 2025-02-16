@@ -252,194 +252,20 @@
                     <!-- 评论表单 -->
                     <div class="comment-form">
                         <h4>发表评论</h4>
-                        <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}" id="comment-form">
-                            <input type="hidden" name="parent_id" id="parent_id">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="nickname" class="form-label">昵称</label>
-                                    <input type="text" class="form-control" id="nickname" name="nickname" required>
+                        <form method="post" action="{{ url_for('blog.comment', post_id=post.id) }}" id="comment-form">
+                            {{ form.csrf_token }}
+                            <div class="mb-3">
+                                <label for="author_name" class="form-label">昵称</label>
+                                {{ form.author_name(class="form-control") }}
+                                {% if form.author_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.author_name.errors %}
+                                    {{ error }}
+                                    {% endfor %}
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="email" class="form-label">邮箱</label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                    <div class="form-text">邮箱不会公开，用于显示头像</div>
-                                </div>
+                                {% endif %}
                             </div>
                             <div class="mb-3">
-                                <label for="content" class="form-label">评论内容</label>
-                                <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
-                                <div class="form-text">支持 Markdown 格式</div>
-                            </div>
-                            <div class="text-end">
-                                <button type="button" class="btn btn-secondary" id="preview-btn">预览</button>
-                                <button type="submit" class="btn btn-primary">提交评论</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 侧边栏 -->
-        <div class="col-lg-4">
-            <!-- 文章目录 -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">目录</h5>
-                </div>
-                <div class="card-body">
-                    <nav class="article-toc" id="articleToc">
-                        <!-- 目录将由JavaScript动态生成 -->
-                    </nav>
-                </div>
-            </div>
-
-            <!-- 作者信息 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">关于作者</h5>
-                    <div class="d-flex align-items-center mb-3">
-                        <img src="https://www.gravatar.com/avatar/{{ post.author.email|gravatar }}?s=80&d=mp" 
-                             class="rounded-circle me-3" alt="{{ post.author.username }}">
-                        <div>
-                            <h6 class="mb-0">{{ post.author.username }}</h6>
-                            <small class="text-muted">{{ post.author.posts.count() }} 篇文章</small>
-                        </div>
-                    </div>
-                    {% if post.author.bio %}
-                    <p class="card-text">{{ post.author.bio }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 预览模态框 -->
-<div class="modal fade" id="preview-modal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">预览评论</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="preview-content"></div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-<script>
-$(document).ready(function() {
-    // 生成文章目录
-    var headings = $('.article-content').find('h2, h3, h4');
-    var toc = '';
-    
-    headings.each(function(i) {
-        var $heading = $(this);
-        var id = 'heading-' + i;
-        $heading.attr('id', id);
-        
-        var level = parseInt($heading.prop('tagName').substr(1));
-        var className = 'nav-link depth-' + level;
-        
-        toc += `<a class="${className}" href="#${id}">${$heading.text()}</a>`;
-    });
-    
-    $('#articleToc').html(toc);
-    
-    // 代码高亮
-    Prism.highlightAll();
-    
-    // 评论回复功能
-    $('.reply-btn').click(function() {
-        const commentId = $(this).data('comment-id');
-        const authorName = $(this).data('author-name');
-        
-        $('#parent_id').val(commentId);
-        easyMDE.value(`@${authorName} `);
-        easyMDE.codemirror.focus();
-        
-        // 滚动到评论框
-        $('html, body').animate({
-            scrollTop: $('#comment-form').offset().top - 100
-        }, 500);
-    });
-    
-    // 图片点击放大
-    $('.article-content img').click(function() {
-        var $img = $(this);
-        var src = $img.attr('src');
-        
-        var $modal = $('<div>', {
-            class: 'modal fade',
-            html: `
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-body p-0">
-                            <img src="${src}" class="img-fluid">
-                        </div>
-                    </div>
-                </div>
-            `
-        }).appendTo('body');
-        
-        $modal.modal('show');
-        $modal.on('hidden.bs.modal', function() {
-            $modal.remove();
-        });
-    });
-    
-    // 滚动时高亮当前标题
-    $(window).scroll(function() {
-        var scrollTop = $(this).scrollTop();
-        
-        headings.each(function() {
-            var $heading = $(this);
-            var headingTop = $heading.offset().top - 100;
-            
-            if (scrollTop >= headingTop) {
-                var id = $heading.attr('id');
-                $('.article-toc .nav-link').removeClass('active');
-                $(`.article-toc .nav-link[href="#${id}"]`).addClass('active');
-            }
-        });
-    });
-});
-
-// 初始化Markdown编辑器
-const easyMDE = new EasyMDE({
-    element: document.getElementById('content'),
-    spellChecker: false,
-    status: false,
-    toolbar: ['bold', 'italic', 'heading', '|', 
-             'quote', 'unordered-list', 'ordered-list', '|',
-             'link', 'image', '|',
-             'preview', 'guide']
-});
-
-// 处理预览按钮点击
-$('#preview-btn').click(function() {
-    const content = easyMDE.value();
-    if (!content) {
-        alert('请先输入评论内容');
-        return;
-    }
-    
-    // 发送预览请求
-    $.post('{{ url_for("blog.preview_comment") }}', {
-        content: content
-    }, function(response) {
-        $('#preview-content').html(response.html);
-        $('#preview-modal').modal('show');
-    });
-});
-</script>
-{% endblock %} 
+                                <label for="author_email" class="form-label">邮箱</label>
+                                {{ form.author_email(class="form-control") }}
+                                {% if form.author_email.errors %}

@@ -9,34 +9,37 @@ from datetime import datetime
 from sqlalchemy import extract, func, desc
 from app.models import Post, Tag, db
 from app.utils.markdown import markdown_to_html
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
 
 class PostService:
     @staticmethod
-    def create_post(title, content, category_id, author_id, summary=None, tags=None, status=0):
+    def create_post(title, content, category_id, author_id, status=1, is_sticky=False):
         """创建新文章"""
-        if not title or not content:
-            raise ValueError("标题和内容不能为空")
+        try:
+            if not title or not content:
+                raise ValueError("标题和内容不能为空")
             
-        # 解析Markdown内容
-        parsed = markdown_to_html(content)
-        
-        post = Post(
-            title=title,
-            content=content,
-            html_content=parsed['html'],
-            toc=parsed['toc'],
-            category_id=category_id,
-            author_id=author_id,
-            summary=summary,
-            status=status
-        )
-        
-        if tags:
-            post.tags = tags
+            # 解析Markdown内容
+            parsed = markdown_to_html(content)
             
-        db.session.add(post)
-        db.session.commit()
-        return post
+            post = Post(
+                title=title,
+                content=content,
+                html_content=parsed['html'],
+                toc=parsed['toc'],
+                category_id=category_id,
+                author_id=author_id,
+                status=status,
+                is_sticky=is_sticky
+            )
+            
+            db.session.add(post)
+            db.session.commit()
+            return post
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("文章创建失败，请检查输入")
     
     @staticmethod
     def get_post_by_id(post_id):
@@ -46,26 +49,40 @@ class PostService:
     @staticmethod
     def get_posts_by_category(category_id, page=1, per_page=10):
         """获取分类下的文章列表"""
-        return Post.query.filter_by(category_id=category_id, status=1)\
-            .order_by(Post.created_at.desc())\
-            .paginate(page=page, per_page=per_page)
+        return Post.query.filter_by(
+            category_id=category_id, 
+            status=1
+        ).order_by(
+            desc(Post.created_at)
+        ).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
     
     @staticmethod
     def get_posts_by_tag(tag_id, page=1, per_page=10):
         """获取标签下的文章列表"""
-        tag = Tag.query.get(tag_id)
-        if tag:
-            return tag.posts.filter_by(status=1)\
-                .order_by(Post.created_at.desc())\
-                .paginate(page=page, per_page=per_page)
-        return None
+        return Post.query.filter(
+            Post.tags.any(id=tag_id),
+            Post.status == 1
+        ).order_by(
+            desc(Post.created_at)
+        ).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
     
     @staticmethod
-    def get_posts_by_page(page=1, per_page=10):
+    def get_posts_by_page(page=1, per_page=10, only_published=True):
         """分页获取文章列表"""
-        return Post.query.filter_by(status=1)\
-            .order_by(Post.is_sticky.desc(), Post.created_at.desc())\
-            .paginate(page=page, per_page=per_page)
+        query = Post.query
+        if only_published:
+            query = query.filter_by(status=1)
+        return query.order_by(desc(Post.created_at)).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
     
     @staticmethod
     def get_total_posts():
@@ -119,51 +136,72 @@ class PostService:
     @staticmethod
     def get_archives():
         """获取文章归档"""
-        year_col = extract('year', Post.created_at).label('year')
-        month_col = extract('month', Post.created_at).label('month')
-        count_col = func.count(Post.id).label('count')
+        posts = Post.query.filter_by(status=1).order_by(desc(Post.created_at)).all()
+        archives = {}
         
-        archives = db.session.query(
-            year_col,
-            month_col,
-            count_col
-        ).filter(Post.status == 1)\
-        .group_by(year_col, month_col)\
-        .order_by(desc(year_col), desc(month_col))\
-        .all()
-        
-        result = []
-        for year, month, count in archives:
-            result.append({
-                'year': int(year),
-                'month': int(month),
-                'count': count
-            })
-        return result
+        for post in posts:
+            year = post.created_at.year
+            month = post.created_at.month
+            key = f"{year}-{month:02d}"
+            
+            if key not in archives:
+                archives[key] = []
+            archives[key].append(post)
+            
+        return archives
+    
+    @staticmethod
+    def get_posts_by_archive(year, month, page=1, per_page=10):
+        """获取归档下的文章"""
+        return Post.query.filter(
+            and_(
+                extract('year', Post.created_at) == year,
+                extract('month', Post.created_at) == month,
+                Post.status == 1
+            )
+        ).order_by(
+            desc(Post.created_at)
+        ).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
     
     @staticmethod
     def update_post(post, **kwargs):
         """更新文章"""
-        for key, value in kwargs.items():
-            if key == 'content':
-                post.update_content(value)
-            else:
-                setattr(post, key, value)
-        db.session.commit()
-        return post
+        try:
+            for key, value in kwargs.items():
+                if hasattr(post, key):
+                    setattr(post, key, value)
+            db.session.commit()
+            return post
+        except IntegrityError:
+            db.session.rollback()
+            raise ValueError("文章更新失败，请检查输入")
     
     @staticmethod
     def delete_post(post):
         """删除文章"""
-        db.session.delete(post)
-        db.session.commit()
+        try:
+            db.session.delete(post)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise ValueError("文章删除失败")
     
     @staticmethod
-    def search_posts(keyword, page=1, per_page=10):
+    def search_posts(search_query, page=1, per_page=10):
         """搜索文章"""
         return Post.query.filter(
-            Post.status == 1,
-            (Post.title.ilike(f'%{keyword}%') |
-             Post.content.ilike(f'%{keyword}%'))
-        ).order_by(Post.created_at.desc())\
-        .paginate(page=page, per_page=per_page) 
+            and_(
+                search_query,
+                Post.status == 1
+            )
+        ).order_by(
+            desc(Post.created_at)
+        ).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        ) 

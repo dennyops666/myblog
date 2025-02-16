@@ -8,7 +8,7 @@
 import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from sqlalchemy import desc
+from sqlalchemy import desc, extract
 from app.models import Post, db
 from app.utils.pagination import Pagination
 from app.config import Config
@@ -140,4 +140,63 @@ class PostService:
                 return True
         except Exception:
             return False
-        return False 
+        return False
+    
+    @staticmethod
+    def get_posts_by_category(category_id, page=1, per_page=10):
+        """获取分类下的文章列表
+        
+        Args:
+            category_id: 分类ID
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        query = Post.query.filter_by(
+            category_id=category_id,
+            status=1
+        ).order_by(desc(Post.created_at))
+        return Pagination(query, page, per_page)
+    
+    @staticmethod
+    def get_posts_by_tag(tag_id, page=1, per_page=10):
+        """获取标签下的文章列表
+        
+        Args:
+            tag_id: 标签ID
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        query = Post.query.filter(
+            Post.status == 1,
+            Post.tags.any(id=tag_id)
+        ).order_by(desc(Post.created_at))
+        return Pagination(query, page, per_page)
+    
+    @staticmethod
+    def get_posts_by_time(year=None, month=None, page=1, per_page=10):
+        """按时间线获取文章列表
+        
+        Args:
+            year: 年份
+            month: 月份
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        query = Post.query.filter_by(status=1)
+        
+        if year:
+            query = query.filter(extract('year', Post.created_at) == year)
+        if month:
+            query = query.filter(extract('month', Post.created_at) == month)
+            
+        query = query.order_by(desc(Post.created_at))
+        return Pagination(query, page, per_page) 

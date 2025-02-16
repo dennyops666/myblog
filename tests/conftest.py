@@ -1,16 +1,16 @@
 """
 文件名：conftest.py
-描述：测试配置文件
+描述：测试配置
 作者：denny
 创建日期：2025-02-16
 """
 
 import os
 import tempfile
+from datetime import timedelta
 import pytest
-from app import create_app
-from app.models import db, User, Category, Tag, Post, Comment
-from flask import g
+from app import create_app, db
+from app.models import User, Post, Category, Tag, Comment
 
 @pytest.fixture
 def app():
@@ -19,37 +19,36 @@ def app():
     db_fd, db_path = tempfile.mkstemp()
     
     # 创建测试配置
-    test_config = {
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-        'WTF_CSRF_ENABLED': False
-    }
+    class TestConfig:
+        TESTING = True
+        SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+        SQLALCHEMY_TRACK_MODIFICATIONS = False
+        WTF_CSRF_ENABLED = True  # 启用CSRF保护
+        SECRET_KEY = 'test-key'
+        PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+        SESSION_COOKIE_SECURE = True
+        SESSION_COOKIE_HTTPONLY = True
+        SESSION_COOKIE_SAMESITE = 'Lax'
     
     # 创建应用实例
     app = create_app('testing')
-    app.config.update(test_config)
+    app.config.from_object(TestConfig)
     
-    # 创建数据库表
+    # 确保在测试环境中使用测试数据库
     with app.app_context():
-        db.create_all()
-        
-        # 创建测试用户
-        user = User(username='admin', email='admin@example.com')
-        user.password = 'password'
-        db.session.add(user)
-        db.session.commit()
+        db.drop_all()  # 确保清理旧数据
+        db.create_all()  # 创建新表
+        db.session.commit()  # 提交更改
     
     yield app
     
     # 清理
+    with app.app_context():
+        db.session.remove()  # 移除所有会话
+        db.drop_all()  # 删除所有表
+    
     os.close(db_fd)
     os.unlink(db_path)
-
-@pytest.fixture
-def app_context(app):
-    """创建应用上下文"""
-    with app.app_context() as ctx:
-        yield ctx
 
 @pytest.fixture
 def client(app):
@@ -58,31 +57,23 @@ def client(app):
 
 @pytest.fixture
 def runner(app):
-    """创建测试命令运行器"""
+    """创建测试命令行运行器"""
     return app.test_cli_runner()
 
 @pytest.fixture
-def auth(client):
-    """认证辅助类"""
-    class AuthActions:
-        def __init__(self, client):
-            self._client = client
-            
-        def login(self, username='admin', password='password'):
-            return self._client.post(
-                '/admin/login',
-                data={'username': username, 'password': password}
-            )
-            
-        def logout(self):
-            return self._client.get('/admin/logout')
-    
-    return AuthActions(client)
+def app_context(app):
+    """创建应用上下文"""
+    with app.app_context() as ctx:
+        yield ctx
+        db.session.rollback()  # 回滚未提交的更改
 
 @pytest.fixture
 def test_user(app_context):
     """创建测试用户"""
-    user = User(username='test', email='test@example.com')
+    user = User(
+        username='test',
+        email='test@example.com'
+    )
     user.password = 'password'
     db.session.add(user)
     db.session.commit()
@@ -91,7 +82,7 @@ def test_user(app_context):
 @pytest.fixture
 def test_category(app_context):
     """创建测试分类"""
-    category = Category(name='测试分类', description='这是一个测试分类')
+    category = Category(name='测试分类')
     db.session.add(category)
     db.session.commit()
     return category
@@ -130,4 +121,25 @@ def test_comment(app_context, test_post):
     )
     db.session.add(comment)
     db.session.commit()
-    return comment 
+    return comment
+
+@pytest.fixture
+def auth(client):
+    """认证辅助类"""
+    class AuthActions:
+        def __init__(self, client):
+            self._client = client
+            
+        def login(self, username='test', password='password'):
+            with client.session_transaction() as session:
+                session.permanent = True  # 设置会话为永久
+            return self._client.post(
+                '/auth/login',
+                data={'username': username, 'password': password},
+                follow_redirects=True
+            )
+            
+        def logout(self):
+            return self._client.get('/auth/logout', follow_redirects=True)
+    
+    return AuthActions(client) 

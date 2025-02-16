@@ -5,16 +5,16 @@
 创建日期：2025-02-16
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, session
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import safe_str_cmp
 from app.models import User
 from app.services import UserService
 from app.forms import LoginForm, RegisterForm
+from datetime import timedelta
 
-auth = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__)
 
-@auth.route('/login', methods=['GET', 'POST'])
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """用户登录"""
     if current_user.is_authenticated:
@@ -32,8 +32,10 @@ def login():
                 flash('账号已被禁用', 'danger')
                 return render_template('auth/login.html', form=form), 403
                 
-            # 登录用户
+            # 登录用户并设置会话持久化
             login_user(user, remember=form.remember_me.data)
+            session.permanent = True
+            session.permanent_session_lifetime = timedelta(days=7)  # 设置会话有效期为7天
             
             # 获取下一个页面的 URL
             next_page = request.args.get('next')
@@ -47,15 +49,16 @@ def login():
             
     return render_template('auth/login.html', form=form)
 
-@auth.route('/logout')
+@auth_bp.route('/logout')
 @login_required
 def logout():
     """用户登出"""
     logout_user()
+    session.clear()  # 清除所有会话数据
     flash('您已成功登出', 'success')
     return redirect(url_for('blog.index'))
 
-@auth.route('/register', methods=['GET', 'POST'])
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """用户注册"""
     if current_user.is_authenticated:

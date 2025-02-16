@@ -8,136 +8,128 @@
 import re
 import markdown
 import bleach
-from bleach.sanitizer import ALLOWED_ATTRIBUTES, ALLOWED_PROTOCOLS
-from pygments import highlight
-from pygments.formatters import HtmlFormatter
-from pygments.lexers import get_lexer_by_name, guess_lexer
-from pygments.util import ClassNotFound
-from markdown.extensions import fenced_code, toc, tables, attr_list
+from bleach.sanitizer import Cleaner
+from bleach.linkifier import LinkifyFilter
 
-# 创建允许的HTML标签列表
-ALLOWED_TAGS = [
-    'p', 'div', 'span', 'pre', 'code', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'strong', 'em', 'a', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-    'ul', 'ol', 'li', 'blockquote', 'hr', 'br', 'sup', 'sub', 'del'
-]
+def clean_href(attrs, new=False):
+    """清理链接属性"""
+    href = attrs.get((None, 'href'), '')
+    if href:
+        # 允许的协议
+        allowed_protocols = ['http', 'https', 'mailto', 'tel']
+        # 检查协议
+        protocol = href.split(':', 1)[0].lower()
+        if protocol not in allowed_protocols:
+            return None
+    return attrs
 
-# 扩展允许的属性
-ALLOWED_ATTRIBUTES.update({
-    'img': ['src', 'alt', 'title', 'width', 'height'],
-    'a': ['href', 'title', 'rel'],
-    'code': ['class'],
-    'pre': ['class'],
-    '*': ['id', 'class']
-})
-
-class HighlightRenderer(markdown.extensions.Extension):
-    def extendMarkdown(self, md):
-        md.preprocessors.register(CodeBlockPreprocessor(md), 'highlight', 175)
-
-class CodeBlockPreprocessor(markdown.preprocessors.Preprocessor):
-    def run(self, lines):
-        new_lines = []
-        in_code_block = False
-        code_block_lines = []
-        language = None
-        
-        for line in lines:
-            if line.strip().startswith('```'):
-                if not in_code_block:
-                    in_code_block = True
-                    language = line.strip()[3:].strip() or None
-                    code_block_lines = []
-                else:
-                    in_code_block = False
-                    code = '\n'.join(code_block_lines)
-                    try:
-                        if language:
-                            lexer = get_lexer_by_name(language)
-                        else:
-                            lexer = guess_lexer(code)
-                    except ClassNotFound:
-                        lexer = get_lexer_by_name('text')
-                        
-                    formatter = HtmlFormatter(style='default', cssclass='highlight')
-                    highlighted = highlight(code, lexer, formatter)
-                    new_lines.append(highlighted)
-            elif in_code_block:
-                code_block_lines.append(line)
-            else:
-                new_lines.append(line)
-                
-        return new_lines
+def clean_xss(text):
+    """清理XSS相关内容"""
+    if not isinstance(text, str):
+        return text
+    text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'data:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'vbscript:', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\son\w+\s*=\s*["\'][^"\']*["\']', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'alert\s*\([^)]*\)', '', text, flags=re.IGNORECASE)
+    return text
 
 def markdown_to_html(content):
-    """将 Markdown 转换为 HTML，并提取目录结构"""
-    if not content:
-        return {'html': '', 'toc': []}
-        
-    # 创建 Markdown 实例
-    md = markdown.Markdown(extensions=[
-        'fenced_code',
-        'codehilite',
-        'tables',
-        'toc',
-        'attr_list',
-        'nl2br',
-        HighlightRenderer()
-    ], extension_configs={
-        'toc': {
-            'permalink': True,
-            'toc_depth': 3
-        },
-        'codehilite': {
+    """将 Markdown 转换为 HTML"""
+    # 配置 Markdown 扩展
+    extensions = [
+        'markdown.extensions.fenced_code',  # 代码块
+        'markdown.extensions.codehilite',   # 代码高亮
+        'markdown.extensions.tables',       # 表格
+        'markdown.extensions.toc',          # 目录
+        'markdown.extensions.nl2br',        # 换行
+        'markdown.extensions.sane_lists',   # 列表
+    ]
+    
+    # 配置扩展选项
+    extension_configs = {
+        'markdown.extensions.codehilite': {
             'css_class': 'highlight',
             'guess_lang': False
+        },
+        'markdown.extensions.toc': {
+            'permalink': True,
+            'toc_depth': 3,
+            'anchorlink': True,
+            'separator': '-',
+            'slugify': lambda value, separator: value  # 保持原始文本作为ID
         }
-    })
+    }
+    
+    # 创建 Markdown 实例
+    md = markdown.Markdown(
+        extensions=extensions,
+        extension_configs=extension_configs
+    )
     
     # 转换 Markdown 为 HTML
     html = md.convert(content)
     
-    # 提取目录结构
-    toc_html = getattr(md, 'toc', '')
+    # 提取目录
     toc_items = []
-    if toc_html:
-        # 解析目录 HTML 为列表结构
-        pattern = r'<a href="#(.+?)">(.+?)</a>'
-        matches = re.finditer(pattern, toc_html)
-        for match in matches:
-            anchor, title = match.groups()
-            # 计算标题级别（通过正则匹配 h1_, h2_ 等前缀）
-            level_match = re.match(r'^h(\d+)_', anchor)
-            if level_match:
-                level = int(level_match.group(1))
-                toc_items.append({
-                    'level': level,
-                    'anchor': anchor,
-                    'title': title
-                })
+    if hasattr(md, 'toc_tokens'):
+        toc_items = _process_toc_tokens(md.toc_tokens)
+    
+    # 配置允许的 HTML 标签和属性
+    allowed_tags = [
+        'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
+        'strong', 'em', 'a', 'img', 'table', 'thead', 'tbody',
+        'tr', 'th', 'td'
+    ]
+    
+    allowed_attributes = {
+        'a': ['href', 'title', 'id', 'class'],
+        'img': ['src', 'alt', 'title'],
+        'code': ['class'],
+        'pre': ['class'],
+        '*': ['id', 'class']
+    }
+
+    # 创建自定义清理器
+    cleaner = Cleaner(
+        tags=allowed_tags,
+        attributes=allowed_attributes,
+        strip=True,
+        strip_comments=True,
+        protocols=['http', 'https', 'mailto', 'tel']
+    )
     
     # 清理 HTML
-    def clean_href(name, value):
-        """清理链接，只允许安全的协议和内部链接"""
-        if name == 'href':
-            url = value.lower()
-            if url.startswith('#') or url.startswith('/'):
-                return value
-            if any(url.startswith(protocol + ':') for protocol in ALLOWED_PROTOCOLS):
-                return value
-            return ''
-        return value
+    html = cleaner.clean(html)
     
-    html = bleach.clean(
-        html,
-        tags=ALLOWED_TAGS,
-        attributes=ALLOWED_ATTRIBUTES,
-        protocols=ALLOWED_PROTOCOLS,
-        strip=True,
-        filters=[clean_href]
-    )
+    # 进行额外的XSS清理
+    html = clean_xss(html)
     
     return {
         'html': html,
         'toc': toc_items
     }
+
+def _process_toc_tokens(tokens, level=1):
+    """处理目录标记，生成扁平化的目录列表
+    
+    Args:
+        tokens: 目录标记列表
+        level: 当前目录级别
+        
+    Returns:
+        list: 扁平化的目录列表
+    """
+    items = []
+    for token in tokens:
+        item = {
+            'level': level,
+            'text': token['name'],
+            'id': f"header-{token['id']}",  # 添加header-前缀
+            'anchor': f"header-{token['id']}"  # 保持一致的ID格式
+        }
+        items.append(item)
+        if 'children' in token:
+            items.extend(_process_toc_tokens(token['children'], level + 1))
+    return items
