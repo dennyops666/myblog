@@ -1,0 +1,43 @@
+# Web框架
+Flask==3.0.0
+Werkzeug==3.0.1
+Jinja2==3.1.2
+
+# 数据库
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+SQLAlchemy==2.0.23
+
+# 用户认证
+Flask-Login==0.6.3
+Flask-Bcrypt==1.0.1
+
+# 表单处理
+Flask-WTF==1.2.1
+WTForms==3.1.1
+
+# API支持
+Flask-RESTful==0.3.10
+marshmallow==3.20.1
+
+# 缓存
+Flask-Caching==2.1.0
+
+# Markdown支持
+Markdown==3.5.1
+PyYAML==6.0.1
+
+# 性能监控
+Flask-Monitor==1.1.0
+
+# 安全
+Flask-SeaSurf==1.1.1
+Flask-Talisman==1.1.0
+
+# 部署
+gunicorn==21.2.0
+supervisor==4.2.5
+
+# 工具
+python-dotenv==1.0.0
+email-validator==2.1.0.post1 
