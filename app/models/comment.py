@@ -17,6 +17,7 @@ class Comment(db.Model):
     html_content = db.Column(db.Text)  # 存储解析后的HTML内容
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # 添加作者ID字段
     author_name = db.Column(db.String(50), nullable=False)
     author_email = db.Column(db.String(120), nullable=False)
     status = db.Column(db.Integer, default=0)  # 0: 待审核, 1: 已通过
@@ -25,6 +26,7 @@ class Comment(db.Model):
     # 关联关系
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]),
                             lazy='dynamic')
+    author = db.relationship('User', foreign_keys=[author_id])  # 修改作者关联定义
     
     def __repr__(self):
         return f'<Comment {self.id}>' 

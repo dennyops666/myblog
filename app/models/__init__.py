@@ -11,5 +11,6 @@ from .post import Post
 from .category import Category
 from .tag import Tag
 from .comment import Comment
+from .role import Role
 
-__all__ = ['db', 'User', 'Post', 'Category', 'Tag', 'Comment']
+__all__ = ['db', 'User', 'Post', 'Category', 'Tag', 'Comment', 'Role']

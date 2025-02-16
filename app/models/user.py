@@ -21,28 +21,44 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     avatar = db.Column(db.String(200))
     bio = db.Column(db.Text)
-    role = db.Column(db.Integer, default=0)  # 0: 普通用户, 1: 管理员
-    status = db.Column(db.Integer, default=1)  # 0: 禁用, 1: 正常
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # 角色关联
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    
+    # 关系
+    posts = db.relationship('Post', backref='author', lazy='dynamic')
+    comments = db.relationship('Comment', foreign_keys='Comment.author_id', backref='user', lazy='dynamic')
+    
+    # 时间戳
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = db.Column(db.DateTime)
     
-    # 关联关系
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        if self.role is None:
+            # 如果没有指定角色，默认设置为普通用户
+            from app.models import Role
+            user_role = Role.query.filter_by(name='user').first()
+            if user_role:
+                self.role = user_role
     
-    @property
-    def password(self):
-        """密码属性不可读"""
-        raise AttributeError('密码不可读')
+    def set_password(self, password):
+        """设置密码"""
+        self.password_hash = generate_password_hash(password)
     
-    @password.setter
-    def password(self, password):
-        """设置密码时自动进行哈希"""
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-    
-    def verify_password(self, password):
+    def check_password(self, password):
         """验证密码"""
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        return check_password_hash(self.password_hash, password)
+    
+    def can(self, permission):
+        """检查用户是否有指定权限"""
+        return self.role is not None and self.role.has_permission(permission)
+    
+    def is_administrator(self):
+        """检查用户是否是管理员"""
+        return self.role is not None and self.role.name == 'admin'
     
     def __repr__(self):
         return f'<User {self.username}>'
