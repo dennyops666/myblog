@@ -2,7 +2,7 @@
 文件名：user.py
 描述：用户数据模型
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
 from datetime import datetime
@@ -22,13 +22,12 @@ class User(UserMixin, db.Model):
     avatar = db.Column(db.String(200))
     bio = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
-    
-    # 角色关联
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     
     # 关系
-    posts = db.relationship('Post', backref='author', lazy='dynamic')
-    comments = db.relationship('Comment', foreign_keys='Comment.author_id', backref='user', lazy='dynamic')
+    role = db.relationship('Role', back_populates='users')
+    posts = db.relationship('Post', back_populates='author', lazy='dynamic')
+    comments = db.relationship('Comment', back_populates='author', lazy='dynamic')
     
     # 时间戳
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -37,12 +36,15 @@ class User(UserMixin, db.Model):
     
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
-        if self.role is None:
-            # 如果没有指定角色，默认设置为普通用户
+        if self.role_id is None:
             from app.models import Role
             user_role = Role.query.filter_by(name='user').first()
             if user_role:
-                self.role = user_role
+                self.role_id = user_role.id
+    
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
     
     def set_password(self, password):
         """设置密码"""
@@ -52,13 +54,9 @@ class User(UserMixin, db.Model):
         """验证密码"""
         return check_password_hash(self.password_hash, password)
     
-    def can(self, permission):
-        """检查用户是否有指定权限"""
-        return self.role is not None and self.role.has_permission(permission)
-    
-    def is_administrator(self):
-        """检查用户是否是管理员"""
-        return self.role is not None and self.role.name == 'admin'
+    def is_admin(self):
+        """检查是否是管理员"""
+        return self.role and self.role.name == 'admin'
     
     def __repr__(self):
         return f'<User {self.username}>'

@@ -7,7 +7,7 @@
 
 from datetime import datetime
 from sqlalchemy import extract, func, desc
-from app.models import Post, Tag, db
+from app.models import Post, Tag, db, Category
 from app.utils.markdown import markdown_to_html
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
@@ -19,6 +19,11 @@ class PostService:
         try:
             if not title or not content:
                 raise ValueError("标题和内容不能为空")
+            
+            # 验证分类ID
+            category = Category.query.get(category_id)
+            if not category:
+                raise ValueError("无效的分类ID")
             
             # 解析Markdown内容
             parsed = markdown_to_html(content)

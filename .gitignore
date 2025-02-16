@@ -34,7 +34,7 @@ env/
 # Flask
 instance/
 .webassets-cache
-*.db
+#*.db
 
 # Coverage
 .coverage

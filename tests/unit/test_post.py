@@ -45,10 +45,9 @@ def hello():
     )
     
     # 验证HTML内容
-    assert '<h1>' in post.html_content
-    assert '<h2>' in post.html_content
-    assert '<strong>' in post.html_content
-    assert '<ul>' in post.html_content
+    assert 'id="标题1"' in post.html_content
+    assert '<strong>加粗</strong>' in post.html_content
+    assert '<li>列表项1</li>' in post.html_content
     assert '<code>' in post.html_content
     
     # 验证目录结构

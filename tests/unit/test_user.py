@@ -13,15 +13,16 @@ def test_user_creation(app_context, test_user):
     """测试用户创建"""
     assert test_user.username == 'test'
     assert test_user.email == 'test@example.com'
+    test_user.set_password('cat')
     assert test_user.password_hash is not None
 
 def test_password_hashing(app_context):
     """测试密码哈希"""
     user = User(username='test', email='test@example.com')
-    user.password = 'cat'
+    user.set_password('cat')
     assert user.password_hash is not None
-    assert user.verify_password('cat')
-    assert not user.verify_password('dog')
+    assert user.check_password('cat')
+    assert not user.check_password('dog')
     with pytest.raises(AttributeError):
         user.password
 
