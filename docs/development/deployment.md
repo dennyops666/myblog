@@ -121,7 +121,7 @@ stdout_logfile=/var/log/myblog/supervisor.out.log
 # /etc/nginx/sites-available/myblog
 server {
     listen 80;
-    server_name yourdomain.com;
+    server_name my.blog.com;
 
     access_log /var/log/nginx/myblog.access.log;
     error_log /var/log/nginx/myblog.error.log;
@@ -177,7 +177,7 @@ sudo ufw enable
 sudo apt install certbot python3-certbot-nginx
 
 # 获取SSL证书
-sudo certbot --nginx -d yourdomain.com
+sudo certbot --nginx -d my.blog.com
 
 # 自动续期证书
 sudo certbot renew --dry-run
