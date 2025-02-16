@@ -86,10 +86,10 @@ sudo apt install python3 python3-pip python3-venv nginx supervisor
 ```bash
 # 创建项目目录（如果不存在）
 sudo mkdir -p /data/myblog
-sudo chown -R $USER:$USER /data/myblog
+sudo chown -R ops:ops /data/myblog
 
 # 克隆项目
-git clone https://github.com/dennyops666/myblog.git /data/myblog
+git clone git@github.com:dennyops666/myblog.git /data/myblog
 cd /data/myblog
 
 # 创建虚拟环境
@@ -107,7 +107,7 @@ pip install gunicorn
 [program:myblog]
 directory=/data/myblog
 command=/data/myblog/venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 run:app
-user=www-data
+user=ops
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -144,7 +144,7 @@ server {
 ```bash
 # 创建日志目录
 sudo mkdir -p /var/log/myblog
-sudo chown -R www-data:www-data /var/log/myblog
+sudo chown -R ops:ops /var/log/myblog
 
 # 启用Nginx配置
 sudo ln -s /etc/nginx/sites-available/myblog /etc/nginx/sites-enabled/
@@ -187,6 +187,10 @@ sudo certbot renew --dry-run
 
 ### 5.1 备份
 ```bash
+# 创建备份目录
+sudo mkdir -p /backup
+sudo chown ops:ops /backup
+
 # 备份数据库
 cp /data/myblog/instance/myblog.db /backup/myblog_$(date +%Y%m%d).db
 
