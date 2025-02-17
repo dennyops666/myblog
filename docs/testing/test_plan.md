@@ -717,6 +717,134 @@
 | | | 集成测试 | | | | | | |
 | | | 安全测试 | | | | | | |
 
+## 10. 测试命令指南
+
+### 10.1 环境准备
+
+```bash
+# 1. 激活虚拟环境
+source venv/bin/activate
+
+# 2. 安装测试依赖
+pip install -r requirements-dev.txt
+
+# 3. 初始化测试数据库
+python manage.py init_test_db
+```
+
+### 10.2 运行测试命令
+
+#### 10.2.1 运行所有单元测试
+```bash
+# 运行所有单元测试（详细模式）
+pytest tests/unit/ -v
+
+# 运行所有单元测试（简单模式）
+pytest tests/unit/
+
+# 运行所有单元测试并生成覆盖率报告
+pytest tests/unit/ --cov=app --cov-report=html
+```
+
+#### 10.2.2 运行特定模块测试
+```bash
+# 运行用户模块测试
+pytest tests/unit/test_user.py -v
+
+# 运行文章模块测试
+pytest tests/unit/test_post.py -v
+
+# 运行评论模块测试
+pytest tests/unit/test_comment.py -v
+
+# 运行分类模块测试
+pytest tests/unit/test_category.py -v
+
+# 运行标签模块测试
+pytest tests/unit/test_tag.py -v
+
+# 运行模型测试
+pytest tests/unit/test_models.py -v
+```
+
+#### 10.2.3 运行集成测试
+```bash
+# 运行所有集成测试
+pytest tests/integration/ -v
+
+# 运行 Markdown 服务集成测试
+pytest tests/integration/test_markdown_service.py -v
+
+# 运行文章集成测试
+pytest tests/integration/test_article_integration.py -v
+
+# 运行评论集成测试
+pytest tests/integration/test_comment_integration.py -v
+
+# 运行用户集成测试
+pytest tests/integration/test_user_integration.py -v
+```
+
+#### 10.2.4 运行性能测试
+```bash
+# 运行所有性能测试
+pytest tests/performance/ -v
+
+# 运行页面加载性能测试
+pytest tests/performance/test_page_loading.py -v
+
+# 运行并发访问性能测试
+pytest tests/performance/test_concurrent_access.py -v
+```
+
+#### 10.2.5 运行安全测试
+```bash
+# 运行所有安全测试
+pytest tests/security/ -v
+
+# 运行认证安全测试
+pytest tests/security/test_auth_security.py -v
+
+# 运行 XSS/CSRF 防护测试
+pytest tests/security/test_xss_csrf.py -v
+
+# 运行注入防护测试
+pytest tests/security/test_injection.py -v
+
+# 运行数据安全测试
+pytest tests/security/test_data_security.py -v
+
+# 运行访问控制测试
+pytest tests/security/test_access_control.py -v
+```
+
+### 10.3 测试参数说明
+
+常用的测试参数：
+
+- `-v`: 显示详细输出
+- `-s`: 显示打印输出
+- `-x`: 遇到失败立即停止
+- `--pdb`: 在失败时进入调试器
+- `--cov=app`: 生成代码覆盖率报告
+- `--cov-report=html`: 生成HTML格式的覆盖率报告
+- `-k "test_name"`: 运行包含特定名称的测试
+- `-m "mark_name"`: 运行带有特定标记的测试
+- `--durations=N`: 显示最慢的N个测试
+- `--maxfail=N`: 失败N次后停止测试
+
+### 10.4 测试结果说明
+
+测试结果标识：
+- `.`: 测试通过
+- `F`: 测试失败
+- `E`: 测试出错
+- `s`: 测试跳过
+- `x`: 测试预期失败
+- `X`: 测试意外通过
+- `p`: 测试通过但有输出
+- `P`: 测试通过但有未捕获的异常
+
 ## 10. 测试报告
 
 ### 10.1 测试结果汇总
