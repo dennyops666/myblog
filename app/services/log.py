@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Optional
 from app.models.operation_log import OperationLog
 from app.extensions import db
@@ -29,7 +29,7 @@ class LogService:
             user_id=user_id,
             action=action,
             details=details,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(UTC)
         )
         db.session.add(log)
         db.session.commit()
@@ -67,7 +67,7 @@ class LogService:
         Returns:
             List[OperationLog]: 日志列表
         """
-        start_date = datetime.utcnow() - timedelta(days=days)
+        start_date = datetime.now(UTC) - timedelta(days=days)
         return OperationLog.query.filter(
             OperationLog.created_at >= start_date
         ).order_by(OperationLog.created_at.desc()).all()
@@ -82,7 +82,7 @@ class LogService:
         Returns:
             int: 清理的日志数量
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         result = OperationLog.query.filter(
             OperationLog.created_at < cutoff_date
         ).delete()

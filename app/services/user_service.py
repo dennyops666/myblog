@@ -30,7 +30,7 @@ class UserService:
         return value.strip()
 
     @staticmethod
-    def create(username, email, password, role_id=None):
+    def create_user(username, email, password, role_id=None):
         """创建新用户"""
         # 验证和清理输入
         username = UserService._validate_input(username, "用户名")
@@ -59,7 +59,7 @@ class UserService:
         """根据ID获取用户"""
         try:
             user_id = int(user_id)
-            return User.query.get(user_id)
+            return db.session.get(User, user_id)
         except (ValueError, TypeError):
             return None
     
@@ -167,10 +167,6 @@ class UserService:
             raise ValueError("用户不存在")
             
         try:
-            # 先记录删除操作
-            from app.services.log import LogService
-            LogService.log_action(1, "delete_user", f"删除用户 ID: {user_id}")  # 使用系统用户ID
-            
             # 删除用户相关的日志记录
             from app.models.operation_log import OperationLog
             OperationLog.query.filter_by(user_id=user_id).delete()
@@ -189,6 +185,11 @@ class UserService:
             
             # 删除用户
             db.session.delete(user)
+            
+            # 记录删除操作
+            from app.services.log import LogService
+            LogService.log_action(1, "delete_user", f"删除用户 ID: {user_id}")  # 使用系统用户ID
+            
             db.session.commit()
         except Exception as e:
             db.session.rollback()

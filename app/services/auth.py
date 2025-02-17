@@ -263,18 +263,17 @@ class AuthService:
         return cache_data
     
     @staticmethod
-    def has_permission(user_id: int, permission: str) -> bool:
-        """
-        检查用户是否具有指定权限
+    def has_permission(user_id, permission):
+        """检查用户是否有指定权限
         
         Args:
             user_id: 用户ID
             permission: 权限名称
             
         Returns:
-            bool: 是否具有权限
+            bool: 是否有权限
         """
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user or not user.role:
             return False
         return permission in user.role.permissions

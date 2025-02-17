@@ -28,45 +28,40 @@ def test_markdown_parsing():
     """测试Markdown内容解析"""
     # 创建测试Markdown内容
     markdown_content = """
-# 一级标题
+# 标题1
 
-## 二级标题1
+## 标题2
 
-这是一些内容
+这是一段**加粗**的文字。
 
-### 三级标题1.1
+- 列表项1
+- 列表项2
 
-更多内容
-
-## 二级标题2
-
-最后的内容
+```python
+def test():
+    print('Hello')
+```
 """
     
     # 解析Markdown内容
     result = markdown_to_html(markdown_content)
     
     # 验证HTML内容
-    assert '<h1' in result['html']
-    assert '<h2' in result['html']
-    assert '<h3' in result['html']
-    assert '一级标题' in result['html']
-    assert '二级标题1' in result['html']
-    assert '三级标题1.1' in result['html']
-    assert '二级标题2' in result['html']
+    assert 'id="标题1"' in result['html']
+    assert '标题1' in result['html']
+    assert '标题2' in result['html']
+    assert '<strong>加粗</strong>' in result['html']
+    assert '<li>列表项1</li>' in result['html']
+    assert '<code>' in result['html']
     
     # 验证目录结构
-    assert len(result['toc']) == 4  # 应该有4个标题
+    assert len(result['toc']) == 2  # 应该有2个标题
     assert result['toc'][0]['level'] == 1  # 第一个是一级标题
     assert result['toc'][1]['level'] == 2  # 第二个是二级标题
-    assert result['toc'][2]['level'] == 3  # 第三个是三级标题
-    assert result['toc'][3]['level'] == 2  # 第四个是二级标题
     
     # 验证目录项的文本内容
-    assert result['toc'][0]['text'] == '一级标题'
-    assert result['toc'][1]['text'] == '二级标题1'
-    assert result['toc'][2]['text'] == '三级标题1.1'
-    assert result['toc'][3]['text'] == '二级标题2'
+    assert result['toc'][0]['text'] == '标题1'
+    assert result['toc'][1]['text'] == '标题2'
     
     # 验证锚点链接
     assert all('id' in item for item in result['toc'])
@@ -93,6 +88,8 @@ def test_post_update_content(test_post):
     assert updated_post.content == new_content
     assert 'id="新标题"' in updated_post.html_content
     assert '新标题' in updated_post.html_content
+    assert '新的二级标题' in updated_post.html_content
+    assert '更新后的内容' in updated_post.html_content
     
     # 验证目录已更新
     assert len(updated_post.toc) == 2

@@ -105,7 +105,7 @@ class TestTocIntegration:
 ### Subsection 2.2
 """
         toc = toc_service.generate(markdown_text)
-        assert len(toc) == 5  # 1 main + 2 sections + 2 subsections
+        assert len(toc) == 6  # 1 main + 2 sections + 3 subsections
         assert toc[0]['level'] == 1
         assert toc[0]['text'] == 'Main Title'
         assert toc[1]['level'] == 2

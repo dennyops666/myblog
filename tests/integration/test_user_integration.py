@@ -108,7 +108,7 @@ class TestUserDataIntegration:
     def test_user_info_association(self, user_service, test_client):
         """测试用户信息关联"""
         # 创建用户和相关数据
-        user = user_service.create(
+        user = user_service.create_user(
             username="testuser",
             email="test@example.com",
             password="password123"
@@ -132,7 +132,7 @@ class TestUserDataIntegration:
     def test_comment_association(self, user_service, test_client):
         """测试评论关联"""
         # 创建用户和文章
-        user = user_service.create(
+        user = user_service.create_user(
             username="testuser",
             email="test@example.com",
             password="password123"
@@ -160,7 +160,7 @@ class TestUserDataIntegration:
     def test_operation_log(self, user_service, log_service, test_client):
         """测试操作日志"""
         # 创建用户
-        user = user_service.create(
+        user = user_service.create_user(
             username="testuser",
             email="test@example.com",
             password="password123"
@@ -178,10 +178,10 @@ class TestUserDataIntegration:
         assert "create_post" in [log.action for log in user_logs]
         assert "comment" in [log.action for log in user_logs]
 
-    def test_data_integrity(self, user_service, test_client):
+    def test_data_integrity(self, user_service, auth_service, log_service, test_client):
         """测试数据完整性"""
         # 创建用户和相关数据
-        user = user_service.create(
+        user = user_service.create_user(
             username="testuser",
             email="test@example.com",
             password="password123"
@@ -202,9 +202,12 @@ class TestUserDataIntegration:
         # 验证相关数据已清理
         assert Post.query.filter_by(author_id=user.id).count() == 0
         assert Comment.query.filter_by(author_id=user.id).count() == 0
-        assert not auth_service.get_active_sessions(user.id)
+        
+        # 验证会话已清理
+        sessions = auth_service.get_active_sessions(user.id)
+        assert len(sessions) == 0
 
         # 验证日志记录完整性
         deletion_log = log_service.get_system_logs()[-1]
         assert deletion_log.action == "delete_user"
-        assert str(user.id) in deletion_log.details 
+        assert str(user.id) in deletion_log.details

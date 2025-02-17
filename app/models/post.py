@@ -31,14 +31,23 @@ class Post(db.Model):
     status = db.Column(db.Integer, nullable=False, default=0)  # 0: 草稿, 1: 已发布
     is_sticky = db.Column(db.Boolean, nullable=False, default=False)
     view_count = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     
     # 关联关系
     category = db.relationship('Category', back_populates='posts')
     author = db.relationship('User', back_populates='posts')
     comments = db.relationship('Comment', back_populates='post', lazy='dynamic', cascade='all, delete-orphan')
     tags = db.relationship('Tag', secondary='post_tags', back_populates='posts')
+    
+    @property
+    def comment_count(self):
+        """获取文章的评论数量"""
+        from app.models import Comment
+        return Comment.query.filter_by(
+            post_id=self.id,
+            status=0  # 包含待审核的评论
+        ).count()
     
     def __init__(self, **kwargs):
         super(Post, self).__init__(**kwargs)
@@ -63,6 +72,10 @@ class Post(db.Model):
     def toc(self, value):
         """设置目录结构"""
         self._toc = json.dumps(value)
+    
+    def get_toc(self):
+        """获取目录结构（兼容方法）"""
+        return self.toc
     
     def __repr__(self):
         return f'<Post {self.title}>' 

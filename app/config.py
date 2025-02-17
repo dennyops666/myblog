@@ -15,7 +15,7 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     
     # 数据库配置
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///myblog.db')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:////' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'blog.db'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 缓存配置

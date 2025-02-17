@@ -13,6 +13,7 @@ from bleach.linkifier import LinkifyFilter
 from bleach.css_sanitizer import CSSSanitizer
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
+from bs4 import BeautifulSoup
 
 class MarkdownService:
     @staticmethod
@@ -47,8 +48,7 @@ class MarkdownService:
             
         # 配置 Markdown 扩展
         extensions = [
-            FencedCodeExtension(),
-            CodeHiliteExtension(css_class='highlight', guess_lang=False),
+            'markdown.extensions.fenced_code',
             'markdown.extensions.tables',
             'markdown.extensions.toc',
             'markdown.extensions.nl2br',
@@ -57,23 +57,25 @@ class MarkdownService:
             'markdown.extensions.def_list',
             'markdown.extensions.footnotes',
             'markdown.extensions.abbr',
-            'markdown.extensions.meta'
+            'markdown.extensions.meta',
+            'markdown.extensions.codehilite'
         ]
         
         # 配置扩展选项
         extension_configs = {
             'markdown.extensions.toc': {
-                'slugify': lambda value, separator: value,  # 使用原始文本作为ID
-                'permalink': True,
+                'slugify': lambda value, separator: value,  # 不做任何转换，保持原始文本
+                'permalink': False,  # 禁用自动生成的永久链接
                 'toc_depth': 3,
-                'anchorlink': True,
+                'anchorlink': False,  # 禁用自动锚点链接
                 'separator': '-'
+            },
+            'markdown.extensions.fenced_code': {
+                'lang_prefix': 'language-'
             },
             'markdown.extensions.codehilite': {
                 'css_class': 'highlight',
-                'guess_lang': False,
-                'use_pygments': True,
-                'noclasses': False
+                'guess_lang': False
             }
         }
         
@@ -85,9 +87,7 @@ class MarkdownService:
         )
         
         # 预处理内容，保护特殊字符
-        content = content.replace('&', '&amp;')
-        content = content.replace('<', '&lt;')
-        content = content.replace('>', '&gt;')
+        content = self.clean_xss(content)
         
         # 转换 Markdown 为 HTML
         html = md.convert(content)
@@ -97,59 +97,55 @@ class MarkdownService:
         if hasattr(md, 'toc_tokens'):
             toc_items = self._process_toc_tokens(md.toc_tokens)
         
+        # 修改 HTML 中的标题 ID
+        soup = BeautifulSoup(html, 'html.parser')
+        for tag in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+            # 获取标题文本
+            text = tag.get_text().strip()
+            # 设置 ID
+            tag['id'] = text
+        
+        html = str(soup)
+        
         # 配置允许的 HTML 标签和属性
         allowed_tags = [
             'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
             'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
             'strong', 'em', 'a', 'img', 'table', 'thead', 'tbody',
             'tr', 'th', 'td', 'hr', 'sup', 'sub', 'dl', 'dt', 'dd',
-            'div', 'span', 'abbr', 'acronym', 'del', 'ins'
+            'div', 'span'
         ]
         
         allowed_attributes = {
-            'a': ['href', 'title', 'id', 'class', 'rel'],
-            'img': ['src', 'alt', 'title', 'width', 'height'],
+            'a': ['href', 'title', 'rel', 'class'],
+            'img': ['src', 'alt', 'title'],
             'code': ['class'],
             'pre': ['class'],
-            'span': ['class', 'style'],
+            'span': ['class'],
             'div': ['class'],
             'p': ['class'],
-            'td': ['colspan', 'rowspan', 'align'],
-            'th': ['colspan', 'rowspan', 'align'],
-            '*': ['id', 'class', 'title']
+            'td': ['colspan', 'rowspan'],
+            'th': ['colspan', 'rowspan'],
+            'h1': ['id'],
+            'h2': ['id'],
+            'h3': ['id'],
+            'h4': ['id'],
+            'h5': ['id'],
+            'h6': ['id']
         }
 
-        # 配置允许的CSS属性
-        allowed_css_properties = [
-            'color', 'background-color', 'text-align', 'font-weight',
-            'font-style', 'text-decoration', 'margin', 'padding',
-            'border', 'width', 'height'
-        ]
-
-        # 创建CSS清理器
-        css_sanitizer = CSSSanitizer(
-            allowed_css_properties=allowed_css_properties,
-            allowed_svg_properties=[],
-        )
-
-        # 创建自定义清理器，配置更宽松的规则
+        # 创建自定义清理器
         cleaner = Cleaner(
             tags=allowed_tags,
             attributes=allowed_attributes,
             protocols=['http', 'https', 'mailto', 'tel'],
             strip=True,
             strip_comments=True,
-            filters=[LinkifyFilter],
-            css_sanitizer=css_sanitizer
+            filters=[]
         )
         
-        # 清理 HTML，但保持基本的Markdown格式
+        # 清理 HTML
         html = cleaner.clean(html)
-        
-        # 恢复特殊字符的HTML实体
-        html = html.replace('&amp;', '&')
-        html = html.replace('&lt;', '<')
-        html = html.replace('&gt;', '>')
         
         return {
             'html': html,
@@ -163,8 +159,8 @@ class MarkdownService:
             item = {
                 'level': level,
                 'text': token['name'],
-                'id': f"header-{token['id']}",  # 添加header-前缀
-                'anchor': f"header-{token['id']}"  # 添加header-前缀
+                'id': f'header-{token["name"]}',  # 添加 header- 前缀
+                'anchor': f'header-{token["name"]}'  # 添加 header- 前缀
             }
             items.append(item)
             if 'children' in token:

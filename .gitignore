@@ -32,7 +32,7 @@ env/
 *.swo
 
 # Flask
-instance/
+#instance/
 .webassets-cache
 #*.db
 

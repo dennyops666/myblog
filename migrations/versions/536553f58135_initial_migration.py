@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: a488e552d2cc
+Revision ID: 536553f58135
 Revises: 
-Create Date: 2025-02-16 12:37:35.646483
+Create Date: 2025-02-17 17:14:38.508172
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a488e552d2cc'
+revision = '536553f58135'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,6 +22,16 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
     sa.Column('description', sa.String(length=200), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
+    )
+    op.create_table('roles',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=64), nullable=False),
+    sa.Column('description', sa.String(length=256), nullable=True),
+    sa.Column('permissions', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
@@ -29,32 +39,53 @@ def upgrade():
     op.create_table('tags',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('description', sa.String(length=200), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('username', sa.String(length=50), nullable=False),
+    sa.Column('username', sa.String(length=64), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
-    sa.Column('password_hash', sa.String(length=128), nullable=False),
+    sa.Column('password_hash', sa.String(length=128), nullable=True),
+    sa.Column('avatar', sa.String(length=200), nullable=True),
+    sa.Column('bio', sa.Text(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('role_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('last_login', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
+    )
+    op.create_table('notifications',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('content', sa.String(length=500), nullable=False),
+    sa.Column('type', sa.String(length=20), nullable=False),
+    sa.Column('target_id', sa.Integer(), nullable=True),
+    sa.Column('read', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('posts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=200), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
-    sa.Column('summary', sa.String(length=500), nullable=True),
-    sa.Column('category_id', sa.Integer(), nullable=False),
+    sa.Column('html_content', sa.Text(), nullable=False),
+    sa.Column('toc', sa.Text(), nullable=False),
+    sa.Column('summary', sa.String(length=500), nullable=False),
+    sa.Column('category_id', sa.Integer(), nullable=True),
     sa.Column('author_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Integer(), nullable=True),
-    sa.Column('view_count', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.Column('status', sa.Integer(), nullable=False),
+    sa.Column('is_sticky', sa.Boolean(), nullable=False),
+    sa.Column('view_count', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -62,12 +93,13 @@ def upgrade():
     op.create_table('comments',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('html_content', sa.Text(), nullable=True),
     sa.Column('post_id', sa.Integer(), nullable=False),
     sa.Column('parent_id', sa.Integer(), nullable=True),
-    sa.Column('author_name', sa.String(length=50), nullable=False),
-    sa.Column('author_email', sa.String(length=120), nullable=False),
+    sa.Column('author_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['author_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['parent_id'], ['comments.id'], ),
     sa.ForeignKeyConstraint(['post_id'], ['posts.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -87,7 +119,9 @@ def downgrade():
     op.drop_table('post_tags')
     op.drop_table('comments')
     op.drop_table('posts')
+    op.drop_table('notifications')
     op.drop_table('users')
     op.drop_table('tags')
+    op.drop_table('roles')
     op.drop_table('categories')
     # ### end Alembic commands ###

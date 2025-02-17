@@ -5,7 +5,7 @@
 创建日期：2025-02-16
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 
 class Category(db.Model):
@@ -15,8 +15,8 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     
     # 关联关系
     posts = db.relationship('Post', back_populates='category', lazy='dynamic')

@@ -46,6 +46,7 @@ def hello():
     
     # 验证HTML内容
     assert 'id="标题1"' in post.html_content
+    assert '标题1' in post.html_content
     assert '<strong>加粗</strong>' in post.html_content
     assert '<li>列表项1</li>' in post.html_content
     assert '<code>' in post.html_content

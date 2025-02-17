@@ -2,7 +2,7 @@
 会话模型
 创建日期: 2025-02-16
 """
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 
 class Session(db.Model):
@@ -13,7 +13,7 @@ class Session(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     token = db.Column(db.String(100), unique=True, nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     
     # 关系
     user = db.relationship('User', backref=db.backref('sessions', lazy=True))

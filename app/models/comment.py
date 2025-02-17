@@ -7,7 +7,7 @@
 
 from datetime import datetime, UTC
 from app.extensions import db
-from app.utils.markdown import markdown_to_html
+from app.utils.markdown import MarkdownService
 
 class Comment(db.Model):
     """评论模型"""
@@ -26,7 +26,8 @@ class Comment(db.Model):
     post = db.relationship('Post', back_populates='comments')
     replies = db.relationship('Comment', 
                             backref=db.backref('parent', remote_side=[id]),
-                            lazy='dynamic')
+                            lazy='dynamic',
+                            cascade='all, delete-orphan')
     author = db.relationship('User', 
                            foreign_keys=[author_id],
                            back_populates='comments')
@@ -34,7 +35,8 @@ class Comment(db.Model):
     def __init__(self, **kwargs):
         super(Comment, self).__init__(**kwargs)
         if self.content:
-            result = markdown_to_html(self.content)
+            service = MarkdownService()
+            result = service.convert(self.content)
             self.html_content = result['html']
     
     def __repr__(self):

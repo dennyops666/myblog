@@ -1,13 +1,13 @@
 """
 文件名：test_comment.py
-描述：评论测试用例
+描述：评论单元测试
 作者：denny
 创建日期：2024-03-21
 """
 
 import pytest
 from app.models import Comment, Post, User, Category, Role
-from app.services.comment import CommentService
+from app.services.comment_service import CommentService
 from app.extensions import db
 
 @pytest.fixture
@@ -151,11 +151,11 @@ def test_get_comments(app_context, test_user, test_post):
     
     # 获取已审核的评论列表
     approved_comments = CommentService.get_comments_by_post(test_post.id)
-    assert len(approved_comments) == 3
+    assert len(approved_comments.items) == 3
     
     # 获取所有评论（包括待审核）
     all_comments = CommentService.get_comments_by_post(test_post.id, include_pending=True)
-    assert len(all_comments) == 4
+    assert len(all_comments.items) == 4
     
     # 获取最新评论
     recent_comments = CommentService.get_recent_comments(limit=2)

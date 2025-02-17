@@ -28,12 +28,14 @@ class TocService:
             # 生成ID
             header_id = self._generate_id(text)
             
-            toc.append({
-                'level': level,
-                'text': text,
-                'id': header_id,
-                'link': f'#{header_id}'
-            })
+            # 只添加前三级标题
+            if level <= 3:
+                toc.append({
+                    'level': level,
+                    'text': text,
+                    'id': header_id,
+                    'link': f'#{header_id}'
+                })
             
         return toc
 

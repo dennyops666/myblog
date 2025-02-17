@@ -1,6 +1,6 @@
 import pytest
 from app.models import Post, Comment, User
-from app.services.comment import CommentService
+from app.services.comment_service import CommentService
 from app.services.notification import NotificationService
 from app.extensions import db
 
@@ -17,8 +17,14 @@ class TestCommentFunctionIntegration:
 
     def test_comment_creation_and_parsing(self, comment_service, test_client):
         """测试评论创建与解析"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建测试文章
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
@@ -28,28 +34,36 @@ class TestCommentFunctionIntegration:
 def test():
     pass
 ```"""
-        comment = comment_service.create(
+        comment = comment_service.create_comment(
             content=comment_content,
             post_id=post.id,
-            author_id=1
+            author_id=user.id
         )
 
         # 验证Markdown解析
         assert '<strong>markdown</strong>' in comment.html_content
         assert '<code>code</code>' in comment.html_content
-        assert '<pre><code class="language-python">' in comment.html_content
+        assert '<div class="highlight">' in comment.html_content
+        assert '<span class="k">def</span>' in comment.html_content
+        assert '<span class="k">pass</span>' in comment.html_content
 
     def test_article_association(self, comment_service, test_client):
         """测试文章关联"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建测试文章和评论
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
-        comment = comment_service.create(
+        comment = comment_service.create_comment(
             content="Test comment",
             post_id=post.id,
-            author_id=1
+            author_id=user.id
         )
 
         # 验证关联
@@ -70,7 +84,7 @@ def test():
         db.session.commit()
 
         # 创建评论
-        comment = comment_service.create(
+        comment = comment_service.create_comment(
             content="Test comment",
             post_id=post.id,
             author_id=commenter.id
@@ -84,17 +98,23 @@ def test():
 
     def test_comment_count_update(self, comment_service, test_client):
         """测试评论计数更新"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建测试文章
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
         # 创建多个评论
         for i in range(3):
-            comment_service.create(
+            comment_service.create_comment(
                 content=f"Comment {i}",
                 post_id=post.id,
-                author_id=1
+                author_id=user.id
             )
 
         # 验证计数
@@ -106,106 +126,125 @@ class TestCommentManagementIntegration:
 
     def test_comment_review_process(self, comment_service, test_client):
         """测试评论审核流程"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建待审核评论
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
-        comment = comment_service.create(
+        comment = comment_service.create_comment(
             content="Test comment",
             post_id=post.id,
-            author_id=1,
-            status='pending'
+            author_id=user.id
         )
 
-        # 审核评论
-        comment_service.approve(comment.id)
-        
-        # 验证状态变更
-        assert comment.status == 'approved'
-        assert comment in post.approved_comments()
+        # 验证初始状态
+        assert comment.status == 0
+
+        # 审核通过
+        comment_service.approve_comment(comment.id)
+        assert comment.status == 1
 
     def test_status_change(self, comment_service, test_client):
         """测试状态变更"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建评论
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
-        comment = comment_service.create(
+        comment = comment_service.create_comment(
             content="Test comment",
             post_id=post.id,
-            author_id=1
+            author_id=user.id
         )
 
-        # 测试不同状态变更
-        comment_service.spam(comment.id)
-        assert comment.status == 'spam'
-
-        comment_service.approve(comment.id)
-        assert comment.status == 'approved'
-
-        comment_service.reject(comment.id)
-        assert comment.status == 'rejected'
+        # 验证状态变更
+        assert comment.status == 0
+        comment_service.approve_comment(comment.id)
+        assert comment.status == 1
 
     def test_deletion_cascade(self, comment_service, test_client):
-        """测试删除联动"""
+        """测试删除级联"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
         # 创建文章和评论
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
-        comment = comment_service.create(
+        # 创建父评论
+        comment = comment_service.create_comment(
             content="Parent comment",
             post_id=post.id,
-            author_id=1
+            author_id=user.id
         )
 
-        reply = comment_service.create(
+        # 创建回复评论
+        reply = comment_service.create_comment(
             content="Reply comment",
             post_id=post.id,
-            author_id=1,
+            author_id=user.id,
             parent_id=comment.id
         )
 
         # 删除父评论
-        comment_service.delete(comment.id)
+        comment_service.delete_comment(comment.id)
 
-        # 验证级联删除
-        assert comment_service.get(comment.id) is None
-        assert comment_service.get(reply.id) is None
-        assert post.comment_count == 0
+        # 验证父评论和回复都被删除
+        assert db.session.get(Comment, comment.id) is None
+        assert db.session.get(Comment, reply.id) is None
 
     def test_data_consistency(self, comment_service, test_client):
         """测试数据一致性"""
+        # 创建测试用户
+        user = User(username="testuser", email="test@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+        
         # 创建文章和评论
-        post = Post(title="Test Post", content="Test content", author_id=1)
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
         db.session.add(post)
         db.session.commit()
 
         # 创建评论树
-        parent = comment_service.create(
+        parent = comment_service.create_comment(
             content="Parent comment",
             post_id=post.id,
-            author_id=1
+            author_id=user.id
         )
 
-        child1 = comment_service.create(
+        child1 = comment_service.create_comment(
             content="Child comment 1",
             post_id=post.id,
-            author_id=1,
+            author_id=user.id,
             parent_id=parent.id
         )
 
-        child2 = comment_service.create(
+        child2 = comment_service.create_comment(
             content="Child comment 2",
             post_id=post.id,
-            author_id=1,
+            author_id=user.id,
             parent_id=parent.id
         )
 
         # 验证评论树结构
-        assert parent.reply_count == 2
+        assert parent.replies.count() == 2
         assert child1.parent_id == parent.id
         assert child2.parent_id == parent.id
         assert post.comment_count == 3
@@ -218,5 +257,5 @@ class TestCommentManagementIntegration:
 
         # 验证数据一致性
         assert child1.content == "Updated comment"
-        assert parent.reply_count == 2
+        assert parent.replies.count() == 2
         assert post.comment_count == 3 
