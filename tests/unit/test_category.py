@@ -63,8 +63,10 @@ def test_category_delete(app_context):
 def test_category_with_posts(app_context, test_category, test_post):
     """测试带有文章的分类"""
     # 验证分类下的文章
-    assert len(test_category.posts) > 0
-    assert test_post in test_category.posts
+    assert test_category.posts.count() > 0
+    # 验证文章内容
+    first_post = test_category.posts.first()
+    assert first_post.title == '测试文章'
     
     # 尝试删除带有文章的分类
     with pytest.raises(Exception):

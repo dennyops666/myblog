@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 
 class Tag(db.Model):
@@ -14,7 +14,8 @@ class Tag(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    description = db.Column(db.String(200))  # 添加描述字段
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     
     # 关联关系
     posts = db.relationship('Post', secondary='post_tags', back_populates='tags', lazy='dynamic')

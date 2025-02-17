@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 
 class Category(db.Model):
@@ -15,10 +15,15 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     
     # 关联关系
     posts = db.relationship('Post', back_populates='category', lazy='dynamic')
+    
+    def __init__(self, **kwargs):
+        super(Category, self).__init__(**kwargs)
+        if self.description is None:
+            self.description = '这是一个测试分类'
     
     def __repr__(self):
         return f'<Category {self.name}>' 

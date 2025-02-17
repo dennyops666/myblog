@@ -21,7 +21,7 @@ class PostService:
                 raise ValueError("标题和内容不能为空")
             
             # 验证分类ID
-            category = Category.query.get(category_id)
+            category = db.session.get(Category, category_id)
             if not category:
                 raise ValueError("无效的分类ID")
             
@@ -49,7 +49,7 @@ class PostService:
     @staticmethod
     def get_post_by_id(post_id):
         """根据ID获取文章"""
-        return Post.query.get(post_id)
+        return db.session.get(Post, post_id)
     
     @staticmethod
     def get_posts_by_category(category_id, page=1, per_page=10):
@@ -175,15 +175,20 @@ class PostService:
     @staticmethod
     def update_post(post, **kwargs):
         """更新文章"""
+        for key, value in kwargs.items():
+            if hasattr(post, key):
+                setattr(post, key, value)
+        
+        # 如果更新了content，重新生成HTML内容
+        if 'content' in kwargs:
+            post.update_html_content()
+        
         try:
-            for key, value in kwargs.items():
-                if hasattr(post, key):
-                    setattr(post, key, value)
             db.session.commit()
             return post
-        except IntegrityError:
+        except Exception as e:
             db.session.rollback()
-            raise ValueError("文章更新失败，请检查输入")
+            raise ValueError(f'更新文章失败：{str(e)}')
     
     @staticmethod
     def delete_post(post):

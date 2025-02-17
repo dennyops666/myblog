@@ -2,7 +2,7 @@
 文件名：user_service.py
 描述：用户服务类
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
 from app.models import User, db
@@ -27,7 +27,7 @@ class UserService:
             raise ValueError(f"{field_name}长度不能超过{max_length}个字符")
         if re.search(r'[;\'\"\\]', value):
             raise ValueError(f"{field_name}包含非法字符")
-        return value
+        return value.strip()
 
     @staticmethod
     def create_user(username, email, password):
@@ -37,22 +37,22 @@ class UserService:
         email = UserService._validate_input(email, "邮箱")
         if not password or len(password) < 6:
             raise ValueError("密码不能为空且长度必须大于6个字符")
-            
+        
         # 验证用户名和邮箱是否已存在
         if UserService.get_user_by_username(username):
             raise ValueError("用户名已存在")
         if UserService.get_user_by_email(email):
             raise ValueError("邮箱已存在")
-            
+        
         try:
             user = User(username=username, email=email)
-            user.password = password
+            user.set_password(password)
             db.session.add(user)
             db.session.commit()
             return user
-        except IntegrityError:
+        except Exception as e:
             db.session.rollback()
-            raise ValueError("用户创建失败，请检查输入")
+            raise ValueError(f"创建用户失败：{str(e)}")
     
     @staticmethod
     def get_user_by_id(user_id):
@@ -84,19 +84,13 @@ class UserService:
         """更新用户信息"""
         try:
             for key, value in kwargs.items():
-                if key == 'password':
-                    if not value or len(value) < 6:
-                        raise ValueError("密码不能为空且长度必须大于6个字符")
-                    user.password = value
-                elif key in ['username', 'email', 'status']:
-                    if key in ['username', 'email']:
-                        value = UserService._validate_input(value, key)
+                if hasattr(user, key):
                     setattr(user, key, value)
             db.session.commit()
             return user
-        except IntegrityError:
+        except Exception as e:
             db.session.rollback()
-            raise ValueError("用户更新失败，请检查输入")
+            raise ValueError(f"更新用户信息失败：{str(e)}")
     
     @staticmethod
     def delete_user(user):
@@ -106,6 +100,22 @@ class UserService:
         try:
             db.session.delete(user)
             db.session.commit()
-        except:
+        except Exception as e:
             db.session.rollback()
-            raise ValueError("用户删除失败") 
+            raise ValueError(f"删除用户失败：{str(e)}")
+    
+    @staticmethod
+    def get_user_posts(user_id):
+        """获取用户的文章列表"""
+        user = UserService.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("用户不存在")
+        return user.posts.all()
+    
+    @staticmethod
+    def get_user_comments(user_id):
+        """获取用户的评论列表"""
+        user = UserService.get_user_by_id(user_id)
+        if not user:
+            raise ValueError("用户不存在")
+        return user.comments.all() 

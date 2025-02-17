@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 from app.utils.markdown import markdown_to_html
 
@@ -30,8 +30,8 @@ class Post(db.Model):
     status = db.Column(db.Integer, default=0)  # 0: 草稿, 1: 已发布
     is_sticky = db.Column(db.Boolean, default=False)  # 是否置顶
     view_count = db.Column(db.Integer, default=0)  # 浏览次数
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     
     # 关联关系
     category = db.relationship('Category', back_populates='posts')
@@ -41,11 +41,17 @@ class Post(db.Model):
     
     def __init__(self, **kwargs):
         super(Post, self).__init__(**kwargs)
+        self.update_html_content()
+    
+    def update_html_content(self):
+        """更新HTML内容和目录"""
         if self.content:
             result = markdown_to_html(self.content)
             self.html_content = result['html']
             self.toc = result['toc']
-            # TODO: 生成摘要
+            # 生成摘要（取前200个字符）
+            text_content = ''.join(self.content.split('\n')[:3])  # 取前三行
+            self.summary = text_content[:200] + '...' if len(text_content) > 200 else text_content
     
     def __repr__(self):
         return f'<Post {self.title}>' 

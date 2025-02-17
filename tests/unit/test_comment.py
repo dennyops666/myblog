@@ -127,7 +127,7 @@ def test_comment_status(app_context, test_user, test_post):
     
     # 拒绝评论
     CommentService.reject_comment(comment.id)
-    assert Comment.query.get(comment.id) is None
+    assert db.session.get(Comment, comment.id) is None
 
 def test_get_comments(app_context, test_user, test_post):
     """测试获取评论列表"""

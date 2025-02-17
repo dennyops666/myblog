@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 from app.utils.markdown import markdown_to_html
 
@@ -20,7 +20,7 @@ class Comment(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     status = db.Column(db.Integer, default=0)  # 0: 待审核, 1: 已通过
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     
     # 关联关系
     post = db.relationship('Post', back_populates='comments')

@@ -31,18 +31,18 @@ class CommentService:
             raise ValueError('评论内容不能为空')
         
         # 验证文章是否存在
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             raise ValueError('文章不存在')
         
         # 验证用户是否存在
-        user = User.query.get(author_id)
+        user = db.session.get(User, author_id)
         if not user:
             raise ValueError('用户不存在')
         
         # 如果有父评论，验证其是否存在
         if parent_id:
-            parent_comment = Comment.query.get(parent_id)
+            parent_comment = db.session.get(Comment, parent_id)
             if not parent_comment:
                 raise ValueError('父评论不存在')
             if parent_comment.post_id != post_id:
@@ -110,7 +110,7 @@ class CommentService:
         异常：
             ValueError: 当评论不存在时抛出
         """
-        comment = Comment.query.get(comment_id)
+        comment = db.session.get(Comment, comment_id)
         if not comment:
             raise ValueError('评论不存在')
         
@@ -132,7 +132,7 @@ class CommentService:
         异常：
             ValueError: 当评论不存在时抛出
         """
-        comment = Comment.query.get(comment_id)
+        comment = db.session.get(Comment, comment_id)
         if not comment:
             raise ValueError('评论不存在')
         

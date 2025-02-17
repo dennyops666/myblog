@@ -2,7 +2,7 @@
 文件名：markdown.py
 描述：Markdown 工具函数
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
 import re
@@ -10,6 +10,9 @@ import markdown
 import bleach
 from bleach.sanitizer import Cleaner
 from bleach.linkifier import LinkifyFilter
+from bleach.css_sanitizer import CSSSanitizer
+from markdown.extensions.codehilite import CodeHiliteExtension
+from markdown.extensions.fenced_code import FencedCodeExtension
 
 def clean_href(attrs, new=False):
     """清理链接属性"""
@@ -24,48 +27,64 @@ def clean_href(attrs, new=False):
     return attrs
 
 def clean_xss(text):
-    """清理XSS相关内容"""
+    """清理XSS相关内容，但保留Markdown特殊字符"""
     if not isinstance(text, str):
         return text
+    # 只清理明确的XSS模式，保留Markdown特殊字符
     text = re.sub(r'javascript:', '', text, flags=re.IGNORECASE)
     text = re.sub(r'data:', '', text, flags=re.IGNORECASE)
     text = re.sub(r'vbscript:', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'\son\w+\s*=\s*["\'][^"\']*["\']', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'alert\s*\([^)]*\)', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\son\w+\s*=', '', text, flags=re.IGNORECASE)
     return text
 
 def markdown_to_html(content):
     """将 Markdown 转换为 HTML"""
+    if not content:
+        return {'html': '', 'toc': []}
+        
     # 配置 Markdown 扩展
     extensions = [
-        'markdown.extensions.fenced_code',  # 代码块
-        'markdown.extensions.codehilite',   # 代码高亮
-        'markdown.extensions.tables',       # 表格
-        'markdown.extensions.toc',          # 目录
-        'markdown.extensions.nl2br',        # 换行
-        'markdown.extensions.sane_lists',   # 列表
+        FencedCodeExtension(),
+        CodeHiliteExtension(css_class='highlight', guess_lang=False),
+        'markdown.extensions.tables',
+        'markdown.extensions.toc',
+        'markdown.extensions.nl2br',
+        'markdown.extensions.sane_lists',
+        'markdown.extensions.attr_list',
+        'markdown.extensions.def_list',
+        'markdown.extensions.footnotes',
+        'markdown.extensions.abbr',
+        'markdown.extensions.meta'
     ]
     
     # 配置扩展选项
     extension_configs = {
-        'markdown.extensions.codehilite': {
-            'css_class': 'highlight',
-            'guess_lang': False
-        },
         'markdown.extensions.toc': {
+            'slugify': lambda value, separator: value,  # 使用原始文本作为ID
             'permalink': True,
             'toc_depth': 3,
             'anchorlink': True,
-            'separator': '-',
-            'slugify': lambda value, separator: value  # 保持原始文本作为ID
+            'separator': '-'
+        },
+        'markdown.extensions.codehilite': {
+            'css_class': 'highlight',
+            'guess_lang': False,
+            'use_pygments': True,
+            'noclasses': False
         }
     }
     
     # 创建 Markdown 实例
     md = markdown.Markdown(
         extensions=extensions,
-        extension_configs=extension_configs
+        extension_configs=extension_configs,
+        output_format='html5'
     )
+    
+    # 预处理内容，保护特殊字符
+    content = content.replace('&', '&amp;')
+    content = content.replace('<', '&lt;')
+    content = content.replace('>', '&gt;')
     
     # 转换 Markdown 为 HTML
     html = md.convert(content)
@@ -80,31 +99,54 @@ def markdown_to_html(content):
         'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
         'ul', 'ol', 'li', 'blockquote', 'code', 'pre',
         'strong', 'em', 'a', 'img', 'table', 'thead', 'tbody',
-        'tr', 'th', 'td'
+        'tr', 'th', 'td', 'hr', 'sup', 'sub', 'dl', 'dt', 'dd',
+        'div', 'span', 'abbr', 'acronym', 'del', 'ins'
     ]
     
     allowed_attributes = {
-        'a': ['href', 'title', 'id', 'class'],
-        'img': ['src', 'alt', 'title'],
+        'a': ['href', 'title', 'id', 'class', 'rel'],
+        'img': ['src', 'alt', 'title', 'width', 'height'],
         'code': ['class'],
         'pre': ['class'],
-        '*': ['id', 'class']
+        'span': ['class', 'style'],
+        'div': ['class'],
+        'p': ['class'],
+        'td': ['colspan', 'rowspan', 'align'],
+        'th': ['colspan', 'rowspan', 'align'],
+        '*': ['id', 'class', 'title']
     }
 
-    # 创建自定义清理器
+    # 配置允许的CSS属性
+    allowed_css_properties = [
+        'color', 'background-color', 'text-align', 'font-weight',
+        'font-style', 'text-decoration', 'margin', 'padding',
+        'border', 'width', 'height'
+    ]
+
+    # 创建CSS清理器
+    css_sanitizer = CSSSanitizer(
+        allowed_css_properties=allowed_css_properties,
+        allowed_svg_properties=[],
+    )
+
+    # 创建自定义清理器，配置更宽松的规则
     cleaner = Cleaner(
         tags=allowed_tags,
         attributes=allowed_attributes,
+        protocols=['http', 'https', 'mailto', 'tel'],
         strip=True,
         strip_comments=True,
-        protocols=['http', 'https', 'mailto', 'tel']
+        filters=[LinkifyFilter],
+        css_sanitizer=css_sanitizer
     )
     
-    # 清理 HTML
+    # 清理 HTML，但保持基本的Markdown格式
     html = cleaner.clean(html)
     
-    # 进行额外的XSS清理
-    html = clean_xss(html)
+    # 恢复特殊字符的HTML实体
+    html = html.replace('&amp;', '&')
+    html = html.replace('&lt;', '<')
+    html = html.replace('&gt;', '>')
     
     return {
         'html': html,
@@ -112,22 +154,14 @@ def markdown_to_html(content):
     }
 
 def _process_toc_tokens(tokens, level=1):
-    """处理目录标记，生成扁平化的目录列表
-    
-    Args:
-        tokens: 目录标记列表
-        level: 当前目录级别
-        
-    Returns:
-        list: 扁平化的目录列表
-    """
+    """处理目录标记，生成扁平化的目录列表"""
     items = []
     for token in tokens:
         item = {
             'level': level,
             'text': token['name'],
             'id': f"header-{token['id']}",  # 添加header-前缀
-            'anchor': f"header-{token['id']}"  # 保持一致的ID格式
+            'anchor': f"header-{token['id']}"  # 添加header-前缀
         }
         items.append(item)
         if 'children' in token:

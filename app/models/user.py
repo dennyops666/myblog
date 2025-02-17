@@ -5,7 +5,7 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime
+from datetime import datetime, UTC
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import bcrypt
@@ -30,8 +30,8 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', back_populates='author', lazy='dynamic')
     
     # 时间戳
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     last_login = db.Column(db.DateTime)
     
     def __init__(self, **kwargs):
@@ -53,6 +53,10 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """验证密码"""
         return check_password_hash(self.password_hash, password)
+    
+    def verify_password(self, password):
+        """验证密码（别名方法）"""
+        return self.check_password(password)
     
     def is_admin(self):
         """检查是否是管理员"""

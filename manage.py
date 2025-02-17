@@ -92,24 +92,18 @@ def init_test_db():
                 content='测试评论1',
                 post=posts[0],
                 author_id=test_user.id,
-                author_name=test_user.username,
-                author_email=test_user.email,
                 status=1
             ),
             Comment(
                 content='测试评论2',
                 post=posts[0],
                 author_id=admin.id,
-                author_name=admin.username,
-                author_email=admin.email,
                 status=1
             ),
             Comment(
                 content='测试评论3',
                 post=posts[1],
                 author_id=admin.id,
-                author_name=admin.username,
-                author_email=admin.email,
                 status=1
             )
         ]

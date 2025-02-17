@@ -6,8 +6,9 @@
 """
 
 import pytest
-from app.models import Tag
+from app.models import Tag, User, Category
 from app.services import TagService
+from app.extensions import db
 
 def test_tag_creation(app_context):
     """测试标签创建"""
@@ -45,14 +46,14 @@ def test_tag_delete(app_context):
     """测试标签删除"""
     # 创建新标签
     tag = TagService.create_tag(name='待删除标签')
+    tag_id = tag.id
     
     # 删除标签
-    result = TagService.delete_tag(tag.id)
-    assert result is True
+    TagService.delete_tag(tag)
     
-    # 验证删除结果
-    deleted = TagService.get_tag_by_id(tag.id)
-    assert deleted is None
+    # 验证标签已被删除
+    deleted_tag = TagService.get_tag_by_id(tag_id)
+    assert deleted_tag is None
 
 def test_tag_with_posts(app_context, test_tag, test_post):
     """测试带有文章的标签"""
@@ -97,6 +98,13 @@ def test_tag_posts_pagination(app_context, test_tag):
 
 def test_tag_merge(app_context):
     """测试标签合并"""
+    # 创建测试用户和分类
+    user = User(username='test_user', email='test@example.com')
+    user.set_password('password')
+    category = Category(name='测试分类')
+    db.session.add_all([user, category])
+    db.session.commit()
+    
     # 创建源标签和目标标签
     source_tag = TagService.create_tag(name='源标签')
     target_tag = TagService.create_tag(name='目标标签')
@@ -106,14 +114,19 @@ def test_tag_merge(app_context):
     post = PostService.create_post(
         title='测试文章',
         content='测试内容',
-        category_id=1,
-        author_id=1
+        category_id=category.id,
+        author_id=user.id
     )
     post.tags.append(source_tag)
+    db.session.commit()
     
-    # 合并标签
+    # 执行标签合并
     TagService.merge_tags(source_tag.id, target_tag.id)
     
     # 验证合并结果
-    assert TagService.get_tag_by_id(source_tag.id) is None  # 源标签应被删除
-    assert post in target_tag.posts  # 文章应转移到目标标签 
+    assert source_tag.posts.count() == 0
+    assert target_tag.posts.count() == 1
+    assert post in target_tag.posts
+    
+    # 验证源标签已被删除
+    assert TagService.get_tag_by_id(source_tag.id) is None 

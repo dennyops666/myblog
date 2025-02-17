@@ -74,7 +74,7 @@ def test_user(app_context):
         username='test',
         email='test@example.com'
     )
-    user.password = 'password'
+    user.set_password('password')
     db.session.add(user)
     db.session.commit()
     return user
@@ -110,13 +110,12 @@ def test_post(app_context, test_user, test_category):
     return post
 
 @pytest.fixture
-def test_comment(app_context, test_post):
+def test_comment(app_context, test_post, test_user):
     """创建测试评论"""
     comment = Comment(
         content='这是一条测试评论',
         post_id=test_post.id,
-        author_name='测试用户',
-        author_email='test@example.com',
+        author_id=test_user.id,
         status=1
     )
     db.session.add(comment)

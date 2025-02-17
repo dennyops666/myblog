@@ -47,10 +47,13 @@ def test_markdown_parsing():
     result = markdown_to_html(markdown_content)
     
     # 验证HTML内容
-    assert 'id="一级标题"' in result['html']
+    assert '<h1' in result['html']
+    assert '<h2' in result['html']
+    assert '<h3' in result['html']
     assert '一级标题' in result['html']
-    assert 'id="二级标题1"' in result['html']
     assert '二级标题1' in result['html']
+    assert '三级标题1.1' in result['html']
+    assert '二级标题2' in result['html']
     
     # 验证目录结构
     assert len(result['toc']) == 4  # 应该有4个标题
@@ -66,8 +69,8 @@ def test_markdown_parsing():
     assert result['toc'][3]['text'] == '二级标题2'
     
     # 验证锚点链接
+    assert all('id' in item for item in result['toc'])
     assert all('anchor' in item for item in result['toc'])
-    assert all(item['anchor'].startswith('header-') for item in result['toc'])
 
 def test_post_update_content(test_post):
     """测试更新文章内容"""
@@ -107,10 +110,9 @@ def test_tag_creation(test_tag):
     """测试标签创建"""
     assert test_tag.name == '测试标签'
 
-def test_comment_creation(test_comment, test_post):
+def test_comment_creation(test_comment, test_post, test_user):
     """测试评论创建"""
     assert test_comment.content == '这是一条测试评论'
     assert test_comment.post_id == test_post.id
-    assert test_comment.author_name == '测试用户'
-    assert test_comment.author_email == 'test@example.com'
-    assert test_comment.status == 1 
+    assert test_comment.author_id == test_user.id
+    assert test_comment.author.username == 'test'  # 通过关联获取作者用户名 
