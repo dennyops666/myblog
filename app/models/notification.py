@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from app.extensions import db
 
 class Notification(db.Model):
@@ -11,7 +11,7 @@ class Notification(db.Model):
     type = db.Column(db.String(20), nullable=False)  # 通知类型：comment, reply, system等
     target_id = db.Column(db.Integer)  # 目标ID（如评论ID、文章ID等）
     read = db.Column(db.Boolean, default=False)  # 是否已读
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     # 关联
     user = db.relationship('User', backref=db.backref('notifications', lazy='dynamic'))

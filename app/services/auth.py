@@ -2,7 +2,7 @@
 文件名：auth.py
 描述：认证服务
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
 from datetime import datetime, timedelta, UTC
@@ -12,6 +12,7 @@ from app.extensions import cache
 import secrets
 from typing import Optional, Dict, Any, List
 from app.models.session import Session
+import jwt
 
 class AuthService:
     """认证服务类"""
@@ -21,6 +22,7 @@ class AuthService:
     def __init__(self):
         self.login_attempts = {}
         self.session_store = {}
+        self.secret_key = "your-secret-key"  # 在生产环境中应该使用环境变量
     
     @staticmethod
     def login(username: str, password: str) -> Dict[str, Any]:
@@ -31,78 +33,68 @@ class AuthService:
             password: 密码
             
         Returns:
-            Dict[str, Any]: 登录结果，包含以下字段：
-                - success: 是否成功
-                - message: 提示信息
-                - user: 用户对象（如果成功）
-                - token: 会话令牌（如果成功）
+            Dict: 包含token和user信息的字典
+            
+        Raises:
+            ValueError: 当登录失败时抛出
         """
+        if not username or not password:
+            raise ValueError("用户名和密码不能为空")
+
         user = User.query.filter_by(username=username).first()
-        
         if not user or not user.check_password(password):
-            return {
-                'success': False,
-                'message': '用户名或密码错误'
-            }
-        
-        # 生成会话令牌
-        token = secrets.token_urlsafe(32)
-        expires_at = datetime.now(UTC) + timedelta(seconds=AuthService.TOKEN_EXPIRY)
-        
-        # 创建会话记录
+            raise ValueError("用户名或密码错误")
+
+        # 创建新会话
         session = Session(
             user_id=user.id,
-            token=token,
-            expires_at=expires_at
+            token=AuthService._generate_token(),
+            expires_at=datetime.now(UTC) + timedelta(days=30)
         )
-        db.session.add(session)
-        
+
         # 更新用户最后登录时间
         user.last_login = datetime.now(UTC)
-        db.session.commit()
-        
-        # 缓存会话信息
-        cache_key = f'session_{token}'
-        session_data = {
-            'user_id': user.id,
-            'expires_at': expires_at
-        }
-        cache.set(cache_key, session_data, timeout=AuthService.TOKEN_EXPIRY)
-        
+
+        try:
+            db.session.add(session)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise ValueError(f"创建会话失败：{str(e)}")
+
         return {
             'success': True,
-            'message': '登录成功',
-            'user': user,
-            'token': token
+            'token': session.token,
+            'user': user
         }
     
     def create_session(self, user_id, device=None):
-        """创建会话
+        """创建新会话
         
-        参数：
+        Args:
             user_id: 用户ID
-            device: 设备标识
+            device: 设备信息（可选）
             
-        返回：
-            dict: 会话信息
+        Returns:
+            Session: 会话对象
         """
-        user = User.query.get(user_id)
-        if not user:
-            return None
-            
-        session = {
-            'id': str(user_id),
-            'token': self._generate_session_token(),
-            'device': device,
-            'created_at': datetime.now(UTC),
-            'expires_at': datetime.now(UTC) + timedelta(days=7)
-        }
+        # 生成会话令牌
+        token = self._generate_session_token()
         
-        # 存储会话信息
-        cache_key = f'session_{session["token"]}'
-        cache.set(cache_key, session, timeout=7*24*60*60)  # 7天过期
+        # 创建新会话
+        session = Session(
+            user_id=user_id,
+            token=token,
+            expires_at=datetime.now(UTC) + timedelta(days=30)  # 使用带时区的时间
+        )
         
-        return session
+        try:
+            db.session.add(session)
+            db.session.commit()
+            return session
+        except Exception as e:
+            db.session.rollback()
+            raise ValueError(f"创建会话失败：{str(e)}")
     
     @staticmethod
     def validate_session(token: str) -> bool:
@@ -116,26 +108,17 @@ class AuthService:
         """
         if not token:
             return False
-        
-        cache_key = f'session_{token}'
-        session = cache.get(cache_key)
-        
+            
+        session = Session.query.filter_by(token=token).first()
         if not session:
-            # 从数据库中查找
-            db_session = Session.query.filter_by(token=token).first()
-            if not db_session:
-                return False
-                
-            # 更新缓存
-            session = {
-                'user_id': db_session.user_id,
-                'expires_at': db_session.expires_at
-            }
-            cache.set(cache_key, session, timeout=AuthService.TOKEN_EXPIRY)
-        
-        # 检查会话是否过期
-        if datetime.now(UTC) > session['expires_at']:
-            cache.delete(cache_key)
+            return False
+            
+        # 确保使用带时区的时间进行比较
+        current_time = datetime.now(UTC)
+        if session.expires_at.replace(tzinfo=UTC) < current_time:
+            # 会话过期，删除会话
+            db.session.delete(session)
+            db.session.commit()
             return False
             
         return True
@@ -150,117 +133,94 @@ class AuthService:
         Returns:
             List[Session]: 活动会话列表
         """
-        now = datetime.now(UTC)
         return Session.query.filter(
             Session.user_id == user_id,
-            Session.expires_at > now
+            Session.expires_at > datetime.now(UTC)
         ).all()
     
     @staticmethod
     def logout(token: str) -> bool:
-        """注销会话
+        """用户登出
         
         Args:
             token: 会话令牌
             
         Returns:
-            bool: 是否成功注销
+            bool: 是否成功登出
         """
         if not token:
             return False
             
-        # 删除缓存
-        cache_key = f'session_{token}'
-        cache.delete(cache_key)
-        
-        # 删除数据库记录
         session = Session.query.filter_by(token=token).first()
         if session:
-            db.session.delete(session)
-            db.session.commit()
-            return True
-            
+            try:
+                db.session.delete(session)
+                db.session.commit()
+                return True
+            except Exception:
+                db.session.rollback()
+                return False
         return False
     
     def check_login_attempts(self, user):
         """检查登录尝试次数"""
-        if not user:
-            return True
-            
-        attempts = self.login_attempts.get(user.id, {})
-        if not attempts:
-            return True
-            
-        # 如果锁定时间未过期且尝试次数超过限制
-        if (attempts.get('locked_until') and 
-            datetime.now(UTC) < attempts['locked_until'] and 
-            attempts.get('count', 0) >= 5):
-            return False
-            
-        return True
+        key = f'login_attempts_{user.id}'
+        attempts = cache.get(key) or 0
+        return attempts
     
     def handle_failed_login(self, user):
         """处理登录失败"""
-        if not user:
-            return
-            
-        attempts = self.login_attempts.get(user.id, {'count': 0})
-        attempts['count'] = attempts.get('count', 0) + 1
+        key = f'login_attempts_{user.id}'
+        attempts = cache.get(key) or 0
+        attempts += 1
         
-        # 如果失败次数超过限制，锁定账户30分钟
-        if attempts['count'] >= 5:
-            attempts['locked_until'] = datetime.now(UTC) + timedelta(minutes=30)
-            
-        self.login_attempts[user.id] = attempts
+        # 设置缓存，5分钟后过期
+        cache.set(key, attempts, timeout=300)
+        
+        if attempts >= 5:
+            # 锁定账户
+            user.is_active = False
+            db.session.commit()
     
     def reset_login_attempts(self, user):
         """重置登录尝试次数"""
-        if not user:
-            return
-            
-        if user.id in self.login_attempts:
-            del self.login_attempts[user.id]
+        key = f'login_attempts_{user.id}'
+        cache.delete(key)
     
     def _generate_session_token(self):
         """生成会话令牌"""
         return secrets.token_urlsafe(32)
-
+    
     @staticmethod
     def validate_token(token: str) -> Optional[Dict[str, Any]]:
-        """
-        验证会话token
+        """验证JWT令牌
         
         Args:
-            token: 会话token
+            token: JWT令牌
             
         Returns:
-            Optional[Dict]: 会话信息
+            Optional[Dict]: 令牌中的数据
         """
-        # 先从缓存中获取
-        cache_key = f"session:{token}"
-        session_data = cache.get(cache_key)
-        
-        if session_data:
+        try:
+            # 解码令牌
+            session_data = jwt.decode(
+                token,
+                "your-secret-key",  # 在生产环境中应该使用环境变量
+                algorithms=["HS256"]
+            )
+            
             # 检查是否过期
-            if session_data["expires_at"] < datetime.utcnow().timestamp():
-                cache.delete(cache_key)
+            if session_data["expires_at"] < datetime.now(UTC).timestamp():
                 return None
+                
+            # 验证会话是否存在
+            session = Session.query.filter_by(token=token).first()
+            if not session or session.expires_at < datetime.now(UTC):
+                return None
+                
             return session_data
-            
-        # 缓存中没有,从数据库查询
-        session = Session.query.filter_by(token=token).first()
-        if not session or session.expires_at < datetime.utcnow():
+        except jwt.InvalidTokenError:
             return None
-            
-        # 更新缓存
-        cache_data = {
-            "user_id": session.user_id,
-            "username": session.user.username,
-            "expires_at": session.expires_at.timestamp()
-        }
-        cache.set(cache_key, cache_data, timeout=AuthService.TOKEN_EXPIRY)
-        
-        return cache_data
     
     @staticmethod
     def has_permission(user_id, permission):
@@ -273,12 +233,13 @@ class AuthService:
         Returns:
             bool: 是否有权限
         """
-        user = db.session.get(User, user_id)
+        user = User.query.get(user_id)
         if not user or not user.role:
             return False
+            
         return permission in user.role.permissions
-
+    
     @staticmethod
     def _generate_token() -> str:
-        """生成随机token"""
+        """生成随机令牌"""
         return secrets.token_urlsafe(32) 

@@ -30,9 +30,9 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', back_populates='author', lazy='dynamic')
     
     # 时间戳
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
-    last_login = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    last_login = db.Column(db.DateTime(timezone=True))
     
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
