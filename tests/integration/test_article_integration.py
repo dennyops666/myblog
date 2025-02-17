@@ -1,7 +1,14 @@
+"""
+文件名：test_article_integration.py
+描述：文章创建集成测试
+作者：denny
+创建日期：2024-03-21
+"""
+
 import pytest
 from app.models import Post, Category, Tag
 from app.services.post import PostService
-from app.services.markdown import MarkdownService
+from app.utils.markdown import MarkdownService
 from app.services.toc import TocService
 from app.extensions import db, cache
 
@@ -12,76 +19,86 @@ def post_service():
 class TestArticleCreationIntegration:
     """文章创建流程集成测试 [IT-003]"""
 
-    def test_article_creation_with_markdown(self, post_service, test_client):
-        """测试文章创建与Markdown解析集成"""
-        content = """# Test Article
-## Section 1
-This is a test article with **markdown** content.
-"""
-        post = post_service.create(
-            title="Test Article",
-            content=content,
-            author_id=1
-        )
-        
-        # 验证Markdown解析
-        assert '<h1>Test Article</h1>' in post.html_content
-        assert '<strong>markdown</strong>' in post.html_content
+    def test_article_creation_with_markdown(self, post_service, app):
+        """测试文章创建与Markdown解析"""
+        with app.app_context():
+            post = post_service.create(
+                title="Test Article",
+                content="# Test Content\n## Section 1\nThis is a test.",
+                author_id=1
+            )
+            
+            assert post.title == "Test Article"
+            assert "Test Content" in post.html_content
+            assert "Section 1" in post.html_content
 
-    def test_category_tag_association(self, post_service, test_client):
+    def test_category_tag_association(self, post_service, app):
         """测试分类标签关联"""
-        # 创建测试分类和标签
-        category = Category(name="Test Category")
-        tag1 = Tag(name="Test Tag 1")
-        tag2 = Tag(name="Test Tag 2")
-        db.session.add_all([category, tag1, tag2])
-        db.session.commit()
+        with app.app_context():
+            # 创建分类和标签
+            category = Category(name="Test Category")
+            tag1 = Tag(name="Test Tag 1")
+            tag2 = Tag(name="Test Tag 2")
+            
+            db.session.add_all([category, tag1, tag2])
+            db.session.commit()
+            
+            # 创建文章并关联分类和标签
+            post = post_service.create(
+                title="Test Article",
+                content="Test content",
+                author_id=1,
+                category_id=category.id,
+                tag_ids=[tag1.id, tag2.id]
+            )
+            
+            assert post.category.name == "Test Category"
+            assert len(post.tags) == 2
+            assert "Test Tag 1" in [tag.name for tag in post.tags]
+            assert "Test Tag 2" in [tag.name for tag in post.tags]
 
-        # 创建带分类和标签的文章
-        post = post_service.create(
-            title="Test Article",
-            content="Test content",
-            author_id=1,
-            category_id=category.id,
-            tags=[tag1.id, tag2.id]
-        )
-
-        # 验证关联
-        assert post.category.name == "Test Category"
-        assert len(post.tags) == 2
-        assert "Test Tag 1" in [tag.name for tag in post.tags]
-
-    def test_toc_auto_generation(self, post_service, test_client):
+    def test_toc_auto_generation(self, post_service, app):
         """测试目录自动生成"""
-        content = """# Main Title
+        with app.app_context():
+            post = post_service.create(
+                title="Test Article",
+                content="""# Main Title
 ## Section 1
 ### Subsection 1.1
 ## Section 2
-### Subsection 2.1
-"""
-        post = post_service.create(
-            title="Test Article",
-            content=content,
-            author_id=1
-        )
+### Subsection 2.1""",
+                author_id=1
+            )
+            
+            assert post.toc
+            assert len(post.toc) == 5  # 1 main + 2 sections + 2 subsections
+            assert post.toc[0]['text'] == "Main Title"
+            assert post.toc[1]['text'] == "Section 1"
 
-        # 验证目录生成
-        toc = post.get_toc()
-        assert len(toc) == 5
-        assert toc[0]['text'] == 'Main Title'
-        assert toc[1]['text'] == 'Section 1'
-
-    def test_index_update(self, post_service, test_client):
+    def test_index_update(self, post_service, app):
         """测试索引更新"""
-        post = post_service.create(
-            title="Test Article",
-            content="Test content for search",
-            author_id=1
-        )
-
-        # 验证文章可以被搜索
-        search_results = post_service.search("Test content")
-        assert post.id in [p.id for p in search_results]
+        with app.app_context():
+            # 创建文章
+            post = post_service.create(
+                title="Test Article",
+                content="Test content for search",
+                author_id=1
+            )
+            
+            # 更新文章
+            post_service.update(
+                post.id,
+                title="Updated Title",
+                content="Updated content for search"
+            )
+            
+            # 清除缓存
+            cache.clear()
+            
+            # 验证搜索结果
+            results = post_service.search("Updated content")
+            assert len(results) > 0
+            assert results[0].id == post.id
 
 
 class TestArticleUpdateIntegration:

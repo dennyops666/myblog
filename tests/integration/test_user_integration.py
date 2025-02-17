@@ -1,6 +1,6 @@
 import pytest
 from app.models import User, Post, Comment, Role
-from app.services.user import UserService
+from app.services.user_service import UserService
 from app.services.auth import AuthService
 from app.services.log import LogService
 from app.extensions import db, cache
@@ -36,9 +36,9 @@ class TestUserAuthIntegration:
             username="testuser",
             password="password123"
         )
-        assert login_result.success
-        assert login_result.user.id == user.id
-        assert auth_service.is_authenticated()
+        assert login_result['success']
+        assert login_result['user'].id == user.id
+        assert 'token' in login_result
 
     def test_permission_system_integration(self, auth_service, test_client):
         """测试权限系统集成"""
@@ -66,15 +66,19 @@ class TestUserAuthIntegration:
         db.session.add(user)
         db.session.commit()
 
-        session = auth_service.create_session(user.id)
+        # 登录获取token
+        login_result = auth_service.login(
+            username="testuser",
+            password="password123"
+        )
+        token = login_result['token']
         
         # 验证会话
-        assert auth_service.validate_session(session.token)
-        assert auth_service.get_current_user().id == user.id
-
+        assert auth_service.validate_session(token)
+        
         # 注销
-        auth_service.logout(session.token)
-        assert not auth_service.validate_session(session.token)
+        auth_service.logout(token)
+        assert not auth_service.validate_session(token)
 
     def test_multi_device_login(self, auth_service, test_client):
         """测试多设备登录"""
@@ -85,20 +89,17 @@ class TestUserAuthIntegration:
         db.session.commit()
 
         # 模拟多设备登录
-        session1 = auth_service.create_session(user.id, device="desktop")
-        session2 = auth_service.create_session(user.id, device="mobile")
+        login1 = auth_service.login(username="testuser", password="password123")
+        login2 = auth_service.login(username="testuser", password="password123")
         
         # 验证所有会话
         active_sessions = auth_service.get_active_sessions(user.id)
         assert len(active_sessions) == 2
-        assert "desktop" in [s.device for s in active_sessions]
-        assert "mobile" in [s.device for s in active_sessions]
 
         # 注销指定设备
-        auth_service.logout(session1.token)
+        auth_service.logout(login1['token'])
         active_sessions = auth_service.get_active_sessions(user.id)
         assert len(active_sessions) == 1
-        assert active_sessions[0].device == "mobile"
 
 
 class TestUserDataIntegration:

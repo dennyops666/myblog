@@ -10,161 +10,132 @@ from app.services import PostService, CommentService, CategoryService, TagServic
 from app.forms import CommentForm
 from sqlalchemy import or_
 from app.models import Post
-from app.utils.markdown import clean_xss
+from app.utils.markdown import MarkdownService
 from . import blog_bp
+
+# 创建服务实例
+markdown_service = MarkdownService()
+post_service = PostService()
+comment_service = CommentService()
+category_service = CategoryService()
+tag_service = TagService()
 
 @blog_bp.route('/')
 def index():
     """博客首页"""
     page = request.args.get('page', 1, type=int)
-    sticky_posts = PostService.get_sticky_posts()
-    posts = PostService.get_posts_by_page(page)
-    categories = CategoryService.get_all_categories()
-    tags = TagService.get_all_tags()
-    recent_comments = CommentService.get_recent_comments()
-    archives = PostService.get_archives()
+    per_page = 10
+    
+    # 获取文章列表
+    pagination = post_service.get_post_list(page, per_page)
+    posts = pagination.items
+    
+    # 获取分类和标签
+    categories = category_service.get_all_categories()
+    tags = tag_service.get_all_tags()
     
     return render_template('blog/index.html',
-                         sticky_posts=sticky_posts,
                          posts=posts,
+                         pagination=pagination,
                          categories=categories,
-                         tags=tags,
-                         recent_comments=recent_comments,
-                         archives=archives)
+                         tags=tags)
 
 @blog_bp.route('/post/<int:post_id>')
 def post(post_id):
     """文章详情页"""
-    post = PostService.get_post_by_id(post_id)
-    if not post or post.status != 1:
+    post = post_service.get_post_by_id(post_id)
+    if not post:
         abort(404)
-        
-    # 获取评论
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    comments = CommentService.get_comments_by_post(post.id, page, per_page)
     
-    # 获取相关文章
-    related_posts = PostService.get_related_posts(post)
+    # 增加阅读次数
+    post_service.increment_views(post_id)
+    
+    # 获取评论
+    comments = comment_service.get_comments_by_post_id(post_id)
+    
+    # 评论表单
+    form = CommentForm()
     
     return render_template('blog/post.html',
                          post=post,
-                         comments=comments.items,
-                         comment_count=comments.total,
-                         pagination=comments,
-                         related_posts=related_posts)
+                         comments=comments,
+                         form=form)
 
 @blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
 def comment(post_id):
-    """提交评论"""
-    post = PostService.get_post_by_id(post_id)
-    if not post or post.status != 1:
-        abort(404)
-        
+    """添加评论"""
     form = CommentForm()
     if form.validate_on_submit():
-        try:
-            # 清理XSS
-            author_name = clean_xss(form.author_name.data)
-            content = clean_xss(form.content.data)
-            
-            comment = CommentService.create_comment(
-                post_id=post.id,
-                author_name=author_name,
-                author_email=form.author_email.data,
-                content=content
-            )
-            
-            flash('评论提交成功，等待审核', 'success')
-            return redirect(url_for('blog.post', post_id=post.id))
-        except ValueError as e:
-            flash(str(e), 'danger')
-        except Exception as e:
-            flash('评论提交失败，请稍后重试', 'danger')
-            
-    return redirect(url_for('blog.post', post_id=post.id))
-
-@blog_bp.route('/archive')
-def archive():
-    """归档页面"""
-    archive_type = request.args.get('type', 'time')  # 默认按时间线展示
-    category_id = request.args.get('category_id', type=int)
-    tag_id = request.args.get('tag_id', type=int)
-    year = request.args.get('year', type=int)
-    month = request.args.get('month', type=int)
-    page = request.args.get('page', 1, type=int)
-    
-    if archive_type == 'category' and category_id:
-        # 按分类展示
-        category = CategoryService.get_category_by_id(category_id)
-        if not category:
-            flash('分类不存在', 'danger')
-            return redirect(url_for('blog.archive'))
-        posts = PostService.get_posts_by_category(category_id, page)
-        template = 'blog/archive_category.html'
-        title = f'分类：{category.name}'
-        data = {'category': category, 'posts': posts}
-    elif archive_type == 'tag' and tag_id:
-        # 按标签展示
-        tag = TagService.get_tag_by_id(tag_id)
-        if not tag:
-            flash('标签不存在', 'danger')
-            return redirect(url_for('blog.archive'))
-        posts = PostService.get_posts_by_tag(tag_id, page)
-        template = 'blog/archive_tag.html'
-        title = f'标签：{tag.name}'
-        data = {'tag': tag, 'posts': posts}
-    else:
-        # 按时间线展示
-        archives = PostService.get_archives()
-        if year and month:
-            # 展示特定年月的文章
-            posts = PostService.get_posts_by_time(year, month, page)
-            title = f'{year}年{month}月'
+        content = markdown_service.clean_xss(form.content.data)
+        parent_id = form.parent_id.data
+        
+        # 创建评论
+        comment = comment_service.create_comment(
+            content=content,
+            post_id=post_id,
+            author_id=current_user.id,
+            parent_id=parent_id if parent_id else None
+        )
+        
+        if comment:
+            flash('评论发表成功！', 'success')
         else:
-            # 展示所有文章的时间线
-            posts = None
-            title = '文章归档'
-        template = 'blog/archive_time.html'
-        data = {'archives': archives, 'posts': posts, 'year': year, 'month': month}
+            flash('评论发表失败！', 'danger')
+            
+    return redirect(url_for('blog.post', post_id=post_id))
+
+@blog_bp.route('/category/<int:category_id>')
+def category(category_id):
+    """分类页面"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
-    return render_template(template, title=title, **data)
+    # 获取分类下的文章
+    pagination = post_service.get_posts_by_category(category_id, page, per_page)
+    posts = pagination.items
+    
+    # 获取分类信息
+    category = category_service.get_category_by_id(category_id)
+    if not category:
+        abort(404)
+    
+    return render_template('blog/category.html',
+                         category=category,
+                         posts=posts,
+                         pagination=pagination)
 
-@blog_bp.route('/about')
-def about():
-    """关于页面"""
-    return render_template('blog/about.html')
-
-@blog_bp.route('/categories')
-def categories():
-    """分类列表页面"""
-    categories = CategoryService.get_all_categories()
-    return render_template('blog/categories.html', categories=categories)
-
-@blog_bp.route('/tags')
-def tags():
-    """标签列表页面"""
-    tags = TagService.get_all_tags()
-    return render_template('blog/tags.html', tags=tags)
+@blog_bp.route('/tag/<int:tag_id>')
+def tag(tag_id):
+    """标签页面"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # 获取标签下的文章
+    pagination = post_service.get_posts_by_tag(tag_id, page, per_page)
+    posts = pagination.items
+    
+    # 获取标签信息
+    tag = tag_service.get_tag_by_id(tag_id)
+    if not tag:
+        abort(404)
+    
+    return render_template('blog/tag.html',
+                         tag=tag,
+                         posts=posts,
+                         pagination=pagination)
 
 @blog_bp.route('/search')
 def search():
     """搜索页面"""
-    query = request.args.get('q', '').strip()
+    query = request.args.get('q', '')
     page = request.args.get('page', 1, type=int)
     per_page = 10
     
     if not query:
         return redirect(url_for('blog.index'))
     
-    # 使用 SQLAlchemy 的 or_ 进行多字段搜索
-    search_query = or_(
-        Post.title.ilike(f'%{query}%'),
-        Post.content.ilike(f'%{query}%')
-    )
-    
-    # 获取搜索结果
-    pagination = PostService.search_posts(search_query, page, per_page)
+    # 搜索文章
+    pagination = post_service.search_posts(query, page, per_page)
     posts = pagination.items
     
     return render_template('blog/search.html',

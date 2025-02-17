@@ -11,6 +11,7 @@ from datetime import timedelta
 import pytest
 from app import create_app, db
 from app.models import User, Post, Category, Tag, Comment
+from app.extensions import cache
 
 @pytest.fixture
 def app():
@@ -29,10 +30,17 @@ def app():
         SESSION_COOKIE_SECURE = True
         SESSION_COOKIE_HTTPONLY = True
         SESSION_COOKIE_SAMESITE = 'Lax'
+        
+        # 缓存配置
+        CACHE_TYPE = 'SimpleCache'
+        CACHE_DEFAULT_TIMEOUT = 300
     
     # 创建应用实例
     app = create_app('testing')
     app.config.from_object(TestConfig)
+    
+    # 初始化缓存
+    cache.init_app(app)
     
     # 确保在测试环境中使用测试数据库
     with app.app_context():
@@ -141,4 +149,9 @@ def auth(client):
         def logout(self):
             return self._client.get('/auth/logout', follow_redirects=True)
     
-    return AuthActions(client) 
+    return AuthActions(client)
+
+@pytest.fixture
+def test_client(app):
+    """创建测试客户端"""
+    return app.test_client() 

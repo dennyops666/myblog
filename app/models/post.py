@@ -8,6 +8,7 @@
 from datetime import datetime, UTC
 from app.extensions import db
 from app.utils.markdown import markdown_to_html
+import json
 
 # 文章标签关联表
 post_tags = db.Table('post_tags',
@@ -22,22 +23,22 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    html_content = db.Column(db.Text)  # 存储解析后的HTML内容
-    toc = db.Column(db.JSON)  # 存储目录结构
-    summary = db.Column(db.Text)  # 文章摘要
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    html_content = db.Column(db.Text, nullable=False)
+    _toc = db.Column('toc', db.Text, nullable=False, default='[]')
+    summary = db.Column(db.String(500), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)  # 允许为空
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    status = db.Column(db.Integer, default=0)  # 0: 草稿, 1: 已发布
-    is_sticky = db.Column(db.Boolean, default=False)  # 是否置顶
-    view_count = db.Column(db.Integer, default=0)  # 浏览次数
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    status = db.Column(db.Integer, nullable=False, default=0)  # 0: 草稿, 1: 已发布
+    is_sticky = db.Column(db.Boolean, nullable=False, default=False)
+    view_count = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # 关联关系
     category = db.relationship('Category', back_populates='posts')
     author = db.relationship('User', back_populates='posts')
-    comments = db.relationship('Comment', back_populates='post', lazy='dynamic')
-    tags = db.relationship('Tag', secondary=post_tags, back_populates='posts')
+    comments = db.relationship('Comment', back_populates='post', lazy='dynamic', cascade='all, delete-orphan')
+    tags = db.relationship('Tag', secondary='post_tags', back_populates='posts')
     
     def __init__(self, **kwargs):
         super(Post, self).__init__(**kwargs)
@@ -52,6 +53,16 @@ class Post(db.Model):
             # 生成摘要（取前200个字符）
             text_content = ''.join(self.content.split('\n')[:3])  # 取前三行
             self.summary = text_content[:200] + '...' if len(text_content) > 200 else text_content
+    
+    @property
+    def toc(self):
+        """获取目录结构"""
+        return json.loads(self._toc)
+        
+    @toc.setter
+    def toc(self, value):
+        """设置目录结构"""
+        self._toc = json.dumps(value)
     
     def __repr__(self):
         return f'<Post {self.title}>' 
