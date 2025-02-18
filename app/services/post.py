@@ -314,7 +314,7 @@ class PostService:
     @staticmethod
     def get_post_images(post_id: int) -> List[str]:
         """获取文章关联的图片列表"""
-        post = Post.query.get(post_id)
+        post = db.session.get(Post, post_id)
         if not post:
             return []
             

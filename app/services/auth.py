@@ -233,7 +233,7 @@ class AuthService:
         Returns:
             bool: 是否有权限
         """
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user or not user.role:
             return False
             
