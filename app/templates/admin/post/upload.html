@@ -1,0 +1,81 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}上传图片{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">上传图片</h5>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">选择图片</label>
+                            <input type="file" class="form-control" id="file" name="file" accept="image/*" required>
+                            <small class="text-muted">支持的格式：PNG、JPG、JPEG、GIF、WEBP，最大尺寸：16MB</small>
+                        </div>
+                        <div class="mb-3">
+                            <div id="preview" class="d-none">
+                                <img id="previewImage" src="" alt="预览" class="img-fluid mb-2">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">上传</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('preview').classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    
+    fetch('/admin/upload', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-Token': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('上传失败：' + data.error);
+        } else {
+            // 将图片URL插入到编辑器
+            window.parent.postMessage({
+                type: 'imageUploaded',
+                url: data.url
+            }, '*');
+        }
+    })
+    .catch(error => {
+        console.error('上传失败:', error);
+        alert('上传失败，请重试');
+    });
+});
+</script>
+{% endblock %} 

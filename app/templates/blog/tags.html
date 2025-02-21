@@ -1,0 +1,41 @@
+{% extends "blog/layout.html" %}
+
+{% block title %}标签 - MyBlog{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">标签列表</h1>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if tags %}
+                        <div class="tag-cloud">
+                            {% for tag in tags %}
+                                <a href="{{ url_for('blog.tag', tag_id=tag.id) }}" 
+                                   class="btn btn-outline-primary m-1">
+                                    {{ tag.name }}
+                                    <span class="badge bg-secondary">{{ tag.posts|length }}</span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">暂无标签</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+</style>
+{% endblock %} 

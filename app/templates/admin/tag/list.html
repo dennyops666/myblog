@@ -6,14 +6,9 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">标签管理</h1>
-        <div>
-            <a href="{{ url_for('admin.merge_tags') }}" class="btn btn-warning">
-                <i class="fas fa-object-group"></i> 合并标签
-            </a>
-            <a href="{{ url_for('admin.create_tag') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> 新建标签
-            </a>
-        </div>
+        <a href="{{ url_for('admin.create_tag') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新建标签
+        </a>
     </div>
 
     <div class="card">
@@ -24,6 +19,7 @@
                         <tr>
                             <th>ID</th>
                             <th>名称</th>
+                            <th>别名</th>
                             <th>文章数量</th>
                             <th>创建时间</th>
                             <th>操作</th>
@@ -34,13 +30,15 @@
                         <tr>
                             <td>{{ tag.id }}</td>
                             <td>{{ tag.name }}</td>
-                            <td>{{ tag.posts|length }}</td>
+                            <td>{{ tag.slug }}</td>
+                            <td>{{ tag.post_count }}</td>
                             <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
-                                <a href="{{ url_for('admin.rename_tag', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i> 重命名
+                                <a href="{{ url_for('admin.edit_tag', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 <form action="{{ url_for('admin.delete_tag', tag_id=tag.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个标签吗？')">
                                         <i class="fas fa-trash"></i> 删除
                                     </button>
@@ -49,12 +47,40 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" class="text-center">暂无标签</td>
+                            <td colspan="6" class="text-center">暂无标签</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.tags', page=pagination.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in range(1, pagination.pages + 1) %}
+                    <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.tags', page=page) }}">{{ page }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.tags', page=pagination.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>

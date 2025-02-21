@@ -5,8 +5,8 @@
 创建日期：2025-02-16
 """
 
-from flask import render_template
-from flask_login import login_required
+from flask import render_template, redirect, url_for
+from flask_login import login_required, logout_user
 from app.services import PostService, CategoryService, CommentService
 from . import admin_bp
 
@@ -24,4 +24,11 @@ def index():
                          total_posts=total_posts,
                          total_categories=total_categories,
                          pending_comments=pending_comments,
-                         recent_posts=recent_posts) 
+                         recent_posts=recent_posts)
+
+@admin_bp.route('/logout', methods=['POST'])
+@login_required
+def logout():
+    """退出登录"""
+    logout_user()
+    return redirect(url_for('admin.index')) 

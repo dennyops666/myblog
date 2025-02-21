@@ -1,0 +1,120 @@
+{% extends "blog/layout.html" %}
+
+{% block title %}分类列表 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">分类列表</h1>
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            {% for category in categories %}
+                            <div class="col">
+                                <div class="card h-100 category-card">
+                                    <div class="card-body">
+                                        <h2 class="card-title h5">
+                                            <a href="{{ url_for('blog.category', category_id=category.id) }}" 
+                                               class="text-decoration-none">
+                                                {{ category.name }}
+                                                <small class="text-muted">({{ category.posts|length }})</small>
+                                            </a>
+                                        </h2>
+                                        {% if category.description %}
+                                        <p class="card-text text-muted small">{{ category.description }}</p>
+                                        {% endif %}
+                                        
+                                        <!-- 最新文章预览 -->
+                                        {% if category.posts %}
+                                        <div class="list-group list-group-flush mt-3">
+                                            {% for post in category.posts[:3] %}
+                                            <a href="{{ url_for('blog.post', post_id=post.id) }}" 
+                                               class="list-group-item list-group-item-action px-0">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                    <h6 class="mb-1">{{ post.title }}</h6>
+                                                    <small class="text-muted">{{ post.created_at.strftime('%m-%d') }}</small>
+                                                </div>
+                                            </a>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer bg-transparent">
+                                        <a href="{{ url_for('blog.category', category_id=category.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            查看全部
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            暂无分类
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 分类统计 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">分类统计</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        共有 <strong>{{ categories|length }}</strong> 个分类，
+                        包含 <strong>{{ categories|sum(attribute='posts|length') }}</strong> 篇文章
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 热门分类 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">热门分类</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for category in categories|sort(attribute='posts|length', reverse=True)[:5] %}
+                        <a href="{{ url_for('blog.category', category_id=category.id) }}" 
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ category.name }}
+                            <span class="badge bg-primary rounded-pill">{{ category.posts|length }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.category-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.list-group-item-action:hover {
+    transform: translateX(5px);
+    transition: transform 0.3s ease;
+}
+</style>
+{% endblock %} 

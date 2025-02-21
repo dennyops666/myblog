@@ -1,17 +1,24 @@
 """
 文件名：__init__.py
-描述：数据模型包初始化
+描述：模型初始化
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
 from app.extensions import db
-from .user import User
-from .post import Post
-from .category import Category
-from .tag import Tag
-from .comment import Comment
-from .role import Role
-from .notification import Notification
+from app.models.user import User
+from app.models.role import Role
+from app.models.post import Post
+from app.models.comment import Comment
+from app.models.category import Category
+from app.models.tag import Tag
 
-__all__ = ['db', 'User', 'Post', 'Category', 'Tag', 'Comment', 'Role', 'Notification']
+__all__ = [
+    'db',
+    'User',
+    'Role',
+    'Post',
+    'Comment',
+    'Category',
+    'Tag'
+]

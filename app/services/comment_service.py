@@ -2,10 +2,12 @@
 文件名：comment_service.py
 描述：评论服务类
 作者：denny
-创建日期：2025-02-16
+创建日期：2024-03-21
 """
 
-from app.models import Comment, Post, User, db
+from app.models import Comment, Post, User
+from app.extensions import db
+from sqlalchemy.exc import IntegrityError
 from app.utils.markdown import markdown_to_html
 
 class CommentService:

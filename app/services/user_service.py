@@ -5,7 +5,8 @@
 创建日期：2025-02-16
 """
 
-from app.models import User, db
+from app.models import User
+from app.extensions import db
 from sqlalchemy.exc import IntegrityError
 import re
 

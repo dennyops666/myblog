@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}401 错误 - MyBlog{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 text-danger">401</h1>
+            <h2 class="mb-4">未授权访问</h2>
+            <p class="lead mb-4">{{ message }}</p>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">登录</a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

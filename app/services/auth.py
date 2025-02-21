@@ -6,240 +6,304 @@
 """
 
 from datetime import datetime, timedelta, UTC
-from flask_login import login_user, logout_user, current_user
-from app.models import User, db
-from app.extensions import cache
-import secrets
-from typing import Optional, Dict, Any, List
+from flask import current_app, session, request
+from flask_login import login_user, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.user import User
 from app.models.session import Session
-import jwt
+from app.models.role import Role
+from app.extensions import db
+from app.utils.security import generate_token, verify_token
+from app.services.security import SecurityService
+from app.services.user import UserService
+import secrets
 
 class AuthService:
     """认证服务类"""
     
-    TOKEN_EXPIRY = 30 * 24 * 60 * 60  # 30天
-    
     def __init__(self):
-        self.login_attempts = {}
-        self.session_store = {}
-        self.secret_key = "your-secret-key"  # 在生产环境中应该使用环境变量
-    
-    @staticmethod
-    def login(username: str, password: str) -> Dict[str, Any]:
+        self.security_service = SecurityService()
+        self.user_service = UserService()
+        self.max_login_attempts = 5
+        self.lockout_duration = 30  # 锁定时间（分钟）
+        self._failed_attempts = {}
+
+    def register(self, username, email, password):
+        """用户注册
+        
+        Args:
+            username: 用户名
+            email: 邮箱
+            password: 密码
+            
+        Returns:
+            dict: 包含状态和消息的字典
+        """
+        try:
+            # 清理和验证输入
+            username = self.security_service.sanitize_input(username)
+            email = self.security_service.sanitize_input(email)
+            
+            # 检查用户名是否已存在
+            if User.query.filter_by(username=username).first():
+                return {'status': 'error', 'message': '用户名已存在'}
+            
+            # 检查邮箱是否已存在
+            if User.query.filter_by(email=email).first():
+                return {'status': 'error', 'message': '邮箱已被注册'}
+            
+            # 检查密码强度
+            if not self.security_service.check_password_strength(password):
+                return {'status': 'error', 'message': '密码不符合安全要求'}
+            
+            # 创建新用户
+            user = User(username=username, email=email)
+            user.set_password(password)
+            
+            # 设置默认角色
+            default_role = Role.query.filter_by(name='user').first()
+            if default_role:
+                user.roles.append(default_role)
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            return {'status': 'success', 'message': '注册成功', 'user': user}
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"用户注册失败: {str(e)}")
+            return {'status': 'error', 'message': '注册失败，请稍后重试'}
+
+    def login(self, username, password, remember=False):
         """用户登录
         
         Args:
             username: 用户名
             password: 密码
+            remember: 是否记住登录状态
             
         Returns:
-            Dict: 包含token和user信息的字典
-            
-        Raises:
-            ValueError: 当登录失败时抛出
+            dict: 包含登录结果的字典
         """
-        if not username or not password:
-            raise ValueError("用户名和密码不能为空")
-
-        user = User.query.filter_by(username=username).first()
-        if not user or not user.check_password(password):
-            raise ValueError("用户名或密码错误")
-
-        # 创建新会话
-        session = Session(
-            user_id=user.id,
-            token=AuthService._generate_token(),
-            expires_at=datetime.now(UTC) + timedelta(days=30)
-        )
-
-        # 更新用户最后登录时间
-        user.last_login = datetime.now(UTC)
-
         try:
-            db.session.add(session)
+            # 清理和验证输入
+            username = self.security_service.sanitize_input(username)
+            if not username or not password:
+                return {'success': False, 'message': '用户名和密码不能为空'}
+                
+            # 检查账户锁定状态
+            if self._is_account_locked(username):
+                return {'success': False, 'message': '账户已被锁定，请稍后再试'}
+                
+            # 获取用户
+            user = self.user_service.get_user_by_username(username)
+            if not user:
+                self._record_failed_attempt(username)
+                return {'success': False, 'message': '用户名或密码错误'}
+                
+            # 验证密码
+            if not user.verify_password(password):
+                self._record_failed_attempt(username)
+                return {'success': False, 'message': '用户名或密码错误'}
+                
+            # 检查密码强度
+            if not self.security_service.check_password_strength(password):
+                return {'success': False, 'message': '密码不符合安全要求，请修改密码'}
+                
+            # 重置失败尝试次数
+            self._clear_failed_attempts(username)
+            
+            # 更新用户状态
+            user.last_login = datetime.now(UTC)
+            user.last_seen = datetime.now(UTC)
+            
+            # 初始化会话
+            session.clear()  # 清除现有会话
+            session['user_id'] = user.id
+            session['_fresh'] = True
+            session['_permanent'] = True
+            session.permanent = True
+            
+            # 生成新的CSRF令牌
+            csrf_token = secrets.token_urlsafe(32)
+            session['csrf_token'] = csrf_token
+            
+            # 记录会话信息
+            session['last_active'] = datetime.now(UTC).isoformat()
+            session['user_agent'] = request.user_agent.string if request else None
+            session.modified = True
+            
+            # 登录用户
+            login_user(user, remember=remember, fresh=True)
+            
             db.session.commit()
+            
+            return {
+                'success': True,
+                'message': '登录成功',
+                'user': user,
+                'csrf_token': csrf_token
+            }
+            
         except Exception as e:
             db.session.rollback()
-            raise ValueError(f"创建会话失败：{str(e)}")
+            current_app.logger.error(f"登录失败: {str(e)}")
+            return {'success': False, 'message': '登录过程中发生错误'}
 
-        return {
-            'success': True,
-            'token': session.token,
-            'user': user
-        }
-    
-    def create_session(self, user_id, device=None):
-        """创建新会话
-        
-        Args:
-            user_id: 用户ID
-            device: 设备信息（可选）
-            
-        Returns:
-            Session: 会话对象
-        """
-        # 生成会话令牌
-        token = self._generate_session_token()
-        
-        # 创建新会话
-        session = Session(
-            user_id=user_id,
-            token=token,
-            expires_at=datetime.now(UTC) + timedelta(days=30)  # 使用带时区的时间
-        )
-        
-        try:
-            db.session.add(session)
-            db.session.commit()
-            return session
-        except Exception as e:
-            db.session.rollback()
-            raise ValueError(f"创建会话失败：{str(e)}")
-    
-    @staticmethod
-    def validate_session(token: str) -> bool:
-        """验证会话
-        
-        Args:
-            token: 会话令牌
-            
-        Returns:
-            bool: 会话是否有效
-        """
-        if not token:
-            return False
-            
-        session = Session.query.filter_by(token=token).first()
-        if not session:
-            return False
-            
-        # 确保使用带时区的时间进行比较
-        current_time = datetime.now(UTC)
-        if session.expires_at.replace(tzinfo=UTC) < current_time:
-            # 会话过期，删除会话
-            db.session.delete(session)
-            db.session.commit()
-            return False
-            
-        return True
-    
-    @staticmethod
-    def get_active_sessions(user_id: int) -> List[Session]:
-        """获取用户的活动会话列表
-        
-        Args:
-            user_id: 用户ID
-            
-        Returns:
-            List[Session]: 活动会话列表
-        """
-        return Session.query.filter(
-            Session.user_id == user_id,
-            Session.expires_at > datetime.now(UTC)
-        ).all()
-    
-    @staticmethod
-    def logout(token: str) -> bool:
+    def logout(self):
         """用户登出
         
-        Args:
-            token: 会话令牌
-            
         Returns:
-            bool: 是否成功登出
-        """
-        if not token:
-            return False
-            
-        session = Session.query.filter_by(token=token).first()
-        if session:
-            try:
-                db.session.delete(session)
-                db.session.commit()
-                return True
-            except Exception:
-                db.session.rollback()
-                return False
-        return False
-    
-    def check_login_attempts(self, user):
-        """检查登录尝试次数"""
-        key = f'login_attempts_{user.id}'
-        attempts = cache.get(key) or 0
-        return attempts
-    
-    def handle_failed_login(self, user):
-        """处理登录失败"""
-        key = f'login_attempts_{user.id}'
-        attempts = cache.get(key) or 0
-        attempts += 1
-        
-        # 设置缓存，5分钟后过期
-        cache.set(key, attempts, timeout=300)
-        
-        if attempts >= 5:
-            # 锁定账户
-            user.is_active = False
-            db.session.commit()
-    
-    def reset_login_attempts(self, user):
-        """重置登录尝试次数"""
-        key = f'login_attempts_{user.id}'
-        cache.delete(key)
-    
-    def _generate_session_token(self):
-        """生成会话令牌"""
-        return secrets.token_urlsafe(32)
-    
-    @staticmethod
-    def validate_token(token: str) -> Optional[Dict[str, Any]]:
-        """验证JWT令牌
-        
-        Args:
-            token: JWT令牌
-            
-        Returns:
-            Optional[Dict]: 令牌中的数据
+            dict: 包含状态和消息的字典
         """
         try:
-            # 解码令牌
-            session_data = jwt.decode(
-                token,
-                "your-secret-key",  # 在生产环境中应该使用环境变量
-                algorithms=["HS256"]
-            )
+            if not session.get('user_id'):
+                return {'success': True, 'message': '已登出'}
+                
+            # 获取当前会话
+            user_session = Session.query.filter_by(
+                user_id=session['user_id'],
+                is_active=True
+            ).first()
             
-            # 检查是否过期
-            if session_data["expires_at"] < datetime.now(UTC).timestamp():
-                return None
-                
-            # 验证会话是否存在
-            session = Session.query.filter_by(token=token).first()
-            if not session or session.expires_at < datetime.now(UTC):
-                return None
-                
-            return session_data
-        except jwt.InvalidTokenError:
-            return None
-    
-    @staticmethod
-    def has_permission(user_id, permission):
-        """检查用户是否有指定权限
+            if user_session:
+                # 使会话失效
+                user_session.invalidate()
+                db.session.commit()
+            
+            # 登出用户
+            logout_user()
+            
+            # 清除会话
+            session.clear()
+            
+            return {'success': True, 'message': '已安全登出'}
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"用户登出失败: {str(e)}")
+            return {'success': False, 'message': '登出失败，请稍后重试'}
+
+    def change_password(self, user, old_password, new_password):
+        """修改密码
         
         Args:
-            user_id: 用户ID
-            permission: 权限名称
+            user: 用户对象
+            old_password: 旧密码
+            new_password: 新密码
             
         Returns:
-            bool: 是否有权限
+            dict: 包含状态和消息的字典
         """
-        user = db.session.get(User, user_id)
-        if not user or not user.role:
-            return False
+        try:
+            # 验证旧密码
+            if not user.verify_password(old_password):
+                return {'status': 'error', 'message': '原密码错误'}
             
-        return permission in user.role.permissions
-    
-    @staticmethod
-    def _generate_token() -> str:
-        """生成随机令牌"""
-        return secrets.token_urlsafe(32) 
+            # 检查新密码强度
+            if not self.security_service.check_password_strength(new_password):
+                return {'status': 'error', 'message': '新密码不符合安全要求'}
+            
+            # 更新密码
+            user.set_password(new_password)
+            db.session.commit()
+            
+            # 清除所有会话
+            Session.query.filter_by(user_id=user.id).delete()
+            db.session.commit()
+            
+            return {'status': 'success', 'message': '密码修改成功'}
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"修改密码失败: {str(e)}")
+            return {'status': 'error', 'message': '密码修改失败，请稍后重试'}
+
+    def reset_password(self, email):
+        """重置密码
+        
+        Args:
+            email: 用户邮箱
+            
+        Returns:
+            dict: 包含状态和消息的字典
+        """
+        try:
+            # 清理输入
+            email = self.security_service.sanitize_input(email)
+            
+            # 获取用户
+            user = User.query.filter_by(email=email).first()
+            if not user:
+                return {'status': 'error', 'message': '邮箱不存在'}
+            
+            # TODO: 实现密码重置邮件发送逻辑
+            
+            return {'status': 'success', 'message': '密码重置邮件已发送'}
+            
+        except Exception as e:
+            current_app.logger.error(f"重置密码失败: {str(e)}")
+            return {'status': 'error', 'message': '重置密码失败，请稍后重试'}
+
+    def confirm_reset_password(self, token, new_password):
+        """确认重置密码
+        
+        Args:
+            token: 重置令牌
+            new_password: 新密码
+            
+        Returns:
+            dict: 包含状态和消息的字典
+        """
+        try:
+            # 验证令牌
+            user_id = verify_token(token)
+            if not user_id:
+                return {'status': 'error', 'message': '无效或过期的重置令牌'}
+            
+            # 获取用户
+            user = User.query.get(user_id)
+            if not user:
+                return {'status': 'error', 'message': '用户不存在'}
+            
+            # 检查新密码强度
+            if not self.security_service.check_password_strength(new_password):
+                return {'status': 'error', 'message': '新密码不符合安全要求'}
+            
+            # 更新密码
+            user.set_password(new_password)
+            db.session.commit()
+            
+            # 清除所有会话
+            Session.query.filter_by(user_id=user.id).delete()
+            db.session.commit()
+            
+            return {'status': 'success', 'message': '密码重置成功'}
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"确认重置密码失败: {str(e)}")
+            return {'status': 'error', 'message': '密码重置失败，请稍后重试'}
+
+    def _is_account_locked(self, username):
+        """检查账户是否被锁定"""
+        attempts = self._get_failed_attempts(username)
+        return attempts.get('count', 0) >= self.max_login_attempts and \
+            attempts.get('timestamp', datetime.min) + timedelta(minutes=self.lockout_duration) > datetime.now(UTC)
+
+    def _record_failed_attempt(self, username):
+        """记录失败的登录尝试"""
+        attempts = self._get_failed_attempts(username)
+        attempts['count'] = attempts.get('count', 0) + 1
+        attempts['timestamp'] = datetime.now(UTC)
+        self._failed_attempts[username] = attempts
+
+    def _get_failed_attempts(self, username):
+        """获取失败的登录尝试记录"""
+        return self._failed_attempts.get(username, {'count': 0, 'timestamp': datetime.min})
+
+    def _clear_failed_attempts(self, username):
+        """清除失败的登录尝试记录"""
+        if username in self._failed_attempts:
+            del self._failed_attempts[username]

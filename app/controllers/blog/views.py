@@ -143,3 +143,43 @@ def search():
                          posts=posts,
                          pagination=pagination)
 
+@blog_bp.route('/about')
+def about():
+    """关于页面"""
+    return render_template('blog/about.html')
+
+@blog_bp.route('/categories')
+def categories():
+    """分类列表页面"""
+    categories = category_service.get_all_categories()
+    return render_template('blog/categories.html', categories=categories)
+
+@blog_bp.route('/tags')
+def tags():
+    """标签列表页面"""
+    tags = tag_service.get_all_tags()
+    return render_template('blog/tags.html', tags=tags)
+
+@blog_bp.route('/archive')
+def archive():
+    """归档页面"""
+    archives = post_service.get_archives()
+    return render_template('blog/archive.html', archives=archives)
+
+@blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
+def create_comment(post_id):
+    """创建评论"""
+    form = CommentForm()
+    if form.validate_on_submit():
+        result = comment_service.create_comment(
+            post_id=post_id,
+            nickname=form.nickname.data,
+            email=form.email.data,
+            content=form.content.data
+        )
+        if result[0]:
+            flash('评论发表成功', 'success')
+        else:
+            flash(f'评论发表失败：{result[1]}', 'danger')
+    return redirect(url_for('blog.post', post_id=post_id))
+
