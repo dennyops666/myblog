@@ -5,90 +5,62 @@
 创建日期：2024-03-21
 """
 
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required
-from app.services import CategoryService
-from . import admin_bp
+from app.models.category import Category
+from app.forms.category_form import CategoryForm
+from app.extensions import db
 
-category_service = CategoryService()
+category_bp = Blueprint('category', __name__, url_prefix='/category')
 
-@admin_bp.route('/categories')
+@category_bp.route('/')
 @login_required
-def categories():
+def index():
     """分类列表页面"""
     page = request.args.get('page', 1, type=int)
-    result = category_service.get_category_list(page=page)
-    return render_template('admin/category/list.html',
-        categories=result['items'],
-        pagination={
-            'page': result['page'],
-            'per_page': result['per_page'],
-            'total': result['total'],
-            'pages': result['pages'],
-            'has_prev': result['has_prev'],
-            'has_next': result['has_next'],
-            'prev_num': result['prev_num'],
-            'next_num': result['next_num']
-        }
+    per_page = request.args.get('per_page', 10, type=int)
+    categories = Category.query.order_by(Category.id.desc()).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
     )
+    return render_template('admin/category/list.html', categories=categories)
 
-@admin_bp.route('/categories/create', methods=['GET', 'POST'])
+@category_bp.route('/create', methods=['GET', 'POST'])
 @login_required
-def create_category():
-    """创建分类"""
-    if request.method == 'POST':
-        name = request.form.get('name')
-        slug = request.form.get('slug')
-        
-        if not all([name, slug]):
-            flash('请填写所有必填字段', 'danger')
-            return redirect(url_for('admin.create_category'))
-            
-        result = category_service.create_category(name, slug)
-        if result['status'] == 'success':
-            flash('分类创建成功', 'success')
-            return redirect(url_for('admin.categories'))
-        else:
-            flash(result['message'], 'danger')
-            return redirect(url_for('admin.create_category'))
-            
-    return render_template('admin/category/create.html')
+def create():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        category = Category(
+            name=form.name.data,
+            slug=form.slug.data,
+            description=form.description.data
+        )
+        db.session.add(category)
+        db.session.commit()
+        flash('分类创建成功', 'success')
+        return redirect(url_for('.index'))
+    return render_template('admin/category/create.html', form=form)
 
-@admin_bp.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
+@category_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-def edit_category(category_id):
-    """编辑分类"""
-    category = category_service.get_category_by_id(category_id)
-    if not category:
-        flash('分类不存在', 'danger')
-        return redirect(url_for('admin.categories'))
-        
-    if request.method == 'POST':
-        name = request.form.get('name')
-        slug = request.form.get('slug')
-        
-        if not all([name, slug]):
-            flash('请填写所有必填字段', 'danger')
-            return redirect(url_for('admin.edit_category', category_id=category_id))
-            
-        result = category_service.update_category(category_id, name, slug)
-        if result['status'] == 'success':
-            flash('分类更新成功', 'success')
-            return redirect(url_for('admin.categories'))
-        else:
-            flash(result['message'], 'danger')
-            return redirect(url_for('admin.edit_category', category_id=category_id))
-            
-    return render_template('admin/category/edit.html', category=category)
+def edit(id):
+    category = Category.query.get_or_404(id)
+    form = CategoryForm(obj=category)
+    if form.validate_on_submit():
+        category.name = form.name.data
+        category.slug = form.slug.data
+        category.description = form.description.data
+        db.session.commit()
+        flash('分类更新成功', 'success')
+        return redirect(url_for('.index'))
+    return render_template('admin/category/edit.html', form=form, category=category)
 
-@admin_bp.route('/categories/<int:category_id>/delete', methods=['POST'])
+@category_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
-def delete_category(category_id):
-    """删除分类"""
-    result = category_service.delete_category(category_id)
-    if result['status'] == 'success':
-        flash('分类删除成功', 'success')
-    else:
-        flash(result['message'], 'danger')
-        
-    return redirect(url_for('admin.categories')) 
+def delete(id):
+    category = Category.query.get_or_404(id)
+    db.session.delete(category)
+    db.session.commit()
+    flash('分类删除成功', 'success')
+    return redirect(url_for('.index')) 

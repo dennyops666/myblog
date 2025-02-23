@@ -1,29 +1,35 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}创建标签 - MyBlog 管理后台{% endblock %}
+{% block title %}创建标签{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">创建标签</h1>
-        <a href="{{ url_for('admin.tags') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> 返回列表
-        </a>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">创建标签</h1>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.create_tag') }}">
+            <form method="POST" action="{{ url_for('admin.tag.create') }}">
+                {{ form.csrf_token }}
+                
                 <div class="mb-3">
-                    <label for="name" class="form-label">标签名称</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
-                    <div class="form-text">标签名称必须是唯一的</div>
+                    <label for="name" class="form-label">名称</label>
+                    {{ form.name(class="form-control") }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="slug" class="form-label">别名</label>
+                    {{ form.slug(class="form-control") }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">描述</label>
+                    {{ form.description(class="form-control", rows=3) }}
                 </div>
 
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 保存
-                    </button>
+                    <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
         </div>

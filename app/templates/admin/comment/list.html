@@ -4,15 +4,17 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">评论管理</h1>
-        <div class="btn-group">
-            <a href="{{ url_for('admin.comments') }}" class="btn btn-outline-primary {% if current_status != 0 %}active{% endif %}">
-                所有评论
-            </a>
-            <a href="{{ url_for('admin.comments', status=0) }}" class="btn btn-outline-primary {% if current_status == 0 %}active{% endif %}">
-                待审核评论
-            </a>
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">评论管理</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('admin.comments.comments') }}" class="btn btn-outline-primary {% if current_status != 0 %}active{% endif %}">
+                    所有评论
+                </a>
+                <a href="{{ url_for('admin.comments.comments', status=0) }}" class="btn btn-outline-primary {% if current_status == 0 %}active{% endif %}">
+                    待审核评论
+                </a>
+            </div>
         </div>
     </div>
 
@@ -23,7 +25,7 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>评论内容</th>
+                            <th width="30%">评论内容</th>
                             <th>评论者</th>
                             <th>文章</th>
                             <th>评论时间</th>
@@ -35,10 +37,24 @@
                         {% for comment in comments.items %}
                         <tr>
                             <td>{{ comment.id }}</td>
-                            <td>{{ comment.content }}</td>
                             <td>
-                                {{ comment.author_name }}<br>
-                                <small class="text-muted">{{ comment.author_email }}</small>
+                                <div class="text-break">{{ comment.content }}</div>
+                                {% if comment.parent %}
+                                <div class="mt-2 text-muted small">
+                                    <i class="fas fa-reply"></i> 回复：{{ comment.parent.content[:50] }}...
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>{{ comment.author_name }}</div>
+                                <div class="small text-muted">{{ comment.author_email }}</div>
+                                {% if comment.author_website %}
+                                <div class="small">
+                                    <a href="{{ comment.author_website }}" target="_blank">
+                                        <i class="fas fa-link"></i> 网站
+                                    </a>
+                                </div>
+                                {% endif %}
                             </td>
                             <td>
                                 <a href="{{ url_for('blog.post', post_id=comment.post_id) }}" target="_blank">
@@ -54,18 +70,22 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if comment.status == 0 %}
-                                <form action="{{ url_for('admin.approve_comment', comment_id=comment.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="fas fa-check"></i> 通过
-                                    </button>
-                                </form>
-                                {% endif %}
-                                <form action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这条评论吗？')">
-                                        <i class="fas fa-trash"></i> 删除
-                                    </button>
-                                </form>
+                                <div class="btn-group">
+                                    {% if comment.status == 0 %}
+                                    <form action="{{ url_for('admin.comments.approve_comment', comment_id=comment.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i> 通过
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <form action="{{ url_for('admin.comments.delete_comment', comment_id=comment.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这条评论吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% else %}
@@ -77,14 +97,19 @@
                 </table>
             </div>
 
-            <!-- 分页 -->
             {% if comments.pages > 1 %}
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center">
+                    {% if comments.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.comments.comments', page=comments.prev_num, status=current_status) }}">上一页</a>
+                    </li>
+                    {% endif %}
+
                     {% for page in comments.iter_pages() %}
                         {% if page %}
                             <li class="page-item {% if page == comments.page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('admin.comments', page=page, status=current_status) }}">
+                                <a class="page-link" href="{{ url_for('admin.comments.comments', page=page, status=current_status) }}">
                                     {{ page }}
                                 </a>
                             </li>
@@ -94,10 +119,33 @@
                             </li>
                         {% endif %}
                     {% endfor %}
+
+                    {% if comments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.comments.comments', page=comments.next_num, status=current_status) }}">下一页</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </nav>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 删除确认
+    const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('确定要删除这条评论吗？')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
 {% endblock %} 

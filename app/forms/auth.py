@@ -11,16 +11,9 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp
 
 class LoginForm(FlaskForm):
     """登录表单"""
-    username = StringField('用户名', validators=[
-        DataRequired(message='请输入用户名'),
-        Length(min=3, max=20, message='用户名长度必须在3-20个字符之间')
-    ])
-    password = PasswordField('密码', validators=[
-        DataRequired(message='请输入密码'),
-        Length(min=6, message='密码长度不能小于6个字符')
-    ])
-    remember = BooleanField('记住我')
-    submit = SubmitField('登录')
+    username = StringField('用户名', validators=[DataRequired()])
+    password = PasswordField('密码', validators=[DataRequired()])
+    remember_me = BooleanField('记住我')
 
 class RegisterForm(FlaskForm):
     """注册表单"""

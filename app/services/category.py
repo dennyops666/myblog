@@ -5,46 +5,48 @@
 创建日期：2024-03-21
 """
 
+from datetime import datetime, UTC
 from flask import current_app
-from app.models import Category, db
 from app.extensions import db
+from app.models.category import Category
 from app.services import SecurityService
 from typing import List, Optional, Dict
 from sqlalchemy import func
 
 class CategoryService:
+    """分类服务类"""
+    
     def __init__(self):
         self.security = SecurityService()
 
-    def create_category(self, name: str, slug: str) -> Dict:
+    def create_category(self, name, slug=None, description=None):
         """创建分类
         
         Args:
             name: 分类名称
-            slug: 分类别名
+            slug: URL友好的名称（可选）
+            description: 分类描述（可选）
             
         Returns:
-            dict: 包含状态和消息的字典
+            Category: 创建的分类对象
+            
+        Raises:
+            ValueError: 如果分类名称已存在
         """
-        try:
-            # 检查分类名是否已存在
-            if Category.query.filter_by(name=name).first():
-                return {'status': 'error', 'message': '分类名已存在'}
-                
-            # 检查别名是否已存在
-            if Category.query.filter_by(slug=slug).first():
-                return {'status': 'error', 'message': '分类别名已存在'}
-                
-            category = Category(name=name, slug=slug)
-            db.session.add(category)
-            db.session.commit()
+        if Category.query.filter_by(name=name).first():
+            raise ValueError('分类名称已存在')
             
-            return {'status': 'success', 'message': '分类创建成功', 'category': category}
-            
-        except Exception as e:
-            db.session.rollback()
-            return {'status': 'error', 'message': f'创建分类失败：{str(e)}'}
-            
+        category = Category(
+            name=name,
+            slug=slug,
+            description=description
+        )
+        
+        db.session.add(category)
+        db.session.commit()
+        
+        return category
+
     def update_category(self, category_id: int, name: str = None, 
                        slug: str = None) -> Dict:
         """更新分类

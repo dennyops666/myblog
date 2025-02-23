@@ -1,0 +1,164 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}文件上传 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">文件上传</h2>
+            
+            <!-- 上传表单 -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">选择文件</label>
+                            <input type="file" class="form-control" id="file" name="file" accept="image/*" required>
+                            <div class="form-text">支持的文件类型：PNG、JPG、JPEG、GIF、WEBP</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">上传</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 上传进度 -->
+            <div id="uploadProgress" class="progress mb-4 d-none">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+
+            <!-- 上传结果 -->
+            <div id="uploadResult" class="alert d-none"></div>
+
+            <!-- 图片预览 -->
+            <div id="imagePreview" class="card mb-4 d-none">
+                <div class="card-body">
+                    <h5 class="card-title">图片预览</h5>
+                    <img src="" class="img-fluid" alt="预览图">
+                    <div class="mt-3">
+                        <input type="text" class="form-control mb-2" id="imageUrl" readonly>
+                        <button class="btn btn-sm btn-secondary copy-url">复制链接</button>
+                        <button class="btn btn-sm btn-danger delete-image">删除图片</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = uploadProgress.querySelector('.progress-bar');
+    const uploadResult = document.getElementById('uploadResult');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImage = imagePreview.querySelector('img');
+    const imageUrl = document.getElementById('imageUrl');
+    
+    // 文件上传
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const file = formData.get('file');
+        
+        // 检查文件大小
+        if (file.size > 16 * 1024 * 1024) {  // 16MB
+            showError('文件太大，请选择小于16MB的文件');
+            return;
+        }
+        
+        // 显示进度条
+        uploadProgress.classList.remove('d-none');
+        progressBar.style.width = '0%';
+        uploadResult.classList.add('d-none');
+        
+        fetch('{{ url_for("admin.upload.upload_file") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-Token': formData.get('csrf_token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('文件上传成功');
+                showPreview(data.url);
+            } else {
+                showError(data.message || '上传失败');
+            }
+        })
+        .catch(error => {
+            showError('上传失败：' + error.message);
+        })
+        .finally(() => {
+            uploadProgress.classList.add('d-none');
+        });
+    });
+    
+    // 复制URL
+    document.querySelector('.copy-url').addEventListener('click', function() {
+        imageUrl.select();
+        document.execCommand('copy');
+        showSuccess('链接已复制到剪贴板');
+    });
+    
+    // 删除图片
+    document.querySelector('.delete-image').addEventListener('click', function() {
+        if (!confirm('确定要删除这张图片吗？')) {
+            return;
+        }
+        
+        const filename = imageUrl.value.split('/').pop();
+        fetch(`{{ url_for("admin.upload.upload_file") }}/${filename}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-Token': document.querySelector('input[name="csrf_token"]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess('图片删除成功');
+                imagePreview.classList.add('d-none');
+                uploadForm.reset();
+            } else {
+                showError(data.message || '删除失败');
+            }
+        })
+        .catch(error => {
+            showError('删除失败：' + error.message);
+        });
+    });
+    
+    // 显示成功消息
+    function showSuccess(message) {
+        uploadResult.textContent = message;
+        uploadResult.classList.remove('d-none', 'alert-danger');
+        uploadResult.classList.add('alert-success');
+    }
+    
+    // 显示错误消息
+    function showError(message) {
+        uploadResult.textContent = message;
+        uploadResult.classList.remove('d-none', 'alert-success');
+        uploadResult.classList.add('alert-danger');
+    }
+    
+    // 显示图片预览
+    function showPreview(url) {
+        previewImage.src = url;
+        imageUrl.value = url;
+        imagePreview.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %} 

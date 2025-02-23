@@ -5,14 +5,8 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint
 from app.middleware.security import csrf_protect, xss_protect, sql_injection_protect
-
-# 创建蓝图
-blog_bp = Blueprint('blog', __name__)
-
-# 导入视图
-from . import views
+from .views import blog_bp
 
 # 为所有视图添加安全装饰器
 for endpoint, view_func in blog_bp.view_functions.items():

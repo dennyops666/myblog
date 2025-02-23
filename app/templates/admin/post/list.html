@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">文章管理</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ url_for('admin.create_post') }}" class="btn btn-primary">
+            <a href="{{ url_for('admin.post.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> 新建文章
             </a>
         </div>
@@ -27,7 +27,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for post in posts %}
+                {% for post in posts.items %}
                 <tr>
                     <td>{{ post.id }}</td>
                     <td>{{ post.title }}</td>
@@ -45,15 +45,15 @@
                     </td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{{ url_for('admin.post.edit', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-edit"></i> 编辑
                             </a>
-                            <a href="{{ url_for('admin.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
+                            <a href="{{ url_for('admin.post.view', post_id=post.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
                                 <i class="fas fa-eye"></i> 查看
                             </a>
-                            <form action="{{ url_for('admin.delete_post', post_id=post.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这篇文章吗？')">
+                            <form action="{{ url_for('admin.post.delete', post_id=post.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这篇文章吗？')">
                                     <i class="fas fa-trash"></i> 删除
                                 </button>
                             </form>
@@ -65,19 +65,19 @@
         </table>
     </div>
 
-    {% if pagination.pages > 1 %}
-    <nav aria-label="Page navigation" class="mt-4">
+    {% if posts.pages > 1 %}
+    <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
-            {% if pagination.has_prev %}
+            {% if posts.has_prev %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.posts', page=pagination.prev_num) }}">上一页</a>
+                <a class="page-link" href="{{ url_for('admin.post.index', page=posts.prev_num) }}">上一页</a>
             </li>
             {% endif %}
 
-            {% for page in pagination.iter_pages() %}
+            {% for page in posts.iter_pages() %}
                 {% if page %}
-                    <li class="page-item {% if page == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin.posts', page=page) }}">{{ page }}</a>
+                    <li class="page-item {% if page == posts.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.post.index', page=page) }}">{{ page }}</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled">
@@ -86,9 +86,9 @@
                 {% endif %}
             {% endfor %}
 
-            {% if pagination.has_next %}
+            {% if posts.has_next %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.posts', page=pagination.next_num) }}">下一页</a>
+                <a class="page-link" href="{{ url_for('admin.post.index', page=posts.next_num) }}">下一页</a>
             </li>
             {% endif %}
         </ul>

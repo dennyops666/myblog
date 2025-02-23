@@ -20,10 +20,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
-env/
+# Flask
+instance/
+.webassets-cache
+.env
 
 # IDE
 .idea/
@@ -31,14 +31,30 @@ env/
 *.swp
 *.swo
 
-# Flask
-#instance/
-.webassets-cache
-#*.db
-
-# Coverage
+# 测试
 .coverage
 htmlcov/
+.pytest_cache/
+.tox/
+
+# 数据库
+*.sqlite
+*.db
+
+# 上传文件
+instance/uploads/
+uploads/
+
+# 日志
+*.log
+
+# 会话文件
+instance/sessions/
+
+# Virtual Environment
+venv/
+ENV/
+env/
 
 # Environment variables
 .env

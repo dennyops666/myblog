@@ -11,34 +11,41 @@ from app.extensions import db
 from app.services import SecurityService
 from typing import List, Optional, Dict
 from sqlalchemy import func
+from datetime import datetime, UTC
 
 class TagService:
     def __init__(self):
         self.security = SecurityService()
     
-    def create_tag(self, name: str, slug: str) -> Dict:
+    def create_tag(self, name, slug, description=None):
         """创建标签
         
         Args:
             name: 标签名称
             slug: 标签别名
+            description: 标签描述（可选）
             
         Returns:
             dict: 包含状态和消息的字典
         """
         try:
-            # 检查标签名是否已存在
+            # 检查名称是否已存在
             if Tag.query.filter_by(name=name).first():
-                return {'status': 'error', 'message': '标签名已存在'}
-                
+                return {'status': 'error', 'message': '标签名称已存在'}
+            
             # 检查别名是否已存在
             if Tag.query.filter_by(slug=slug).first():
                 return {'status': 'error', 'message': '标签别名已存在'}
-                
-            tag = Tag(name=name, slug=slug)
+            
+            tag = Tag(
+                name=name,
+                slug=slug,
+                description=description,
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC)
+            )
             db.session.add(tag)
             db.session.commit()
-            
             return {'status': 'success', 'message': '标签创建成功', 'tag': tag}
             
         except Exception as e:
@@ -76,13 +83,14 @@ class TagService:
         return Tag.query.all()
     
     def update_tag(self, tag_id: int, name: str = None, 
-                  slug: str = None) -> Dict:
+                  slug: str = None, description: str = None) -> Dict:
         """更新标签
         
         Args:
             tag_id: 标签ID
             name: 新的标签名称
             slug: 新的标签别名
+            description: 标签描述
             
         Returns:
             dict: 包含状态和消息的字典
@@ -103,7 +111,11 @@ class TagService:
                 if Tag.query.filter_by(slug=slug).first():
                     return {'status': 'error', 'message': '标签别名已存在'}
                 tag.slug = slug
+                
+            if description is not None:
+                tag.description = description
             
+            tag.updated_at = datetime.now(UTC)
             db.session.commit()
             return {'status': 'success', 'message': '标签更新成功', 'tag': tag}
             
@@ -124,6 +136,10 @@ class TagService:
             tag = self.get_tag_by_id(tag_id)
             if not tag:
                 return {'status': 'error', 'message': '标签不存在'}
+            
+            # 检查标签是否有关联的文章
+            if tag.posts.count() > 0:
+                return {'status': 'error', 'message': '该标签下还有关联的文章，无法删除'}
                 
             db.session.delete(tag)
             db.session.commit()
@@ -134,48 +150,33 @@ class TagService:
             return {'status': 'error', 'message': f'删除标签失败：{str(e)}'}
     
     def get_tag_list(self, page=1, per_page=10):
-        """获取标签列表（分页）
+        """获取标签列表
         
         Args:
             page: 页码
             per_page: 每页数量
             
         Returns:
-            dict: 包含分页信息的字典
+            Pagination: 分页对象
         """
-        from app.models import Post
+        # 使用join和子查询优化查询性能
+        query = Tag.query.order_by(Tag.created_at.desc())
         
-        pagination = Tag.query.paginate(
+        # 添加文章数量统计
+        from app.models import Post
+        for tag in query:
+            tag.post_count = Post.query.filter(
+                Post.tags.any(id=tag.id)
+            ).count()
+        
+        # 分页
+        pagination = query.paginate(
             page=page,
             per_page=per_page,
             error_out=False
         )
         
-        tags = []
-        for tag in pagination.items:
-            post_count = Post.query.filter(
-                Post.tags.any(id=tag.id),
-                Post.status == 1
-            ).count()
-            tags.append({
-                'id': tag.id,
-                'name': tag.name,
-                'slug': tag.slug,
-                'post_count': post_count,
-                'created_at': tag.created_at
-            })
-            
-        return {
-            'items': tags,
-            'page': page,
-            'per_page': per_page,
-            'total': pagination.total,
-            'pages': pagination.pages,
-            'has_prev': pagination.has_prev,
-            'has_next': pagination.has_next,
-            'prev_num': pagination.prev_num,
-            'next_num': pagination.next_num
-        }
+        return pagination
     
     def search_tags(self, keyword, page=1, per_page=10):
         """搜索标签"""

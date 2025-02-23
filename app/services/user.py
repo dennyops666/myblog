@@ -7,94 +7,83 @@
 
 from datetime import datetime, UTC
 from flask import current_app
-from app.models.user import User
-from app.models.role import Role
 from app.extensions import db
+from app.models.user import User
 from app.services.security import SecurityService
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class UserService:
     """用户服务类"""
     
     def __init__(self):
-        self.security_service = SecurityService()
-        
-    def get_user_by_id(self, user_id):
-        """根据ID获取用户
-        
-        Args:
-            user_id: 用户ID
-            
-        Returns:
-            User: 用户对象
-        """
-        return User.query.get(user_id)
-        
-    def get_user_by_username(self, username):
-        """根据用户名获取用户
+        self.security = SecurityService()
+    
+    def create_user(self, username, password, email=None, roles=None):
+        """创建用户
         
         Args:
             username: 用户名
+            password: 密码
+            email: 邮箱（可选）
+            roles: 角色列表（可选）
             
         Returns:
-            User: 用户对象
-        """
-        return User.query.filter_by(username=username).first()
-        
-    def get_user_by_email(self, email):
-        """根据邮箱获取用户
-        
-        Args:
-            email: 邮箱
+            User: 创建的用户对象
             
-        Returns:
-            User: 用户对象
+        Raises:
+            ValueError: 如果用户名已存在
         """
-        return User.query.filter_by(email=email).first()
+        if User.query.filter_by(username=username).first():
+            raise ValueError('用户名已存在')
+            
+        user = User(
+            username=username,
+            email=email,
+            is_active=True
+        )
+        user.password = password
         
-    def update_user(self, user_id, data):
+        if roles:
+            from app.models.role import Role
+            for role_name in roles:
+                role = Role.query.filter_by(name=role_name).first()
+                if role:
+                    user.add_role(role)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return user
+    
+    def update_user(self, user_id, username=None, password=None, email=None):
         """更新用户信息
         
         Args:
             user_id: 用户ID
-            data: 要更新的数据
+            username: 新用户名（可选）
+            password: 新密码（可选）
+            email: 新邮箱（可选）
             
         Returns:
             dict: 包含状态和消息的字典
         """
         try:
-            user = self.get_user_by_id(user_id)
+            user = User.query.get(user_id)
             if not user:
                 return {'status': 'error', 'message': '用户不存在'}
                 
-            # 清理输入
-            if 'username' in data:
-                data['username'] = self.security_service.sanitize_input(data['username'])
-            if 'email' in data:
-                data['email'] = self.security_service.sanitize_input(data['email'])
-            if 'bio' in data:
-                data['bio'] = self.security_service.sanitize_input(data['bio'])
-                
-            # 检查用户名是否已存在
-            if 'username' in data and data['username'] != user.username:
-                if User.query.filter_by(username=data['username']).first():
+            if username and username != user.username:
+                # 检查新用户名是否已存在
+                if User.query.filter_by(username=username).first():
                     return {'status': 'error', 'message': '用户名已存在'}
-                    
-            # 检查邮箱是否已存在
-            if 'email' in data and data['email'] != user.email:
-                if User.query.filter_by(email=data['email']).first():
-                    return {'status': 'error', 'message': '邮箱已被注册'}
-                    
-            # 更新角色
-            if 'role' in data:
-                role = Role.query.filter_by(name=data['role']).first()
-                if role:
-                    user.roles = [role]
-                    
-            # 更新其他字段
-            for key, value in data.items():
-                if hasattr(user, key) and key not in ['id', 'password_hash', 'roles']:
-                    setattr(user, key, value)
-                    
+                user.username = username
+                
+            if password:
+                user.password = generate_password_hash(password)
+                
+            if email:
+                user.email = email
+                
             user.updated_at = datetime.now(UTC)
             db.session.commit()
             
@@ -104,7 +93,7 @@ class UserService:
             db.session.rollback()
             current_app.logger.error(f"更新用户信息失败: {str(e)}")
             return {'status': 'error', 'message': '更新用户信息失败，请稍后重试'}
-            
+    
     def delete_user(self, user_id):
         """删除用户
         
@@ -115,7 +104,7 @@ class UserService:
             dict: 包含状态和消息的字典
         """
         try:
-            user = self.get_user_by_id(user_id)
+            user = User.query.get(user_id)
             if not user:
                 return {'status': 'error', 'message': '用户不存在'}
                 
@@ -128,28 +117,42 @@ class UserService:
             db.session.rollback()
             current_app.logger.error(f"删除用户失败: {str(e)}")
             return {'status': 'error', 'message': '删除用户失败，请稍后重试'}
-            
-    def get_users(self, page=1, per_page=10, role=None):
-        """获取用户列表
+    
+    def get_user(self, user_id):
+        """获取用户
         
         Args:
-            page: 页码
-            per_page: 每页数量
-            role: 角色名
+            user_id: 用户ID
             
         Returns:
             dict: 包含状态和消息的字典
         """
         try:
-            query = User.query
-            
-            # 按角色筛选
-            if role:
-                query = query.join(User.roles).filter(Role.name == role)
+            user = User.query.get(user_id)
+            if not user:
+                return {'status': 'error', 'message': '用户不存在'}
                 
-            # 分页
-            pagination = query.order_by(User.created_at.desc()).paginate(
-                page=page, per_page=per_page, error_out=False
+            return {'status': 'success', 'user': user}
+            
+        except Exception as e:
+            current_app.logger.error(f"获取用户失败: {str(e)}")
+            return {'status': 'error', 'message': '获取用户失败，请稍后重试'}
+    
+    def get_users(self, page=1, per_page=10):
+        """获取用户列表
+        
+        Args:
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            dict: 包含状态和消息的字典
+        """
+        try:
+            pagination = User.query.paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
             )
             
             return {
@@ -164,71 +167,83 @@ class UserService:
             current_app.logger.error(f"获取用户列表失败: {str(e)}")
             return {'status': 'error', 'message': '获取用户列表失败，请稍后重试'}
     
-    def update_profile(self, user, data):
-        """更新用户资料"""
-        try:
-            for key, value in data.items():
-                if hasattr(user, key) and key not in ['id', 'password_hash']:
-                    setattr(user, key, value)
-            db.session.commit()
-            return True, "资料更新成功"
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"更新用户资料失败: {str(e)}")
-            return False, "资料更新失败，请稍后重试"
+    def verify_password(self, user_id, password):
+        """验证用户密码
+        
+        Args:
+            user_id: 用户ID
+            password: 密码
+            
+        Returns:
+            bool: 密码是否正确
+        """
+        user = User.query.get(user_id)
+        if not user:
+            return False
+            
+        return check_password_hash(user.password, password)
     
-    def update_avatar(self, user, avatar_url):
-        """更新用户头像"""
-        try:
-            user.avatar = avatar_url
-            db.session.commit()
-            return True, "头像更新成功"
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"更新用户头像失败: {str(e)}")
-            return False, "头像更新失败，请稍后重试"
+    def get_user_by_username(self, username):
+        """根据用户名获取用户
+        
+        Args:
+            username: 用户名
+            
+        Returns:
+            User: 用户对象
+        """
+        return User.query.filter_by(username=username).first()
     
-    def change_role(self, user, role_name):
-        """修改用户角色"""
-        try:
-            role = Role.query.filter_by(name=role_name).first()
-            if not role:
-                return False, "角色不存在"
-            user.role = role
-            db.session.commit()
-            return True, "角色修改成功"
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"修改用户角色失败: {str(e)}")
-            return False, "角色修改失败，请稍后重试"
-    
-    def get_user_list(self, page=1, per_page=10):
-        """获取用户列表"""
-        return User.query.paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+    def get_user_by_email(self, email):
+        """根据邮箱获取用户
+        
+        Args:
+            email: 邮箱
+            
+        Returns:
+            User: 用户对象
+        """
+        return User.query.filter_by(email=email).first()
     
     def search_users(self, keyword, page=1, per_page=10):
-        """搜索用户"""
-        return User.query.filter(
-            (User.username.ilike(f'%{keyword}%')) |
-            (User.email.ilike(f'%{keyword}%'))
-        ).paginate(
+        """搜索用户
+        
+        Args:
+            keyword: 关键词
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            dict: 包含分页信息的字典
+        """
+        query = User.query.filter(
+            User.username.ilike(f'%{keyword}%')
+        )
+        
+        pagination = query.paginate(
             page=page,
             per_page=per_page,
             error_out=False
         )
+        
+        return {
+            'items': pagination.items,
+            'page': page,
+            'per_page': per_page,
+            'total': pagination.total,
+            'pages': pagination.pages,
+            'has_prev': pagination.has_prev,
+            'has_next': pagination.has_next,
+            'prev_num': pagination.prev_num,
+            'next_num': pagination.next_num
+        }
     
     def get_user_stats(self):
         """获取用户统计信息"""
         total_users = User.query.count()
         active_users = User.query.filter_by(is_active=True).count()
-        admin_users = User.query.join(Role).filter(Role.name == 'Administrator').count()
         
         return {
             'total_users': total_users,
-            'active_users': active_users,
-            'admin_users': admin_users
+            'active_users': active_users
         } 

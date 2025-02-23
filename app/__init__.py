@@ -1,67 +1,89 @@
 """
 文件名：__init__.py
-描述：Flask应用初始化
+描述：应用工厂
 作者：denny
 创建日期：2024-03-21
 """
 
 import os
-from flask import Flask, request, jsonify, session, g
-from flask_login import current_user
-from app.extensions import db, migrate, login_manager, csrf, cache
-from app.models.user import User
-from app.services.security import SecurityService
-import secrets
-from datetime import datetime, UTC
-from flask import send_from_directory
+from flask import Flask, send_from_directory, g
 from flask_wtf.csrf import generate_csrf
+from app.config import config
+from app.extensions import db, migrate, login_manager, csrf, init_app, cache
+from datetime import datetime
+from app.controllers.blog import blog_bp
+from app.controllers.auth import auth_bp
+from app.controllers.admin import admin_bp
 
-def create_app(config=None):
-    """创建 Flask 应用实例"""
+def create_app(config_name='development'):
+    """创建Flask应用实例"""
     app = Flask(__name__)
     
-    # 加载默认配置
-    app.config.from_mapping(
-        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
-        SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL', 'sqlite:///blog.db'),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        UPLOAD_FOLDER=os.path.join(app.instance_path, 'uploads'),
-        MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB
-        WTF_CSRF_ENABLED=True,
-        WTF_CSRF_CHECK_DEFAULT=True,
-        WTF_CSRF_TIME_LIMIT=3600,
-        LOGIN_VIEW='auth.login',
-        LOGIN_MESSAGE='请先登录',
-        SESSION_PROTECTION='strong'
-    )
+    # 加载配置
+    if isinstance(config_name, dict):
+        app.config.update(config_name)
+    else:
+        if config_name not in config:
+            config_name = 'default'
+        app.config.from_object(config[config_name]())
     
-    # 如果提供了配置，则更新
-    if config is not None:
-        app.config.update(config)
+    # 确保上传目录存在
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
     
-    # 初始化扩展
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login_manager.init_app(app)
-    csrf.init_app(app)
+    # 配置会话
+    if app.config.get('TESTING'):
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'sessions')
+        os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    
+    # 初始化所有扩展
+    init_app(app)
     
     # 注册蓝图
-    from .controllers.admin import admin_bp
-    from .controllers.auth import auth_bp
-    
-    app.register_blueprint(auth_bp, url_prefix='/admin')
+    app.register_blueprint(blog_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
-    # 添加上传文件路由
-    @app.route('/uploads/<path:filename>')
-    def uploaded_file(filename):
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    # 注册自定义过滤器
+    from app.utils.filters import init_filters
+    init_filters(app)
     
-    # 添加 CSRF 令牌到响应头
+    # 添加now过滤器
+    @app.template_filter('now')
+    def now_filter(format_string):
+        """返回当前时间的格式化字符串"""
+        return datetime.now().strftime(format_string)
+    
+    # 添加上传文件访问路由
+    @app.route('/uploads/<filename>')
+    def uploaded_file(filename):
+        return send_from_directory(app.config['IMAGE_UPLOAD_FOLDER'], filename)
+    
+    # 添加CSRF令牌到响应
     @app.after_request
     def add_csrf_token(response):
         if 'text/html' in response.headers.get('Content-Type', ''):
-            response.headers['X-CSRF-Token'] = generate_csrf()
+            g.csrf_token = generate_csrf()
         return response
+    
+    # 添加上下文处理器
+    @app.context_processor
+    def inject_now():
+        return {'now': datetime.now()}
+    
+    # 初始化配置
+    config[config_name if config_name in config else 'default']().init_app(app)
+    
+    # 在测试环境下初始化数据库
+    if app.config.get('TESTING'):
+        with app.app_context():
+            db.create_all()
+            from app.models import Role
+            admin_role = Role.query.filter_by(name='admin').first()
+            if not admin_role:
+                admin_role = Role(name='admin', description='Administrator')
+                db.session.add(admin_role)
+                db.session.commit()
     
     return app

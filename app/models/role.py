@@ -12,12 +12,13 @@ from datetime import datetime, UTC
 user_roles = db.Table('user_roles',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True),
-    db.Column('created_at', db.DateTime, default=lambda: datetime.now(UTC))
+    extend_existing=True
 )
 
 class Role(db.Model):
     """角色模型"""
     __tablename__ = 'roles'
+    __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
@@ -27,13 +28,13 @@ class Role(db.Model):
                           onupdate=lambda: datetime.now(UTC))
     
     # 关系
-    users = db.relationship('User', secondary=user_roles, back_populates='roles')
+    users = db.relationship('User', secondary=user_roles,
+                          back_populates='roles', lazy='dynamic')
     
     def __init__(self, name, description=None):
         """初始化角色"""
         self.name = name
         self.description = description
-        
+    
     def __repr__(self):
-        """字符串表示"""
         return f'<Role {self.name}>'

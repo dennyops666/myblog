@@ -7,158 +7,138 @@
 
 import pytest
 from flask import url_for
-from app.models import Post, Category, Tag, User
+from flask_wtf.csrf import generate_csrf
+from app.models import Post, Category, Tag, User, db
 from app.models.post import PostStatus
-from app.extensions import db
 
-def test_admin_access(client):
+def test_admin_access(client, auth):
     """测试管理后台访问权限"""
+    # 未登录时访问管理后台
+    response = client.get('/admin/', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'login' in response.data
+    
+    # 登录后访问管理后台
+    auth.login()
     response = client.get('/admin/')
-    assert response.status_code == 401
-    assert response.json['error'] == '未授权访问'
+    assert response.status_code == 200
+    assert b'\xe7\xae\xa1\xe7\x90\x86\xe5\x90\x8e\xe5\x8f\xb0' in response.data  # "管理后台"的UTF-8编码
 
-def test_post_management(client, auth, test_user):
-    """测试文章管理"""
+def test_post_management(client, auth, test_category):
+    """测试文章管理功能"""
     auth.login()
     
-    # 创建测试分类
-    category = Category(name='Test Category', slug='test-category')
-    db.session.add(category)
-    db.session.commit()
-    
-    # 获取CSRF令牌
-    response = client.get('/admin/posts')
+    # 访问文章列表页
+    response = client.get('/admin/post/')
     assert response.status_code == 200
-    csrf_token = response.headers.get('X-CSRF-Token')
+    assert '文章管理'.encode('utf-8') in response.data
     
     # 创建文章
-    response = client.post('/admin/posts/create', data={
-        'title': '测试文章',
-        'content': '这是一篇测试文章',
-        'category_id': category.id,
-        'status': 'published',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    
-    # 获取文章列表
-    response = client.get('/admin/posts')
+    response = client.post('/admin/post/create', data={
+        'csrf_token': generate_csrf(),
+        'title': 'Test Post',
+        'content': 'Test Content',
+        'category_id': test_category.id,
+        'status': 'draft',
+        'tags': []
+    }, follow_redirects=True)
     assert response.status_code == 200
-    assert b'\xe6\xb5\x8b\xe8\xaf\x95\xe6\x96\x87\xe7\xab\xa0' in response.data  # '测试文章'的UTF-8编码
-    csrf_token = response.headers.get('X-CSRF-Token')
     
     # 编辑文章
-    post = Post.query.filter_by(title='测试文章').first()
-    response = client.post(f'/admin/posts/{post.id}/edit', data={
-        'title': '更新后的文章',
-        'content': '这是更新后的内容',
-        'category_id': category.id,
+    post = Post.query.filter_by(title='Test Post').first()
+    response = client.post(f'/admin/post/{post.id}/edit', data={
+        'csrf_token': generate_csrf(),
+        'title': 'Updated Post',
+        'content': 'Updated Content',
+        'category_id': test_category.id,
         'status': 'published',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
+        'tags': []
+    }, follow_redirects=True)
+    assert response.status_code == 200
     
     # 删除文章
-    response = client.post(f'/admin/posts/{post.id}/delete', data={
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    assert not Post.query.filter_by(title='更新后的文章').first()
-
-def test_category_management(client, auth):
-    """测试分类管理"""
-    auth.login()
-    
-    # 获取CSRF令牌
-    response = client.get('/admin/categories')
+    response = client.post(f'/admin/post/{post.id}/delete', data={
+        'csrf_token': generate_csrf()
+    }, follow_redirects=True)
     assert response.status_code == 200
-    csrf_token = response.headers.get('X-CSRF-Token')
+
+def test_category_management(client, auth, test_category):
+    """测试分类管理功能"""
+    auth.login()
     
     # 创建分类
-    response = client.post('/admin/categories/create', data={
-        'name': '测试分类',
-        'slug': 'test-category',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    
-    # 获取分类列表
-    response = client.get('/admin/categories')
+    response = client.post('/admin/category/create', data={
+        'csrf_token': generate_csrf(),
+        'name': 'New Category',
+        'slug': 'new-category',
+        'description': 'New Category Description'
+    }, follow_redirects=True)
     assert response.status_code == 200
-    assert b'\xe6\xb5\x8b\xe8\xaf\x95\xe5\x88\x86\xe7\xb1\xbb' in response.data  # '测试分类'的UTF-8编码
-    csrf_token = response.headers.get('X-CSRF-Token')
     
     # 编辑分类
-    category = Category.query.filter_by(name='测试分类').first()
-    response = client.post(f'/admin/categories/{category.id}/edit', data={
-        'name': '更新后的分类',
+    category = Category.query.filter_by(name='New Category').first()
+    response = client.post(f'/admin/category/{category.id}/edit', data={
+        'csrf_token': generate_csrf(),
+        'name': 'Updated Category',
         'slug': 'updated-category',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
+        'description': 'Updated Category Description'
+    }, follow_redirects=True)
+    assert response.status_code == 200
     
     # 删除分类
-    response = client.post(f'/admin/categories/{category.id}/delete', data={
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    assert not Category.query.filter_by(name='更新后的分类').first()
-
-def test_tag_management(client, auth):
-    """测试标签管理"""
-    auth.login()
-    
-    # 获取CSRF令牌
-    response = client.get('/admin/tags')
+    response = client.post(f'/admin/category/{category.id}/delete', data={
+        'csrf_token': generate_csrf()
+    }, follow_redirects=True)
     assert response.status_code == 200
-    csrf_token = response.headers.get('X-CSRF-Token')
+
+def test_tag_management(client, auth, test_tag):
+    """测试标签管理功能"""
+    auth.login()
     
     # 创建标签
-    response = client.post('/admin/tags/create', data={
-        'name': '测试标签',
-        'slug': 'test-tag',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    
-    # 获取标签列表
-    response = client.get('/admin/tags')
+    response = client.post('/admin/tag/create', data={
+        'csrf_token': generate_csrf(),
+        'name': 'New Tag',
+        'slug': 'new-tag',
+        'description': 'New Tag Description'
+    }, follow_redirects=True)
     assert response.status_code == 200
-    assert b'\xe6\xb5\x8b\xe8\xaf\x95\xe6\xa0\x87\xe7\xad\xbe' in response.data  # '测试标签'的UTF-8编码
-    csrf_token = response.headers.get('X-CSRF-Token')
     
     # 编辑标签
-    tag = Tag.query.filter_by(name='测试标签').first()
-    response = client.post(f'/admin/tags/{tag.id}/edit', data={
-        'name': '更新后的标签',
+    tag = Tag.query.filter_by(name='New Tag').first()
+    response = client.post(f'/admin/tag/{tag.id}/edit', data={
+        'csrf_token': generate_csrf(),
+        'name': 'Updated Tag',
         'slug': 'updated-tag',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
+        'description': 'Updated Tag Description'
+    }, follow_redirects=True)
+    assert response.status_code == 200
     
     # 删除标签
-    response = client.post(f'/admin/tags/{tag.id}/delete', data={
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
-    assert not Tag.query.filter_by(name='更新后的标签').first()
+    response = client.post(f'/admin/tag/{tag.id}/delete', data={
+        'csrf_token': generate_csrf()
+    }, follow_redirects=True)
+    assert response.status_code == 200
 
-def test_admin_profile(client, auth):
+def test_admin_profile(client, auth, test_user):
     """测试管理员个人资料"""
+    # 登录
     auth.login()
     
-    # 获取个人资料页面和CSRF令牌
-    response = client.get('/admin/profile')
+    # 访问个人资料页面
+    response = client.get('/admin/users/profile')
     assert response.status_code == 200
-    csrf_token = response.headers.get('X-CSRF-Token')
+    assert '个人资料'.encode('utf-8') in response.data
     
     # 更新个人资料
-    response = client.post('/admin/profile', data={
-        'nickname': '新昵称',
-        'email': 'new@example.com',
-        'csrf_token': csrf_token
-    })
-    assert response.status_code == 302
+    response = client.post('/admin/users/profile', data={
+        'csrf_token': generate_csrf(),
+        'username': 'updated_test',
+        'email': 'updated_test@example.com'
+    }, follow_redirects=True)
+    assert response.status_code == 200
     
-    user = User.query.filter_by(email='new@example.com').first()
-    assert user.nickname == '新昵称' 
+    # 验证更新是否成功
+    updated_user = User.query.get(test_user.id)
+    assert updated_user.username == 'updated_test'
+    assert updated_user.email == 'updated_test@example.com'

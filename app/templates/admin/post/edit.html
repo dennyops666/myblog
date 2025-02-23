@@ -1,83 +1,136 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}编辑文章{% endblock %}
+{% block title %}{% if post %}编辑文章{% else %}新建文章{% endif %}{% endblock %}
 
 {% block styles %}
 {{ super() }}
-<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
 <style>
-.image-preview {
-    max-width: 200px;
-    margin: 10px 0;
-}
-.upload-area {
-    border: 2px dashed #ccc;
+.editor-preview {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
     padding: 20px;
-    text-align: center;
-    margin-bottom: 20px;
-    cursor: pointer;
+    margin-top: 20px;
 }
-.upload-area:hover {
-    border-color: #666;
+.preview-toggle {
+    margin-bottom: 15px;
+}
+.editor-toolbar {
+    border-radius: 4px 4px 0 0;
+}
+.CodeMirror {
+    border-radius: 0 0 4px 4px;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">编辑文章</h1>
-        <a href="{{ url_for('admin.posts') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> 返回列表
-        </a>
-    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="h2 mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
+            <form method="POST" id="postForm">
+                {{ form.csrf_token }}
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.title.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.edit_post', post_id=post.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <div class="mb-3">
-                    <label for="title" class="form-label">标题</label>
-                    <input type="text" class="form-control" id="title" name="title" value="{{ post.title }}" required>
-                </div>
+                        <div class="form-group mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else "")) }}
+                            {% if form.content.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.content.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                <div class="mb-3">
-                    <label for="category" class="form-label">分类</label>
-                    <select class="form-select" id="category" name="category_id" required>
-                        <option value="">请选择分类</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}" {% if category.id == post.category_id %}selected{% endif %}>
-                            {{ category.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    {{ form.category_id.label(class="form-label") }}
+                                    {{ form.category_id(class="form-control" + (" is-invalid" if form.category_id.errors else "")) }}
+                                    {% if form.category_id.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.category_id.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                <div class="mb-3">
-                    <label for="summary" class="form-label">摘要</label>
-                    <textarea class="form-control" id="summary" name="summary" rows="3">{{ post.summary }}</textarea>
-                </div>
+                                <div class="form-group mb-3">
+                                    {{ form.tags.label(class="form-label") }}
+                                    {{ form.tags(class="form-control select2" + (" is-invalid" if form.tags.errors else "")) }}
+                                    {% if form.tags.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.tags.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                <div class="mb-3">
-                    <label for="content" class="form-label">内容</label>
-                    <textarea class="form-control" id="content" name="content" required>{{ post.content }}</textarea>
-                </div>
+                                <div class="form-group mb-3">
+                                    {{ form.status.label(class="form-label") }}
+                                    {{ form.status(class="form-control" + (" is-invalid" if form.status.errors else "")) }}
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.status.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                <div class="mb-3">
-                    <label for="status" class="form-label">状态</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="draft" {% if post.status.value == 'draft' %}selected{% endif %}>草稿</option>
-                        <option value="published" {% if post.status.value == 'published' %}selected{% endif %}>发布</option>
-                    </select>
-                </div>
+                                <div class="form-group mb-3">
+                                    {{ form.summary.label(class="form-label") }}
+                                    {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), rows=3) }}
+                                    {% if form.summary.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.summary.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> 保存
-                    </button>
+                                <div class="form-group mt-3">
+                                    <button type="submit" class="btn btn-primary">保存</button>
+                                    <a href="{{ url_for('admin.post.index') }}" class="btn btn-secondary">取消</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="preview-toggle">
+                <button class="btn btn-outline-secondary" id="togglePreview">
+                    <i class="fas fa-eye"></i> 切换预览
+                </button>
+            </div>
+            <div class="editor-preview d-none" id="preview"></div>
         </div>
     </div>
 </div>
@@ -85,69 +138,95 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-zh-CN.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-$(document).ready(function() {
-    // 初始化编辑器
-    $('#content').summernote({
-        lang: 'zh-CN',
-        height: 300,
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化 Select2
+    $('.select2').select2({
+        theme: 'classic',
+        placeholder: '选择标签',
+        allowClear: true
+    });
+
+    // 初始化 EasyMDE
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        spellChecker: false,
+        autosave: {
+            enabled: true,
+            uniqueId: "postEditor",
+            delay: 1000,
+        },
         toolbar: [
-            ['style', ['style']],
-            ['font', ['bold', 'underline', 'clear']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture']],
-            ['view', ['fullscreen', 'codeview', 'help']]
-        ],
-        callbacks: {
-            onImageUpload: function(files) {
-                for (let file of files) {
-                    uploadImage(file, $(this));
-                }
-            }
-        }
+            "bold", "italic", "heading", "|",
+            "quote", "code", "unordered-list", "ordered-list", "|",
+            "link", "image", "table", "|",
+            "preview", "side-by-side", "fullscreen", "|",
+            "guide"
+        ]
     });
-    
-    // 图片上传函数
-    function uploadImage(file, editor) {
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        $.ajax({
-            url: '{{ url_for("admin.upload_image") }}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                editor.summernote('insertImage', response.url);
-            },
-            error: function(xhr) {
-                const error = xhr.responseJSON ? xhr.responseJSON.error : '上传失败';
-                alert('图片上传失败：' + error);
+
+    // 预览功能
+    const previewDiv = document.getElementById('preview');
+    const toggleBtn = document.getElementById('togglePreview');
+    let previewVisible = false;
+
+    async function updatePreview() {
+        const content = easyMDE.value();
+        try {
+            const response = await fetch('/admin/posts/preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({ content: content })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                previewDiv.innerHTML = data.html;
+            } else {
+                previewDiv.innerHTML = '<div class="alert alert-danger">预览加载失败：' + data.message + '</div>';
             }
-        });
+        } catch (error) {
+            previewDiv.innerHTML = '<div class="alert alert-danger">预览加载失败，请稍后重试</div>';
+            console.error('预览请求失败:', error);
+        }
     }
-    
-    // 拖放上传
-    $('.upload-area').on('dragover', function(e) {
-        e.preventDefault();
-        $(this).addClass('border-primary');
-    }).on('dragleave', function(e) {
-        e.preventDefault();
-        $(this).removeClass('border-primary');
-    }).on('drop', function(e) {
-        e.preventDefault();
-        $(this).removeClass('border-primary');
-        
-        const files = e.originalEvent.dataTransfer.files;
-        if (files.length > 0) {
-            uploadImage(files[0], $('#content'));
+
+    toggleBtn.addEventListener('click', function() {
+        previewVisible = !previewVisible;
+        previewDiv.classList.toggle('d-none');
+        if (previewVisible) {
+            updatePreview();
+            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 关闭预览';
+        } else {
+            toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
         }
     });
+
+    // 监听编辑器内容变化
+    easyMDE.codemirror.on("change", debounce(function() {
+        if (previewVisible) {
+            updatePreview();
+        }
+    }, 500));
+
+    // 防抖函数
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 });
 </script>
 {% endblock %} 

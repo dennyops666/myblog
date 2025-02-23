@@ -6,14 +6,14 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">编辑标签</h1>
-        <a href="{{ url_for('admin.tags') }}" class="btn btn-secondary">
+        <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> 返回列表
         </a>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.edit_tag', tag_id=tag.id) }}">
+            <form method="POST" action="{{ url_for('admin.tag.edit', tag_id=tag.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 
                 <div class="mb-3">
@@ -70,7 +70,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('admin.post.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 <a href="{{ url_for('blog.post', post_id=post.id) }}" class="btn btn-sm btn-info" target="_blank">

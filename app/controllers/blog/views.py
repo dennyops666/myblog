@@ -5,84 +5,159 @@
 创建日期：2025-02-16
 """
 
-from flask import render_template, request, redirect, url_for, flash, Blueprint, abort
-from app.services import PostService, CommentService, CategoryService, TagService
+from flask import (
+    render_template, request, redirect, url_for, flash, 
+    Blueprint, abort, current_app, jsonify
+)
+from flask_login import current_user
+from app.services.post import PostService
+from app.services.comment import CommentService
+from app.services.category import CategoryService
+from app.services.tag import TagService
 from app.forms import CommentForm
 from sqlalchemy import or_
-from app.models import Post
-from app.utils.markdown import MarkdownService
-from . import blog_bp
+from app.models.post import Post, PostStatus
+from datetime import datetime, UTC
+from app.extensions import db
+import markdown2
 
 # 创建服务实例
-markdown_service = MarkdownService()
 post_service = PostService()
 comment_service = CommentService()
 category_service = CategoryService()
 tag_service = TagService()
 
+blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
+
 @blog_bp.route('/')
 def index():
     """博客首页"""
     page = request.args.get('page', 1, type=int)
-    per_page = 10
+    per_page = current_app.config['POSTS_PER_PAGE']
     
-    # 获取文章列表
-    pagination = post_service.get_post_list(page, per_page)
-    posts = pagination.items
-    
-    # 获取分类和标签
+    result = post_service.get_post_list(page, per_page)
+    archives = post_service.get_archives()
     categories = category_service.get_all_categories()
     tags = tag_service.get_all_tags()
     
     return render_template('blog/index.html',
-                         posts=posts,
-                         pagination=pagination,
+                         posts=result,
+                         archives=archives,
                          categories=categories,
                          tags=tags)
 
 @blog_bp.route('/post/<int:post_id>')
 def post(post_id):
     """文章详情页"""
-    post = post_service.get_post_by_id(post_id)
-    if not post:
-        abort(404)
-    
-    # 增加阅读次数
-    post_service.increment_views(post_id)
-    
-    # 获取评论
-    comments = comment_service.get_comments_by_post_id(post_id)
-    
-    # 评论表单
-    form = CommentForm()
-    
-    return render_template('blog/post.html',
-                         post=post,
-                         comments=comments,
-                         form=form)
+    try:
+        # 获取文章
+        post = db.session.get(Post, post_id)
+        if not post:
+            current_app.logger.error(f"文章不存在: {post_id}")
+            flash('文章不存在', 'error')
+            return redirect(url_for('blog.index'))
+        
+        # 检查文章状态
+        if post.status != PostStatus.PUBLISHED:
+            current_app.logger.error(f"文章未发布: {post_id}")
+            flash('文章不存在', 'error')
+            return redirect(url_for('blog.index'))
+        
+        # 增加浏览量
+        try:
+            post_service.increment_views(post_id)
+        except Exception as e:
+            current_app.logger.error(f"更新浏览量失败: {str(e)}")
+        
+        # 获取上一篇和下一篇文章
+        prev_post, next_post = post_service.get_prev_next_post(post)
+        
+        # 获取评论列表（只显示已审核的评论）
+        try:
+            comments = comment_service.get_comments_by_post_id(post_id, include_pending=False)
+        except Exception as e:
+            current_app.logger.error(f"获取评论列表失败: {str(e)}")
+            comments = []
+        
+        # 确保 HTML 内容已生成
+        if not post.html_content:
+            post.html_content = markdown2.markdown(post.content, extras={
+                'fenced-code-blocks': None,
+                'tables': None,
+                'header-ids': None,
+                'toc': None,
+                'footnotes': None,
+                'metadata': None,
+                'code-friendly': None
+            })
+            db.session.commit()
+        
+        # 创建评论表单
+        form = CommentForm()
+        
+        return render_template('blog/post.html',
+                             post=post,
+                             prev_post=prev_post,
+                             next_post=next_post,
+                             comments=comments,
+                             form=form)
+                             
+    except Exception as e:
+        current_app.logger.error(f"获取文章详情失败: {str(e)}")
+        flash('获取文章详情失败', 'error')
+        return render_template('blog/error.html', error_message='获取文章详情失败'), 500
 
 @blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
-def comment(post_id):
-    """添加评论"""
-    form = CommentForm()
-    if form.validate_on_submit():
-        content = markdown_service.clean_xss(form.content.data)
-        parent_id = form.parent_id.data
+def create_comment(post_id):
+    """创建评论"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status': 'error', 'message': '无效的请求数据'}), 400
+            
+        content = data.get('content')
+        nickname = data.get('nickname')
+        email = data.get('email')
+        parent_id = data.get('parent_id')
+        
+        # 获取当前用户ID（如果已登录）
+        author_id = current_user.id if current_user.is_authenticated else None
         
         # 创建评论
-        comment = comment_service.create_comment(
-            content=content,
+        result = comment_service.create_comment(
             post_id=post_id,
-            author_id=current_user.id,
-            parent_id=parent_id if parent_id else None
+            content=content,
+            nickname=nickname,
+            email=email,
+            author_id=author_id,
+            parent_id=parent_id
         )
         
-        if comment:
-            flash('评论发表成功！', 'success')
+        if result['status'] == 'success':
+            # 返回成功响应
+            return jsonify({
+                'status': 'success',
+                'message': result['message'],
+                'comment': {
+                    'id': result['comment'].id,
+                    'content': result['comment'].content,
+                    'nickname': result['comment'].nickname or result['comment'].author.username if result['comment'].author else result['comment'].nickname,
+                    'created_at': result['comment'].created_at.strftime('%Y-%m-%d %H:%M:%S')
+                }
+            }), 201
         else:
-            flash('评论发表失败！', 'danger')
+            # 返回错误响应
+            return jsonify({
+                'status': 'error',
+                'message': result['message']
+            }), 400
             
-    return redirect(url_for('blog.post', post_id=post_id))
+    except Exception as e:
+        current_app.logger.error(f"创建评论失败: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': '创建评论失败'
+        }), 500
 
 @blog_bp.route('/category/<int:category_id>')
 def category(category_id):
@@ -161,25 +236,27 @@ def tags():
     return render_template('blog/tags.html', tags=tags)
 
 @blog_bp.route('/archive')
-def archive():
+@blog_bp.route('/archive/<date>')
+def archive(date=None):
     """归档页面"""
+    page = request.args.get('page', 1, type=int)
+    per_page = current_app.config.get('POSTS_PER_PAGE', 10)
+    
+    if date:
+        try:
+            year, month = map(int, date.split('-'))
+            result = post_service.get_posts_by_time(year, month, page, per_page)
+        except ValueError:
+            flash('无效的日期格式', 'danger')
+            return redirect(url_for('blog.index'))
+    else:
+        result = post_service.get_posts_by_page(page, per_page)
+        
     archives = post_service.get_archives()
-    return render_template('blog/archive.html', archives=archives)
-
-@blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
-def create_comment(post_id):
-    """创建评论"""
-    form = CommentForm()
-    if form.validate_on_submit():
-        result = comment_service.create_comment(
-            post_id=post_id,
-            nickname=form.nickname.data,
-            email=form.email.data,
-            content=form.content.data
-        )
-        if result[0]:
-            flash('评论发表成功', 'success')
-        else:
-            flash(f'评论发表失败：{result[1]}', 'danger')
-    return redirect(url_for('blog.post', post_id=post_id))
+    
+    return render_template('blog/archive.html',
+                         posts=result,
+                         archives=archives,
+                         year=year if date else None,
+                         month=month if date else None)
 

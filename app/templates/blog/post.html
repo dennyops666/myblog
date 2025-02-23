@@ -7,6 +7,8 @@
 <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
 <style>
+{{ post.highlight_css|safe }}
+
 .article-meta {
     color: #666;
     font-size: 0.9rem;
@@ -250,22 +252,122 @@
                     {% endif %}
 
                     <!-- 评论表单 -->
-                    <div class="comment-form">
-                        <h4>发表评论</h4>
-                        <form method="post" action="{{ url_for('blog.comment', post_id=post.id) }}" id="comment-form">
+                    <div class="comment-form mt-4">
+                        <h5 class="mb-3">发表评论</h5>
+                        <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}">
                             {{ form.csrf_token }}
+                            {{ form.parent_id }}
+                            
                             <div class="mb-3">
-                                <label for="author_name" class="form-label">昵称</label>
-                                {{ form.author_name(class="form-control") }}
-                                {% if form.author_name.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.author_name.errors %}
-                                    {{ error }}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
+                                <label for="content" class="form-label">评论内容</label>
+                                {{ form.content(class="form-control", rows=5) }}
                             </div>
-                            <div class="mb-3">
-                                <label for="author_email" class="form-label">邮箱</label>
-                                {{ form.author_email(class="form-control") }}
-                                {% if form.author_email.errors %}
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="author_name" class="form-label">昵称</label>
+                                    {{ form.author_name(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="author_email" class="form-label">邮箱</label>
+                                    {{ form.author_email(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="author_website" class="form-label">网站</label>
+                                    {{ form.author_website(class="form-control") }}
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">提交评论</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-lg-4">
+            <!-- 目录 -->
+            {% if post.toc %}
+            <div class="card article-toc">
+                <div class="card-header">
+                    <h5 class="mb-0">目录</h5>
+                </div>
+                <div class="card-body">
+                    <nav class="nav flex-column">
+                        {% for item in post.toc %}
+                        <a class="nav-link depth-{{ item.depth }}" href="#{{ item.id }}">
+                            {{ item.text }}
+                        </a>
+                        {% endfor %}
+                    </nav>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 代码高亮
+    Prism.highlightAll();
+    
+    // 图片点击放大
+    const images = document.querySelectorAll('.article-content img');
+    images.forEach(img => {
+        img.addEventListener('click', () => {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+            
+            const modalImg = document.createElement('img');
+            modalImg.src = img.src;
+            modalImg.style.maxWidth = '90%';
+            modalImg.style.maxHeight = '90%';
+            modalImg.style.objectFit = 'contain';
+            
+            modal.appendChild(modalImg);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', () => {
+                modal.remove();
+            });
+        });
+    });
+    
+    // 评论回复功能
+    const replyBtns = document.querySelectorAll('.reply-btn');
+    const commentForm = document.querySelector('.comment-form');
+    const parentIdInput = document.querySelector('#parent_id');
+    
+    replyBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const commentId = btn.dataset.commentId;
+            const authorName = btn.dataset.authorName;
+            
+            parentIdInput.value = commentId;
+            commentForm.scrollIntoView({ behavior: 'smooth' });
+            
+            const contentTextarea = commentForm.querySelector('#content');
+            contentTextarea.value = `@${authorName} `;
+            contentTextarea.focus();
+        });
+    });
+});
+</script>
+{% endblock %}

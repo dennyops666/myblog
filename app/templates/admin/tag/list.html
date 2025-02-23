@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">标签管理</h1>
-        <a href="{{ url_for('admin.create_tag') }}" class="btn btn-primary">
+        <a href="{{ url_for('admin.tag.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> 新建标签
         </a>
     </div>
@@ -26,7 +26,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for tag in tags %}
+                        {% for tag in pagination.items %}
                         <tr>
                             <td>{{ tag.id }}</td>
                             <td>{{ tag.name }}</td>
@@ -34,11 +34,11 @@
                             <td>{{ tag.post_count }}</td>
                             <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
-                                <a href="{{ url_for('admin.edit_tag', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('admin.tag.edit', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <form action="{{ url_for('admin.delete_tag', tag_id=tag.id) }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <form action="{{ url_for('admin.tag.delete', tag_id=tag.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个标签吗？')">
                                         <i class="fas fa-trash"></i> 删除
                                     </button>
@@ -57,27 +57,17 @@
             {% if pagination.pages > 1 %}
             <nav aria-label="Page navigation" class="mt-4">
                 <ul class="pagination justify-content-center">
-                    {% if pagination.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.tags', page=pagination.prev_num) }}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% for page in range(1, pagination.pages + 1) %}
-                    <li class="page-item {% if page == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin.tags', page=page) }}">{{ page }}</a>
-                    </li>
+                    {% for page in pagination.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.tag.index', page=page) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
                     {% endfor %}
-
-                    {% if pagination.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.tags', page=pagination.next_num) }}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
             </nav>
             {% endif %}

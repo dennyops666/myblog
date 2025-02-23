@@ -7,9 +7,9 @@
 
 from datetime import datetime, UTC
 from flask import current_app
+from app.extensions import db
 from app.models.comment import Comment
 from app.models.post import Post
-from app.extensions import db
 from app.services.security import SecurityService
 
 class CommentService:
@@ -18,42 +18,61 @@ class CommentService:
     def __init__(self):
         self.security_service = SecurityService()
         
-    def create_comment(self, content, post_id, author):
+    def create_comment(self, post_id, content, nickname=None, email=None, author_id=None, parent_id=None):
         """创建评论
         
         Args:
-            content: 评论内容
             post_id: 文章ID
-            author: 作者对象
+            content: 评论内容
+            nickname: 昵称（匿名评论时使用）
+            email: 邮箱（匿名评论时使用）
+            author_id: 作者ID（可选）
+            parent_id: 父评论ID（可选）
             
         Returns:
             dict: 包含状态和消息的字典
+            
+        Raises:
+            ValueError: 如果必要参数缺失或无效
         """
         try:
-            # 清理输入
-            content = self.security_service.sanitize_comment(content)
+            if not content:
+                return {'status': 'error', 'message': '评论内容不能为空'}
             
             # 检查文章是否存在
             post = Post.query.get(post_id)
             if not post:
                 return {'status': 'error', 'message': '文章不存在'}
-                
+            
+            # 检查父评论是否存在
+            parent = None
+            if parent_id:
+                parent = Comment.query.get(parent_id)
+                if not parent or parent.post_id != post_id:
+                    return {'status': 'error', 'message': '父评论不存在或不属于该文章'}
+            
+            # 清理输入
+            content = self.security_service.sanitize_comment(content)
+            
             # 创建评论
             comment = Comment(
                 content=content,
                 post_id=post_id,
-                author=author
+                author_id=author_id,
+                parent_id=parent_id,
+                nickname=nickname,
+                email=email,
+                status=1  # 默认已审核
             )
             
             db.session.add(comment)
             db.session.commit()
             
             return {'status': 'success', 'message': '评论创建成功', 'comment': comment}
-            
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"创建评论失败: {str(e)}")
-            return {'status': 'error', 'message': '创建评论失败，请稍后重试'}
+            return {'status': 'error', 'message': str(e)}
             
     def update_comment(self, comment_id, content):
         """更新评论

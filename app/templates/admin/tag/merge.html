@@ -6,14 +6,14 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">合并标签</h1>
-        <a href="{{ url_for('admin.tags') }}" class="btn btn-secondary">
+        <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> 返回列表
         </a>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.merge_tags') }}">
+            <form method="POST" action="{{ url_for('admin.tag.merge') }}">
                 <div class="alert alert-warning">
                     <i class="fas fa-exclamation-triangle"></i>
                     将源标签合并到目标标签后，源标签将被删除，其关联的所有文章将改为使用目标标签。此操作不可撤销，请谨慎操作。

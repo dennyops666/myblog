@@ -18,15 +18,22 @@ class Category(db.Model):
     slug = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.String(256))
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC),
+                          onupdate=lambda: datetime.now(UTC))
     
     # 关系
-    posts = db.relationship('Post', back_populates='category', lazy='dynamic')
+    posts = db.relationship('Post', back_populates='category', lazy='dynamic',
+                          cascade='all, delete-orphan')
     
     def __init__(self, name, slug=None, description=None):
         self.name = name
         self.slug = slug or name.lower().replace(' ', '-')
         self.description = description
-        
+    
+    @property
+    def post_count(self):
+        """获取分类下的文章数量"""
+        return self.posts.count()
+    
     def __repr__(self):
         return f'<Category {self.name}>' 

@@ -1,0 +1,112 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}标签管理 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">标签管理</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('admin.tags.create_tag') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 新建标签
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>名称</th>
+                            <th>别名</th>
+                            <th>描述</th>
+                            <th>文章数量</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tag in tags.items %}
+                        <tr>
+                            <td>{{ tag.id }}</td>
+                            <td>{{ tag.name }}</td>
+                            <td>{{ tag.slug }}</td>
+                            <td>{{ tag.description or '无' }}</td>
+                            <td>{{ tag.post_count }}</td>
+                            <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('admin.tags.edit_tag', tag_id=tag.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    <form action="{{ url_for('admin.tags.delete_tag', tag_id=tag.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这个标签吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">暂无标签</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if tags.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if tags.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.tags.tags', page=tags.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in tags.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == tags.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.tags.tags', page=page) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if tags.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.tags.tags', page=tags.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 删除确认
+    const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('确定要删除这个标签吗？')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

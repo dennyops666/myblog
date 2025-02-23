@@ -6,7 +6,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3">分类管理</h1>
-        <a href="{{ url_for('admin.create_category') }}" class="btn btn-primary">
+        <a href="{{ url_for('admin.category.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> 新建分类
         </a>
     </div>
@@ -19,26 +19,27 @@
                         <tr>
                             <th>ID</th>
                             <th>名称</th>
-                            <th>描述</th>
+                            <th>别名</th>
                             <th>文章数量</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for category in categories %}
+                        {% for category in categories.items %}
                         <tr>
                             <td>{{ category.id }}</td>
                             <td>{{ category.name }}</td>
-                            <td>{{ category.description or '无' }}</td>
-                            <td>{{ category.posts|length }}</td>
+                            <td>{{ category.slug }}</td>
+                            <td>{{ category.post_count }}</td>
                             <td>{{ category.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
-                                <a href="{{ url_for('admin.edit_category', category_id=category.id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('admin.category.edit', id=category.id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <form action="{{ url_for('admin.delete_category', category_id=category.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个分类吗？如果分类下有文章将无法删除。')">
+                                <form action="{{ url_for('admin.category.delete', id=category.id) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个分类吗？')">
                                         <i class="fas fa-trash"></i> 删除
                                     </button>
                                 </form>
@@ -52,7 +53,52 @@
                     </tbody>
                 </table>
             </div>
+
+            {% if categories.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if categories.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.category.index', page=categories.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in range(1, categories.pages + 1) %}
+                    <li class="page-item {% if page == categories.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.category.index', page=page) }}">{{ page }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if categories.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.category.index', page=categories.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 删除确认
+    const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('确定要删除这个分类吗？如果分类下有文章将无法删除。')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
 {% endblock %} 
