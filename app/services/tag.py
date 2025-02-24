@@ -61,7 +61,7 @@ class TagService:
         Returns:
             Tag: 标签对象
         """
-        return Tag.query.get(tag_id)
+        return db.session.get(Tag, tag_id)
     
     def get_tag_by_slug(self, slug: str) -> Optional[Tag]:
         """根据别名获取标签
@@ -245,8 +245,8 @@ class TagService:
             dict: 包含状态和消息的字典
         """
         try:
-            source_tag = Tag.query.get(source_id)
-            target_tag = Tag.query.get(target_id)
+            source_tag = db.session.get(Tag, source_id)
+            target_tag = db.session.get(Tag, target_id)
             
             if not source_tag or not target_tag:
                 return {'status': 'error', 'message': '标签不存在'}

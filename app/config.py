@@ -18,8 +18,8 @@ class Config:
     # 安全配置
     WTF_CSRF_ENABLED = True
     WTF_CSRF_CHECK_DEFAULT = True
-    WTF_CSRF_SSL_STRICT = True
-    SESSION_COOKIE_SECURE = True
+    WTF_CSRF_SSL_STRICT = False  # 默认不强制 HTTPS
+    SESSION_COOKIE_SECURE = False  # 默认不强制 HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
@@ -29,7 +29,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # 缓存配置
-    CACHE_TYPE = 'simple'
+    CACHE_TYPE = 'SimpleCache'
     CACHE_DEFAULT_TIMEOUT = 300
     
     # 文件上传配置
@@ -56,17 +56,28 @@ class Config:
     BLOG_AUTHOR = 'Denny'
     BLOG_EMAIL = 'admin@example.com'
     
+    # 会话配置
+    SESSION_TYPE = 'sqlalchemy'
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    SESSION_SQLALCHEMY_TABLE = 'sessions'
+    
     @staticmethod
     def init_app(app):
         """初始化应用"""
         # 创建上传目录
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         os.makedirs(app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
+        
+        # 设置 SESSION_SQLALCHEMY
+        from app.extensions import db
+        app.config['SESSION_SQLALCHEMY'] = db
 
 class DevelopmentConfig(Config):
     """开发环境配置"""
     DEBUG = True
-    SQLALCHEMY_ECHO = True
+    TESTING = False
+    WTF_CSRF_SSL_STRICT = False
+    SESSION_COOKIE_SECURE = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'blog-dev.db')
     
@@ -74,64 +85,48 @@ class DevelopmentConfig(Config):
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'dev_uploads')
     IMAGE_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, 'images')
 
+class TestingConfig(Config):
+    """测试环境配置"""
+    TESTING = True
+    DEBUG = False
+    WTF_CSRF_ENABLED = False  # 在测试环境中禁用 CSRF 保护
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'  # 使用 Lax 模式
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SERVER_NAME = 'localhost'
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1MB for testing
+    
+    # 会话配置
+    SESSION_TYPE = 'sqlalchemy'
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+    
+    @classmethod
+    def init_app(cls, app):
+        """初始化测试应用"""
+        Config.init_app(app)
+        
+        # 确保测试上传目录存在
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        os.makedirs(app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
+
 class ProductionConfig(Config):
     """生产环境配置"""
     DEBUG = False
-    CACHE_TYPE = 'redis'
-    CACHE_REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-    
-    # 安全配置
+    TESTING = False
+    WTF_CSRF_SSL_STRICT = True
     SESSION_COOKIE_SECURE = True
-    REMEMBER_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_HTTPONLY = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'blog.db')
     
     # 生产环境图片配置
     IMAGE_MAX_DIMENSION = 1920  # 更大的最大尺寸
     IMAGE_QUALITY = 90  # 更高的图片质量
 
-class TestingConfig(Config):
-    """测试环境配置"""
-    TESTING = True
-    DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    
-    # 安全配置
-    WTF_CSRF_ENABLED = False
-    WTF_CSRF_CHECK_DEFAULT = False
-    WTF_CSRF_SSL_STRICT = False
-    SESSION_COOKIE_SECURE = False
-    SESSION_COOKIE_HTTPONLY = False
-    REMEMBER_COOKIE_SECURE = False
-    REMEMBER_COOKIE_HTTPONLY = False
-    
-    # 认证配置
-    LOGIN_DISABLED = True  # 禁用登录要求
-    LOGIN_VIEW = 'auth.login'
-    SESSION_PROTECTION = None
-    
-    # API配置
-    API_TOKEN_ENABLED = False
-    API_TOKEN_HEADER = 'X-CSRF-Token'
-    
-    # 上传配置
-    UPLOAD_FOLDER = tempfile.mkdtemp()
-    IMAGE_UPLOAD_FOLDER = tempfile.mkdtemp()
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
-    
-    @staticmethod
-    def init_app(app):
-        """初始化应用"""
-        Config.init_app(app)
-        
-        # 确保测试上传目录存在
-        os.makedirs(TestingConfig.UPLOAD_FOLDER, exist_ok=True)
-        os.makedirs(TestingConfig.IMAGE_UPLOAD_FOLDER, exist_ok=True)
-
 # 配置字典
 config = {
     'development': DevelopmentConfig,
-    'production': ProductionConfig,
     'testing': TestingConfig,
+    'production': ProductionConfig,
     'default': DevelopmentConfig
 }

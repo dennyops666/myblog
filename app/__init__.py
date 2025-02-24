@@ -8,12 +8,17 @@
 import os
 from flask import Flask, send_from_directory, g
 from flask_wtf.csrf import generate_csrf
+from flask_migrate import Migrate
 from app.config import config
-from app.extensions import db, migrate, login_manager, csrf, init_app, cache
+from app.extensions import db, login_manager, csrf, init_app, cache
 from datetime import datetime
 from app.controllers.blog import blog_bp
 from app.controllers.auth import auth_bp
 from app.controllers.admin import admin_bp
+from app.controllers.admin.upload import upload_bp
+
+# 创建 migrate 实例
+migrate = Migrate()
 
 def create_app(config_name='development'):
     """创建Flask应用实例"""
@@ -33,9 +38,14 @@ def create_app(config_name='development'):
     
     # 配置会话
     if app.config.get('TESTING'):
-        app.config['SESSION_TYPE'] = 'filesystem'
-        app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'sessions')
-        os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+        app.config['SESSION_TYPE'] = 'sqlalchemy'
+        app.config['SESSION_SQLALCHEMY'] = db
+    
+    # 初始化SQLAlchemy
+    db.init_app(app)
+    
+    # 初始化 Flask-Migrate
+    migrate.init_app(app, db)
     
     # 初始化所有扩展
     init_app(app)
@@ -44,6 +54,7 @@ def create_app(config_name='development'):
     app.register_blueprint(blog_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(upload_bp, url_prefix='/admin/upload')
     
     # 注册自定义过滤器
     from app.utils.filters import init_filters
@@ -63,7 +74,7 @@ def create_app(config_name='development'):
     # 添加CSRF令牌到响应
     @app.after_request
     def add_csrf_token(response):
-        if 'text/html' in response.headers.get('Content-Type', ''):
+        if not app.config.get('TESTING') and 'text/html' in response.headers.get('Content-Type', ''):
             g.csrf_token = generate_csrf()
         return response
     

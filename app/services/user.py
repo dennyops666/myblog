@@ -68,7 +68,7 @@ class UserService:
             dict: 包含状态和消息的字典
         """
         try:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if not user:
                 return {'status': 'error', 'message': '用户不存在'}
                 
@@ -104,7 +104,7 @@ class UserService:
             dict: 包含状态和消息的字典
         """
         try:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if not user:
                 return {'status': 'error', 'message': '用户不存在'}
                 
@@ -128,7 +128,7 @@ class UserService:
             dict: 包含状态和消息的字典
         """
         try:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if not user:
                 return {'status': 'error', 'message': '用户不存在'}
                 
@@ -177,7 +177,7 @@ class UserService:
         Returns:
             bool: 密码是否正确
         """
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return False
             

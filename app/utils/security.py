@@ -7,13 +7,13 @@
 
 import os
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 
 def generate_token(user_id, expires_in=3600):
     """生成JWT令牌"""
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     payload = {
         'user_id': user_id,
         'exp': now + timedelta(seconds=expires_in),

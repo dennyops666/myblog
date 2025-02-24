@@ -139,6 +139,6 @@ def test_admin_profile(client, auth, test_user):
     assert response.status_code == 200
     
     # 验证更新是否成功
-    updated_user = User.query.get(test_user.id)
+    updated_user = db.session.get(User, test_user.id)
     assert updated_user.username == 'updated_test'
     assert updated_user.email == 'updated_test@example.com'

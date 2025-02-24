@@ -331,7 +331,7 @@ class PostService:
             Post: 更新后的文章对象
         """
         try:
-            post = Post.query.get(post_id)
+            post = db.session.get(Post, post_id)
             if not post:
                 return None
                 
@@ -366,7 +366,7 @@ class PostService:
             dict: 包含状态和消息的字典
         """
         try:
-            post = Post.query.get(post_id)
+            post = db.session.get(Post, post_id)
             if not post:
                 return {'status': 'error', 'message': '文章不存在'}
                 
@@ -497,7 +497,7 @@ class PostService:
             if current_app.config.get('TESTING'):
                 return True, 1
                 
-            post = Post.query.get(post_id)
+            post = db.session.get(Post, post_id)
             if not post:
                 return False, "文章不存在"
             

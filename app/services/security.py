@@ -11,7 +11,7 @@ import bleach
 import hashlib
 import magic
 import hmac
-from typing import Dict, Any, Union, Tuple
+from typing import Dict, Any, Union, Tuple, Optional, List
 from werkzeug.utils import secure_filename
 from app.extensions import cache, db
 from app.utils.markdown import markdown_to_html
@@ -22,6 +22,8 @@ from flask import current_app, session, request
 from datetime import datetime, timedelta, UTC
 import secrets
 import logging
+import ipaddress
+from app.models import User, Post, UserSession
 
 logger = logging.getLogger('app')
 
@@ -88,6 +90,12 @@ class SecurityService:
             r"BENCHMARK\s*\(",
             r"SLEEP\s*\("
         ]
+
+        self.session_timeout = 30  # 会话超时时间（分钟）
+        self.max_failed_attempts = 5  # 最大失败尝试次数
+        self.lockout_duration = 30  # 锁定时间（分钟）
+        self.password_pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'
+        self._failed_attempts = {}
 
     def validate_csrf_token(self, token=None):
         """验证CSRF令牌"""
@@ -606,4 +614,92 @@ class SecurityService:
                 if pattern in content.lower():
                     return False
                     
-        return True 
+        return True
+
+    def validate_password_strength(self, password: str) -> bool:
+        """验证密码强度"""
+        return bool(re.match(self.password_pattern, password))
+    
+    def is_account_locked(self, username: str) -> bool:
+        """检查账户是否被锁定"""
+        if username in self._failed_attempts:
+            attempts, lockout_time = self._failed_attempts[username]
+            if attempts >= self.max_failed_attempts:
+                if datetime.now(UTC) < lockout_time + timedelta(minutes=self.lockout_duration):
+                    return True
+                del self._failed_attempts[username]
+        return False
+    
+    def record_failed_attempt(self, username: str) -> None:
+        """记录失败的登录尝试"""
+        if username in self._failed_attempts:
+            attempts, _ = self._failed_attempts[username]
+            self._failed_attempts[username] = (attempts + 1, datetime.now(UTC))
+        else:
+            self._failed_attempts[username] = (1, datetime.now(UTC))
+    
+    def clear_failed_attempts(self, username: str) -> None:
+        """清除失败的登录尝试记录"""
+        if username in self._failed_attempts:
+            del self._failed_attempts[username]
+    
+    def is_session_valid(self, session: UserSession) -> bool:
+        """检查会话是否有效"""
+        if not session.is_active:
+            return False
+            
+        if session.last_active + timedelta(minutes=self.session_timeout) < datetime.now(UTC):
+            return False
+            
+        return True
+    
+    def update_session_activity(self, session: UserSession) -> None:
+        """更新会话活动时间"""
+        session.last_active = datetime.now(UTC)
+        db.session.commit()
+    
+    def invalidate_session(self, session: UserSession) -> None:
+        """使会话失效"""
+        session.is_active = False
+        db.session.commit()
+    
+    def validate_ip_address(self, ip: str) -> bool:
+        """验证IP地址格式"""
+        try:
+            ipaddress.ip_address(ip)
+            return True
+        except ValueError:
+            return False
+    
+    def is_safe_url(self, url: str) -> bool:
+        """检查URL是否安全"""
+        from urllib.parse import urlparse, urljoin
+        ref_url = urlparse(request.host_url)
+        test_url = urlparse(urljoin(request.host_url, url))
+        return test_url.scheme in ('http', 'https') and \
+            ref_url.netloc == test_url.netloc
+    
+    def sanitize_redirect_url(self, url: str, default: str = '/') -> str:
+        """清理重定向URL"""
+        return url if url and self.is_safe_url(url) else default
+    
+    def check_resource_access(self, user: User, resource: Any) -> bool:
+        """检查用户是否有权限访问资源"""
+        if isinstance(resource, Post):
+            # 检查文章访问权限
+            if resource.is_private:
+                return resource.author_id == user.id
+            return True
+        return False
+    
+    def get_user_sessions(self, user: User) -> List[UserSession]:
+        """获取用户的所有会话"""
+        return UserSession.query.filter_by(user_id=user.id, is_active=True).all()
+    
+    def terminate_all_sessions(self, user: User, except_session_id: Optional[str] = None) -> None:
+        """终止用户的所有会话"""
+        query = UserSession.query.filter_by(user_id=user.id, is_active=True)
+        if except_session_id:
+            query = query.filter(UserSession.session_id != except_session_id)
+        query.update({'is_active': False})
+        db.session.commit() 

@@ -40,14 +40,14 @@ class CommentService:
                 return {'status': 'error', 'message': '评论内容不能为空'}
             
             # 检查文章是否存在
-            post = Post.query.get(post_id)
+            post = db.session.get(Post, post_id)
             if not post:
                 return {'status': 'error', 'message': '文章不存在'}
             
             # 检查父评论是否存在
             parent = None
             if parent_id:
-                parent = Comment.query.get(parent_id)
+                parent = db.session.get(Comment, parent_id)
                 if not parent or parent.post_id != post_id:
                     return {'status': 'error', 'message': '父评论不存在或不属于该文章'}
             
@@ -85,7 +85,7 @@ class CommentService:
             dict: 包含状态和消息的字典
         """
         try:
-            comment = Comment.query.get(comment_id)
+            comment = db.session.get(Comment, comment_id)
             if not comment:
                 return {'status': 'error', 'message': '评论不存在'}
                 
@@ -114,7 +114,7 @@ class CommentService:
             dict: 包含状态和消息的字典
         """
         try:
-            comment = Comment.query.get(comment_id)
+            comment = db.session.get(Comment, comment_id)
             if not comment:
                 return {'status': 'error', 'message': '评论不存在'}
                 
@@ -138,7 +138,7 @@ class CommentService:
             dict: 包含状态和消息的字典
         """
         try:
-            comment = Comment.query.get(comment_id)
+            comment = db.session.get(Comment, comment_id)
             if not comment:
                 return {'status': 'error', 'message': '评论不存在'}
                 
@@ -190,7 +190,7 @@ class CommentService:
     
     def get_comment_by_id(self, comment_id):
         """根据ID获取评论"""
-        return Comment.query.get(comment_id)
+        return db.session.get(Comment, comment_id)
     
     def get_comments_by_post(self, post_id, page=1, per_page=10, include_pending=False):
         """获取文章的评论列表"""

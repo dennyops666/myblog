@@ -6,11 +6,13 @@
 """
 
 from datetime import datetime, timedelta, UTC
+from typing import Optional, Dict, Any
+import jwt
 from flask import current_app, session, request
 from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models.user import User
-from app.models.session import Session
+from app.models.session import UserSession
 from app.models.role import Role
 from app.extensions import db
 from app.utils.security import generate_token, verify_token
@@ -22,11 +24,13 @@ class AuthService:
     """认证服务类"""
     
     def __init__(self):
+        """初始化认证服务"""
         self.security_service = SecurityService()
         self.user_service = UserService()
         self.max_login_attempts = 5
         self.lockout_duration = 30  # 锁定时间（分钟）
         self._failed_attempts = {}
+        self.token_expire_hours = 24  # Token有效期24小时
 
     def register(self, username, email, password):
         """用户注册
@@ -162,7 +166,7 @@ class AuthService:
                 return {'success': True, 'message': '已登出'}
                 
             # 获取当前会话
-            user_session = Session.query.filter_by(
+            user_session = UserSession.query.filter_by(
                 user_id=session['user_id'],
                 is_active=True
             ).first()
@@ -210,7 +214,7 @@ class AuthService:
             db.session.commit()
             
             # 清除所有会话
-            Session.query.filter_by(user_id=user.id).delete()
+            UserSession.query.filter_by(user_id=user.id).delete()
             db.session.commit()
             
             return {'status': 'success', 'message': '密码修改成功'}
@@ -276,7 +280,7 @@ class AuthService:
             db.session.commit()
             
             # 清除所有会话
-            Session.query.filter_by(user_id=user.id).delete()
+            UserSession.query.filter_by(user_id=user.id).delete()
             db.session.commit()
             
             return {'status': 'success', 'message': '密码重置成功'}
@@ -307,3 +311,70 @@ class AuthService:
         """清除失败的登录尝试记录"""
         if username in self._failed_attempts:
             del self._failed_attempts[username]
+
+    def authenticate(self, username: str, password: str) -> Optional[User]:
+        """验证用户凭据"""
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            return user
+        return None
+    
+    def generate_token(self, user: User) -> str:
+        """生成JWT令牌"""
+        now = datetime.now(UTC)
+        payload = {
+            'user_id': user.id,
+            'username': user.username,
+            'exp': now + timedelta(hours=self.token_expire_hours),
+            'iat': now
+        }
+        return jwt.encode(
+            payload,
+            current_app.config['SECRET_KEY'],
+            algorithm='HS256'
+        )
+    
+    def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+        """验证JWT令牌"""
+        try:
+            payload = jwt.decode(
+                token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            return payload
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
+    
+    def get_user_from_token(self, token: str) -> Optional[User]:
+        """从令牌中获取用户"""
+        payload = self.verify_token(token)
+        if payload:
+            return User.query.get(payload['user_id'])
+        return None
+    
+    def login_user(self, user: User) -> bool:
+        """登录用户"""
+        try:
+            user.last_login = datetime.now(UTC)
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
+    
+    def logout_user(self, user: User) -> bool:
+        """登出用户"""
+        try:
+            user.last_seen = datetime.now(UTC)
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            return False
+    
+    def check_permission(self, user: User, permission: int) -> bool:
+        """检查用户是否具有指定权限"""
+        return bool(user.role and user.role.permissions & permission)

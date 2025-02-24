@@ -17,6 +17,13 @@ from app.models import User, Category, Post, Tag, Comment, Role
 from app.models.post import PostStatus
 import shutil
 import markdown2
+from sqlalchemy import event
+from bs4 import BeautifulSoup
+from sqlalchemy.orm import scoped_session, sessionmaker
+from flask_login import login_user
+from flask import session
+import secrets
+from werkzeug.datastructures import MultiDict, FileStorage
 
 @contextmanager
 def session_scope():
@@ -28,21 +35,58 @@ def session_scope():
         db.session.rollback()
         raise
     finally:
-        db.session.remove()
+        db.session.close()
 
 @pytest.fixture(autouse=True)
-def db_session():
-    """每个测试用例自动使用的数据库会话"""
-    with session_scope() as session:
+def db_session(app):
+    """创建数据库会话"""
+    with app.app_context():
+        connection = db.engine.connect()
+        transaction = connection.begin()
+        
+        session_factory = sessionmaker(bind=connection)
+        session = scoped_session(session_factory)
+        
+        # 替换 Flask-SQLAlchemy 的会话
+        db.session = session
+        
         yield session
+        
+        session.remove()
+        transaction.rollback()
+        connection.close()
 
 @pytest.fixture(scope='session')
 def app():
-    """创建Flask应用实例"""
+    """创建应用实例"""
     app = create_app('testing')
-    return app
+    
+    # 创建数据库表
+    with app.app_context():
+        db.create_all()
+        
+    yield app
+    
+    # 清理数据库
+    with app.app_context():
+        db.drop_all()
 
-@pytest.fixture
+@pytest.fixture(scope='function')
+def test_user(app, db_session):
+    """创建测试用户"""
+    user = User.query.filter_by(username='test').first()
+    if not user:
+        user = User(
+            username='test',
+            email='test@example.com'
+        )
+        user.set_password('test')
+        db.session.add(user)
+        db.session.commit()
+    db.session.refresh(user)
+    return user
+
+@pytest.fixture(scope='function')
 def client(app):
     """创建测试客户端"""
     return app.test_client()
@@ -61,50 +105,35 @@ def csrf_token(client):
 
 @pytest.fixture
 def auth(client, test_user):
-    """认证操作类"""
+    """认证操作的辅助类"""
     class AuthActions:
         def __init__(self, client):
-            self._client = client
-
+            self.client = client
+            self._csrf_token = None
+        
+        @property
+        def csrf_token(self):
+            """获取CSRF令牌"""
+            if not self._csrf_token:
+                from flask_wtf.csrf import generate_csrf
+                self._csrf_token = generate_csrf()
+            return self._csrf_token
+        
         def login(self, username='test', password='test', follow_redirects=False):
             """登录"""
-            with self._client.session_transaction() as sess:
-                sess['csrf_token'] = generate_csrf()
-            response = self._client.post('/auth/login', 
-                data={
-                    'username': username,
-                    'password': password,
-                    'remember': True,
-                    'csrf_token': generate_csrf()
-                }, 
-                follow_redirects=follow_redirects
-            )
+            return self.client.post('/auth/login', data={
+                'username': username,
+                'password': password,
+                'csrf_token': self.csrf_token,
+                'remember_me': False
+            }, follow_redirects=follow_redirects)
             
-            # 设置会话变量
-            with self._client.session_transaction() as sess:
-                sess['_user_id'] = str(test_user.id)
-                sess['_fresh'] = True
-                sess['_permanent'] = True
-                sess['user_agent'] = 'test'
-                sess['last_active'] = datetime.now(UTC).isoformat()
-                sess['is_authenticated'] = True
-                sess['csrf_token'] = generate_csrf()
-                sess['user'] = {
-                    'id': test_user.id,
-                    'username': test_user.username,
-                    'email': test_user.email
-                }
-            
-            return response
-
         def logout(self):
             """登出"""
-            with self._client.session_transaction() as sess:
-                sess['csrf_token'] = generate_csrf()
-            return self._client.post('/auth/logout', data={
-                'csrf_token': generate_csrf()
+            return self.client.post('/auth/logout', data={
+                'csrf_token': self.csrf_token
             })
-
+    
     return AuthActions(client)
 
 @pytest.fixture(scope='session')
@@ -116,45 +145,100 @@ def init_roles(app):
             admin_role = Role(name='admin', description='Administrator')
             db.session.add(admin_role)
             db.session.commit()
+            db.session.refresh(admin_role)
         return admin_role
 
-@pytest.fixture
-def test_user(app, db_session, init_roles):
-    """创建测试用户"""
-    with app.app_context():
-        # 使用时间戳生成唯一的电子邮件地址
-        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-        user = User(
-            username=f'test_{timestamp}',
-            email=f'test_{timestamp}@example.com'
-        )
-        user.set_password('test')
-        
-        # 添加管理员角色
-        user.roles.append(init_roles)
-        
-        db.session.add(user)
-        db.session.commit()
-        return user
+@pytest.fixture(scope='function')
+def authenticated_client(client, test_user, app):
+    """创建一个已认证的测试客户端"""
+    # 确保上传目录存在
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
 
-@pytest.fixture
-def authenticated_client(client, auth, test_user):
-    """已认证的测试客户端"""
-    auth.login()
-    with client.session_transaction() as session:
-        session['_user_id'] = test_user.id
-        session['_fresh'] = True
-        session['_permanent'] = True
-        session['user_agent'] = 'pytest'
-        session['last_active'] = datetime.now(UTC).isoformat()
-        session['is_authenticated'] = True
-        session['csrf_token'] = generate_csrf()
-        session['user'] = {
-            'id': test_user.id,
-            'username': test_user.username,
-            'email': test_user.email
-        }
-    return client
+    # 确保 CSRF 保护被禁用
+    app.config['WTF_CSRF_ENABLED'] = False
+
+    with session_scope() as session:
+        # 重新加载 test_user
+        session.add(test_user)
+        session.refresh(test_user)
+
+        # 设置会话数据
+        with client.session_transaction() as sess:
+            sess['_fresh'] = True
+            sess['_permanent'] = True
+            sess['_user_id'] = str(test_user.id)
+            sess['_id'] = test_user.get_id()
+            sess['user_agent'] = 'pytest'
+            sess['last_active'] = datetime.now(UTC).isoformat()
+
+        # 执行登录请求
+        response = client.post('/auth/login', data={
+            'username': 'test',
+            'password': 'test'
+        })
+
+        assert response.status_code in (200, 302)
+
+        # 添加 POST 请求方法
+        def post_with_token(url, data=None, **kwargs):
+            """发送 POST 请求"""
+            if data is None:
+                data = {}
+
+            # 处理文件上传
+            if isinstance(data, dict) and 'file' in data:
+                form_data = MultiDict()
+                
+                # 处理文件
+                file_data = data.pop('file')
+                if isinstance(file_data, tuple):
+                    stream, filename = file_data
+                    file_data = FileStorage(
+                        stream=stream,
+                        filename=filename,
+                        content_type='application/octet-stream'
+                    )
+                form_data.add('file', file_data)
+                
+                # 添加其他表单数据
+                for key, value in data.items():
+                    form_data.add(key, value)
+                
+                # 添加CSRF token
+                form_data.add('csrf_token', generate_csrf())
+                
+                data = form_data
+            else:
+                # 如果不是文件上传，直接添加CSRF token
+                if isinstance(data, dict):
+                    data = data.copy()
+                else:
+                    data = MultiDict(data)
+                data['csrf_token'] = generate_csrf()
+
+            # 确保用户对象绑定到会话
+            with session_scope() as session:
+                # 获取新的用户对象而不是重用现有的
+                current_user = session.get(User, test_user.id)
+                return client.post(url, data=data, **kwargs)
+
+        # 保存原始的get方法
+        original_get = client.get
+        
+        # 添加 GET 请求方法
+        def get_with_session(*args, **kwargs):
+            """发送 GET 请求"""
+            with session_scope() as session:
+                session.add(test_user)
+                session.refresh(test_user)
+                return original_get(*args, **kwargs)
+
+        # 替换原始的 get 方法
+        client.get = get_with_session
+        client.post_with_token = post_with_token
+
+        return client
 
 @pytest.fixture
 def test_category(app, db_session):

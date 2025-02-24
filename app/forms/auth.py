@@ -14,6 +14,18 @@ class LoginForm(FlaskForm):
     username = StringField('用户名', validators=[DataRequired()])
     password = PasswordField('密码', validators=[DataRequired()])
     remember_me = BooleanField('记住我')
+    csrf_token = StringField('CSRF Token')
+    submit = SubmitField('登录')
+
+    @classmethod
+    def from_json(cls, json_data):
+        """从 JSON 数据创建表单实例"""
+        form = cls()
+        form.username.data = json_data.get('username')
+        form.password.data = json_data.get('password')
+        form.remember_me.data = json_data.get('remember_me', False)
+        form.csrf_token.data = json_data.get('csrf_token')
+        return form
 
 class RegisterForm(FlaskForm):
     """注册表单"""

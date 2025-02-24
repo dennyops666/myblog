@@ -60,7 +60,7 @@ class CategoryService:
             dict: 包含状态和消息的字典
         """
         try:
-            category = Category.query.get(category_id)
+            category = db.session.get(Category, category_id)
             if not category:
                 return {'status': 'error', 'message': '分类不存在'}
                 
@@ -93,7 +93,7 @@ class CategoryService:
             dict: 包含状态和消息的字典
         """
         try:
-            category = Category.query.get(category_id)
+            category = db.session.get(Category, category_id)
             if not category:
                 return {'status': 'error', 'message': '分类不存在'}
                 
@@ -126,7 +126,7 @@ class CategoryService:
         Returns:
             Category: 分类对象
         """
-        return Category.query.get(category_id)
+        return db.session.get(Category, category_id)
         
     def get_category_by_slug(self, slug: str) -> Optional[Category]:
         """根据别名获取分类

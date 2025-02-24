@@ -5,9 +5,14 @@
 创建日期：2025-02-16
 """
 
-from app.models import User
+from datetime import datetime, timedelta, UTC
+from typing import Optional, Dict, Any, List
+from werkzeug.security import generate_password_hash, check_password_hash
+from app.models.user import User
+from app.models.role import Role
+from app.models.session import UserSession
 from app.extensions import db
-from sqlalchemy.exc import IntegrityError
+import logging
 import re
 
 class UserService:
@@ -181,8 +186,7 @@ class UserService:
             Post.query.filter_by(author_id=user_id).delete()
             
             # 删除用户的所有会话
-            from app.models.session import Session
-            Session.query.filter_by(user_id=user_id).delete()
+            UserSession.query.filter_by(user_id=user_id).delete()
             
             # 删除用户
             db.session.delete(user)

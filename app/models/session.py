@@ -8,46 +8,60 @@
 from datetime import datetime, UTC
 from app.extensions import db
 import secrets
+import json
 
-class Session(db.Model):
-    """会话模型"""
-    __tablename__ = 'sessions'
+class UserSession(db.Model):
+    """用户会话模型"""
+    __tablename__ = 'user_sessions'
+    __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    session_id = db.Column(db.String(128), unique=True, nullable=False)
+    session_id = db.Column(db.String(255), unique=True, nullable=False)
+    data = db.Column(db.Text)  # Flask-Session 数据
+    expiry = db.Column(db.DateTime, nullable=False)  # Flask-Session 过期时间
+    
+    # 用户会话相关字段
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     csrf_token = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
-    expires_at = db.Column(db.DateTime, nullable=False)
     last_active = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.String(256))
     is_active = db.Column(db.Boolean, default=True)
     
-    user = db.relationship('User', backref=db.backref('sessions', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('user_sessions', lazy='dynamic'))
     
-    def __init__(self, user_id, expires_at, ip_address=None, user_agent=None):
+    def __init__(self, session_id, data=None, expiry=None, user_id=None, 
+                 ip_address=None, user_agent=None):
+        self.session_id = session_id
+        self.data = json.dumps(data) if isinstance(data, dict) else data
+        self.expiry = expiry
         self.user_id = user_id
-        self.session_id = secrets.token_urlsafe(32)
         self.csrf_token = secrets.token_urlsafe(32)
-        self.expires_at = expires_at
         self.ip_address = ip_address
         self.user_agent = user_agent
     
+    @property
+    def serialized_data(self):
+        """获取序列化的数据"""
+        if self.data:
+            try:
+                return json.loads(self.data)
+            except:
+                return {}
+        return {}
+    
+    @serialized_data.setter
+    def serialized_data(self, value):
+        """设置序列化的数据"""
+        self.data = json.dumps(value) if value else '{}'
+    
     def is_expired(self):
         """检查会话是否过期"""
-        return datetime.now(UTC) > self.expires_at
+        return datetime.now(UTC) > self.expiry
     
     def is_valid(self, ip_address=None, user_agent=None):
-        """检查会话是否有效
-        
-        Args:
-            ip_address: 客户端IP地址
-            user_agent: 客户端用户代理
-            
-        Returns:
-            bool: 会话是否有效
-        """
+        """检查会话是否有效"""
         if not self.is_active:
             return False
             
@@ -76,10 +90,10 @@ class Session(db.Model):
     def cleanup_expired(cls):
         """清理过期会话"""
         cls.query.filter(
-            (cls.expires_at < datetime.now(UTC)) |
+            (cls.expiry < datetime.now(UTC)) |
             (cls.is_active == False)  # noqa: E712
         ).delete()
         db.session.commit()
     
     def __repr__(self):
-        return f'<Session {self.id}>'
+        return f'<UserSession {self.session_id}>'

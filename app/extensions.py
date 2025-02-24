@@ -17,6 +17,7 @@ from flask import request, jsonify, redirect, url_for, current_app, session, g
 from datetime import datetime, UTC
 import secrets
 import os
+import json
 
 # 初始化扩展
 db = SQLAlchemy()
@@ -33,7 +34,7 @@ def init_login_manager(app):
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = '请先登录'
-    login_manager.login_message_category = 'info'
+    login_manager.login_message_category = 'warning'
     
     @login_manager.unauthorized_handler
     def unauthorized():
@@ -48,7 +49,8 @@ def init_login_manager(app):
         if not user_id:
             return None
         try:
-            user = User.query.get(int(user_id))
+            from app.models import User
+            user = db.session.get(User, int(user_id))
             if user and user.is_active:
                 return user
         except:
@@ -56,29 +58,37 @@ def init_login_manager(app):
         return None
 
 def init_csrf(app):
-    """初始化CSRF保护"""
-    csrf.init_app(app)
-    
-    def handle_csrf_error(e):
-        """处理CSRF错误"""
-        if request.is_json:
-            return jsonify({'error': 'CSRF验证失败', 'reason': str(e)}), 400
-        return redirect(url_for('auth.login'))
-            
-    app.register_error_handler(CSRFError, handle_csrf_error)
-    
-    # 在测试环境中添加CSRF令牌到响应头
+    """初始化 CSRF 保护"""
+    # 在测试环境中不启用 CSRF 保护
     if app.config.get('TESTING'):
-        @app.after_request
-        def add_csrf_token(response):
-            if not request.path.startswith('/static/'):
-                response.headers['X-CSRF-Token'] = generate_csrf()
-            return response
-            
-    # 添加CSRF令牌到模板全局变量
+        app.config['WTF_CSRF_ENABLED'] = False
+    csrf.init_app(app)
+
+    def handle_csrf_error(e):
+        """处理 CSRF 错误"""
+        if request.is_json:
+            return jsonify({
+                'code': 400,
+                'message': '无效的 CSRF 令牌'
+            }), 400
+        return redirect(url_for('auth.login'))
+
+    app.register_error_handler(CSRFError, handle_csrf_error)
+
+    @app.after_request
+    def add_csrf_token(response):
+        """为响应添加 CSRF 令牌"""
+        if not app.config.get('TESTING'):
+            token = generate_csrf()
+            response.headers.set('X-CSRF-Token', token)
+        return response
+
     @app.context_processor
     def inject_csrf_token():
-        return {'csrf_token': generate_csrf()}
+        """注入 CSRF 令牌到模板"""
+        if not app.config.get('TESTING'):
+            return dict(csrf_token=generate_csrf())
+        return dict(csrf_token='')
 
 def init_app(app):
     """初始化扩展"""
@@ -94,25 +104,22 @@ def init_app(app):
     
     # 配置缓存
     if app.config.get('TESTING'):
-        app.config['CACHE_TYPE'] = 'simple'
+        app.config['CACHE_TYPE'] = 'SimpleCache'
     cache.init_app(app)
     
     # 配置会话
-    if app.config.get('TESTING'):
-        app.config['SESSION_TYPE'] = 'filesystem'
-        app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'sessions')
-        os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    if not app.config.get('SESSION_SQLALCHEMY'):
+        app.config['SESSION_SQLALCHEMY'] = db
     sess.init_app(app)
     
     # 配置安全头
     talisman.init_app(app, force_https=not app.config.get('TESTING', False))
     
-    # 在测试环境中禁用CSRF保护
+    # 在测试环境中配置CSRF保护
     if app.config.get('TESTING'):
         app.config['WTF_CSRF_ENABLED'] = False
         app.config['WTF_CSRF_CHECK_DEFAULT'] = False
         app.config['WTF_CSRF_SSL_STRICT'] = False
-        app.config['API_TOKEN_HEADER'] = 'X-CSRF-Token'
         
         # 在测试环境中添加请求前处理器
         @app.before_request
@@ -121,11 +128,12 @@ def init_app(app):
             if request.method == 'OPTIONS':
                 return None
                 
-            # 生成CSRF令牌
-            if 'csrf_token' not in session:
-                session['csrf_token'] = secrets.token_urlsafe(32)
+            # 如果是已登录用户的请求，确保会话数据正确
+            if current_user.is_authenticated:
                 session['_fresh'] = True
                 session['_permanent'] = True
+                session['_user_id'] = str(current_user.id)
+                session['_id'] = current_user.get_id()
                 session['user_agent'] = request.headers.get('User-Agent', '')
                 session['last_active'] = datetime.now(UTC).isoformat()
                 
@@ -155,4 +163,87 @@ def init_app(app):
     # 添加数据库会话清理
     @app.teardown_appcontext
     def shutdown_session(exception=None):
-        db.session.remove() 
+        if hasattr(g, 'session'):
+            g.session.close()
+
+    # 注册错误处理器
+    @app.errorhandler(400)
+    def bad_request(e):
+        """处理400错误"""
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'csrf_token': generate_csrf()
+        }), 400
+
+    @app.errorhandler(401)
+    def unauthorized(e):
+        """处理401错误"""
+        return jsonify({
+            'success': False,
+            'message': '未授权访问',
+            'csrf_token': generate_csrf()
+        }), 401
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        """处理403错误"""
+        return jsonify({
+            'success': False,
+            'message': '禁止访问',
+            'csrf_token': generate_csrf()
+        }), 403
+
+    @app.errorhandler(404)
+    def not_found(e):
+        """处理404错误"""
+        return jsonify({
+            'success': False,
+            'message': '资源不存在',
+            'csrf_token': generate_csrf()
+        }), 404
+
+    @app.errorhandler(413)
+    def request_entity_too_large(e):
+        """处理413错误"""
+        return jsonify({
+            'success': False,
+            'message': '文件太大',
+            'csrf_token': generate_csrf()
+        }), 413
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        """处理500错误"""
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误',
+            'csrf_token': generate_csrf()
+        }), 500
+
+    # 配置CSRF错误处理
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        """处理CSRF错误"""
+        token = generate_csrf()
+        response = jsonify({
+            'success': False,
+            'message': f'CSRF验证失败: {str(e)}',
+            'csrf_token': token
+        })
+        response.status_code = 400
+        return response
+
+    # 为每个响应添加CSRF token
+    @app.after_request
+    def add_csrf_token(response):
+        """为每个响应添加CSRF token"""
+        if request.endpoint != 'static':
+            token = generate_csrf()
+            response.set_cookie('csrf_token', token)
+            if response.is_json:
+                data = response.get_json()
+                if isinstance(data, dict):
+                    data['csrf_token'] = token
+                    response.data = current_app.json.dumps(data)
+        return response 

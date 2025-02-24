@@ -43,7 +43,7 @@ admin_bp.register_blueprint(category_bp)
 admin_bp.register_blueprint(tag_bp)
 admin_bp.register_blueprint(comment_bp)
 admin_bp.register_blueprint(user_bp)
-admin_bp.register_blueprint(upload_bp)
+admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
 def check_auth():
     if not current_user.is_authenticated:
@@ -94,17 +94,3 @@ def profile():
         flash('个人资料更新成功', 'success')
         return redirect(url_for('admin.profile'))
     return render_template('admin/profile.html', form=form)
-
-@admin_bp.route('/upload/', methods=['GET', 'POST'])
-@login_required
-def upload():
-    """文件上传页面"""
-    if request.method == 'GET':
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({
-                'success': True, 
-                'message': '准备上传',
-                'csrf_token': generate_csrf()
-            }), 200
-        return render_template('admin/upload.html'), 200
-    return redirect(url_for('admin.index'))
