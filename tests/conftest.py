@@ -158,87 +158,91 @@ def authenticated_client(client, test_user, app):
     # 确保 CSRF 保护被禁用
     app.config['WTF_CSRF_ENABLED'] = False
 
-    with session_scope() as session:
-        # 重新加载 test_user
-        session.add(test_user)
-        session.refresh(test_user)
+    # 设置会话数据
+    with client.session_transaction() as sess:
+        sess['_fresh'] = True
+        sess['_permanent'] = True
+        sess['_user_id'] = str(test_user.id)
+        sess['_id'] = test_user.get_id()
+        sess['user_agent'] = 'pytest'
+        sess['last_active'] = datetime.now(UTC).isoformat()
 
-        # 设置会话数据
-        with client.session_transaction() as sess:
-            sess['_fresh'] = True
-            sess['_permanent'] = True
-            sess['_user_id'] = str(test_user.id)
-            sess['_id'] = test_user.get_id()
-            sess['user_agent'] = 'pytest'
-            sess['last_active'] = datetime.now(UTC).isoformat()
+    # 执行登录请求
+    with app.app_context():
+        with session_scope() as session:
+            # 重新加载用户
+            session.add(test_user)
+            session.refresh(test_user)
+            login_user(test_user)
 
-        # 执行登录请求
-        response = client.post('/auth/login', data={
-            'username': 'test',
-            'password': 'test'
-        })
+            response = client.post('/auth/login', data={
+                'username': 'test',
+                'password': 'test'
+            })
 
-        assert response.status_code in (200, 302)
+            assert response.status_code in (200, 302)
 
-        # 添加 POST 请求方法
-        def post_with_token(url, data=None, **kwargs):
-            """发送 POST 请求"""
-            if data is None:
-                data = {}
+            # 添加 POST 请求方法
+            def post_with_token(url, data=None, **kwargs):
+                """发送 POST 请求"""
+                if data is None:
+                    data = {}
 
-            # 处理文件上传
-            if isinstance(data, dict) and 'file' in data:
-                form_data = MultiDict()
-                
-                # 处理文件
-                file_data = data.pop('file')
-                if isinstance(file_data, tuple):
-                    stream, filename = file_data
-                    file_data = FileStorage(
-                        stream=stream,
-                        filename=filename,
-                        content_type='application/octet-stream'
-                    )
-                form_data.add('file', file_data)
-                
-                # 添加其他表单数据
-                for key, value in data.items():
-                    form_data.add(key, value)
-                
-                # 添加CSRF token
-                form_data.add('csrf_token', generate_csrf())
-                
-                data = form_data
-            else:
-                # 如果不是文件上传，直接添加CSRF token
-                if isinstance(data, dict):
-                    data = data.copy()
+                # 处理文件上传
+                if isinstance(data, dict) and 'file' in data:
+                    form_data = MultiDict()
+                    
+                    # 处理文件
+                    file_data = data.pop('file')
+                    if isinstance(file_data, tuple):
+                        stream, filename = file_data
+                        file_data = FileStorage(
+                            stream=stream,
+                            filename=filename,
+                            content_type='application/octet-stream'
+                        )
+                    form_data.add('file', file_data)
+                    
+                    # 添加其他表单数据
+                    for key, value in data.items():
+                        form_data.add(key, value)
+                    
+                    # 添加CSRF token
+                    form_data.add('csrf_token', generate_csrf())
+                    
+                    data = form_data
                 else:
-                    data = MultiDict(data)
-                data['csrf_token'] = generate_csrf()
+                    # 如果不是文件上传，直接添加CSRF token
+                    if isinstance(data, dict):
+                        data = data.copy()
+                    else:
+                        data = MultiDict(data)
+                    data['csrf_token'] = generate_csrf()
 
-            # 确保用户对象绑定到会话
-            with session_scope() as session:
-                # 获取新的用户对象而不是重用现有的
-                current_user = session.get(User, test_user.id)
-                return client.post(url, data=data, **kwargs)
+                # 在应用上下文中执行请求
+                with app.app_context():
+                    with session_scope() as session:
+                        # 确保用户对象绑定到会话
+                        current_user = session.merge(test_user)
+                        return client.post(url, data=data, **kwargs)
 
-        # 保存原始的get方法
-        original_get = client.get
-        
-        # 添加 GET 请求方法
-        def get_with_session(*args, **kwargs):
-            """发送 GET 请求"""
-            with session_scope() as session:
-                session.add(test_user)
-                session.refresh(test_user)
-                return original_get(*args, **kwargs)
+            # 保存原始的get方法
+            original_get = client.get
+            
+            # 添加 GET 请求方法
+            def get_with_session(*args, **kwargs):
+                """发送 GET 请求"""
+                with app.app_context():
+                    with session_scope() as session:
+                        # 确保用户对象绑定到会话
+                        current_user = session.merge(test_user)
+                        return original_get(*args, **kwargs)
 
-        # 替换原始的 get 方法
-        client.get = get_with_session
-        client.post_with_token = post_with_token
+            # 替换原始的 get 方法
+            client.get = get_with_session
+            client.post_with_token = post_with_token
 
-        return client
+            return client
 
 @pytest.fixture
 def test_category(app, db_session):

@@ -77,6 +77,16 @@ def upload_file():
             'message': '不支持的文件类型',
             'csrf_token': generate_csrf()
         }), 400
+
+    # 检查文件大小
+    file_content = file.read()
+    file.seek(0)  # 重置文件指针
+    if len(file_content) > current_app.config.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024):
+        return jsonify({
+            'success': False,
+            'message': '文件太大',
+            'csrf_token': generate_csrf()
+        }), 400
         
     try:
         # 生成安全的文件名
@@ -110,6 +120,7 @@ def upload_file():
             'success': True,
             'message': '文件上传成功',
             'url': f"/uploads/{new_filename}",
+            'filename': new_filename,
             'csrf_token': generate_csrf()
         }), 200
             
