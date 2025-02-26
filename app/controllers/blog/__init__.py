@@ -7,6 +7,8 @@
 
 from app.middleware.security import csrf_protect, xss_protect, sql_injection_protect
 from .views import blog_bp
+from flask import Blueprint
+from app.services import UserService
 
 # 为所有视图添加安全装饰器
 for endpoint, view_func in blog_bp.view_functions.items():
@@ -15,3 +17,5 @@ for endpoint, view_func in blog_bp.view_functions.items():
             sql_injection_protect()(view_func)
         )
     )
+
+user_service = UserService()

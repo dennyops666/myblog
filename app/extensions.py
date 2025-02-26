@@ -35,7 +35,7 @@ def init_login_manager(app):
     """初始化Flask-Login"""
     login_manager.init_app(app)
     login_manager.session_protection = 'strong'
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'auth.login'
     login_manager.login_message = '请先登录'
     login_manager.login_message_category = 'info'
     

@@ -1,35 +1,89 @@
-{% extends "admin/layout.html" %}
-
-{% block title %}登录 - MyBlog 管理后台{% endblock %}
-
-{% block content %}
-<div class="login-form">
-    <h2 class="text-center mb-4">管理员登录</h2>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台登录 - {{ config.BLOG_NAME }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h1 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .login-header p {
+            color: #666;
+            margin-bottom: 0;
+        }
+        .form-control {
+            border-radius: 5px;
+            padding: 0.75rem;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 0.75rem;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        .alert {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>管理后台登录</h1>
+                <p>请输入管理员账号和密码</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST">
+                {{ form.csrf_token }}
+                <div class="form-group">
+                    {{ form.username.label }}
+                    {{ form.username(class="form-control", placeholder="请输入用户名") }}
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <div class="mb-3">
-            <label for="username" class="form-label">用户名</label>
-            <input type="text" class="form-control" id="username" name="username" required>
+                <div class="form-group">
+                    {{ form.password.label }}
+                    {{ form.password(class="form-control", placeholder="请输入密码") }}
+                </div>
+                <div class="form-check mb-3">
+                    {{ form.remember_me(class="form-check-input") }}
+                    {{ form.remember_me.label(class="form-check-label") }}
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">密码</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="remember" name="remember">
-            <label class="form-check-label" for="remember">记住我</label>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">登录</button>
-    </form>
-</div>
-{% endblock %} 
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html> 

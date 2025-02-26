@@ -9,23 +9,27 @@ from flask import (
     render_template, request, redirect, url_for, flash, 
     Blueprint, abort, current_app, jsonify
 )
-from flask_login import current_user
+from flask_login import current_user, login_user, logout_user, login_required
 from app.services.post import PostService
 from app.services.comment import CommentService
 from app.services.category import CategoryService
 from app.services.tag import TagService
+from app.services.user import UserService
 from app.forms import CommentForm
+from app.forms.auth import LoginForm
 from sqlalchemy import or_
 from app.models.post import Post, PostStatus
 from datetime import datetime, UTC
 from app.extensions import db
 import markdown2
+from app.models.role import Permission
 
 # 创建服务实例
 post_service = PostService()
 comment_service = CommentService()
 category_service = CategoryService()
 tag_service = TagService()
+user_service = UserService()
 
 blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
 
@@ -259,4 +263,40 @@ def archive(date=None):
                          archives=archives,
                          year=year if date else None,
                          month=month if date else None)
+
+@blog_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """博客前台登录"""
+    if current_user.is_authenticated:
+        return redirect(url_for('blog.index'))
+        
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = user_service.get_user_by_username(form.username.data)
+        if user and user.verify_password(form.password.data):
+            # 检查是否是管理员用户
+            if user.is_admin:
+                flash('管理员用户请从后台登录', 'warning')
+                return redirect(url_for('auth.login'))
+            
+            # 普通用户登录
+            login_user(user, remember=form.remember_me.data)
+            flash('登录成功', 'success')
+            
+            next_page = request.args.get('next')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('blog.index'))
+            
+        flash('用户名或密码错误', 'danger')
+    
+    return render_template('blog/login.html', form=form)
+
+@blog_bp.route('/logout')
+@login_required
+def logout():
+    """博客前台退出"""
+    logout_user()
+    flash('您已退出登录', 'success')
+    return redirect(url_for('blog.index'))
 

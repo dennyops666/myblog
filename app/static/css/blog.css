@@ -150,4 +150,22 @@ footer a:hover {
     .sidebar {
         margin-top: 2rem;
     }
+}
+
+/* 登录链接样式 */
+.login-link {
+    color: #007bff;
+    font-weight: bold;
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 2px solid #007bff;
+}
+
+.login-link:hover {
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 } 

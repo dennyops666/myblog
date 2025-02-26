@@ -89,7 +89,7 @@ def create_app(config_name='development'):
     app.logger.info('数据库迁移初始化完成')
     
     # 注册蓝图
-    app.register_blueprint(blog_bp)
+    app.register_blueprint(blog_bp, url_prefix='/blog')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(upload_bp, url_prefix='/admin/upload')

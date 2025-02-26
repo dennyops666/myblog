@@ -7,8 +7,8 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response, session, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.services import UserService
-from app.models import User
+from app.services import UserService, OperationLogService
+from app.models import User, Permission
 from app.forms.auth import LoginForm
 from urllib.parse import urlparse
 from flask_wtf.csrf import generate_csrf, validate_csrf
@@ -20,61 +20,39 @@ user_service = UserService()
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """登录"""
-    try:
-        if current_user.is_authenticated:
-            if request.is_json or request.headers.get('Accept') == 'application/json':
-                return jsonify({
-                    'success': True, 
-                    'message': '已登录',
-                    'csrf_token': generate_csrf()
-                })
-            return redirect(url_for('admin.index'))
-
-        if request.method == 'GET':
-            current_app.logger.debug('访问登录页面')
-            form = LoginForm()
-            response = make_response(render_template('auth/login.html', form=form))
-            response.headers['X-CSRF-Token'] = generate_csrf()
-            return response
-
-        current_app.logger.debug(f'处理登录请求: {request.form}')
-        form = LoginForm()
+    """博客前台登录视图"""
+    if current_user.is_authenticated:
+        return redirect(url_for('blog.index'))
         
-        if form.validate_on_submit():
-            current_app.logger.debug(f'表单验证通过，用户名: {form.username.data}')
-            user = User.query.filter_by(username=form.username.data).first()
-            
-            if user and user.check_password(form.password.data):
-                if not user.is_active:
-                    current_app.logger.warning(f'用户 {user.username} 已被禁用')
-                    flash('账户已被禁用', 'error')
-                    return redirect(url_for('login'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = user_service.get_user_by_username(form.username.data)
+        
+        if user and user.verify_password(form.password.data):
+            # 检查是否是管理员用户试图从博客前台登录
+            is_admin = False
+            for role in user.roles:
+                if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
+                    is_admin = True
+                    break
+                    
+            if is_admin:
+                flash('管理员用户请从管理后台登录', 'danger')
+                return redirect(url_for('auth.login'))
                 
-                login_user(user, remember=form.remember_me.data)
-                next_page = request.args.get('next')
-                if not next_page or urlparse(next_page).netloc != '':
-                    next_page = url_for('admin.index')
-                
-                current_app.logger.info(f'用户 {user.username} 登录成功')
-                response = redirect(next_page)
-                response.headers['X-CSRF-Token'] = generate_csrf()
-                return response
+            # 普通用户登录成功
+            login_user(user, remember=form.remember_me.data)
+            OperationLogService.log_operation(
+                user=user,
+                action='blog_login',
+                details=f'用户 {user.username} 登录博客'
+            )
+            flash('登录成功', 'success')
+            return redirect(url_for('blog.index'))
+        else:
+            flash('用户名或密码错误', 'danger')
             
-            current_app.logger.warning(f'登录失败，用户名: {form.username.data}')
-            flash('用户名或密码错误', 'error')
-            return redirect(url_for('login'))
-        
-        current_app.logger.warning(f'表单验证失败: {form.errors}')
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f'{getattr(form, field).label.text}: {error}', 'error')
-        return redirect(url_for('login'))
-        
-    except Exception as e:
-        current_app.logger.error(f'登录过程中发生错误: {str(e)}\n{traceback.format_exc()}')
-        flash('服务器内部错误', 'error')
-        return render_template('errors/500.html'), 500
+    return render_template('auth/login.html', form=form)
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
 @login_required

@@ -48,4 +48,10 @@ class ProfileForm(FlaskForm):
     ])
     nickname = StringField('昵称', validators=[Optional(), Length(0, 64)])
     avatar = StringField('头像', validators=[Optional(), URL(), Length(0, 200)])
-    bio = TextAreaField('个人简介', validators=[Optional(), Length(0, 500)]) 
+    bio = TextAreaField('个人简介', validators=[Optional(), Length(0, 500)])
+
+class LoginForm(FlaskForm):
+    """管理员登录表单"""
+    username = StringField('用户名', validators=[DataRequired(), Length(1, 64)])
+    password = PasswordField('密码', validators=[DataRequired(), Length(6, 128)])
+    remember_me = BooleanField('记住我') 
