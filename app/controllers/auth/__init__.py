@@ -20,35 +20,39 @@ user_service = UserService()
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """博客前台登录视图"""
+    """管理后台登录视图"""
     if current_user.is_authenticated:
-        return redirect(url_for('blog.index'))
+        return redirect(url_for('admin.index'))
         
     form = LoginForm()
     if form.validate_on_submit():
         user = user_service.get_user_by_username(form.username.data)
         
         if user and user.verify_password(form.password.data):
-            # 检查是否是管理员用户试图从博客前台登录
+            # 检查是否具有管理员权限
             is_admin = False
             for role in user.roles:
                 if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
                     is_admin = True
                     break
                     
-            if is_admin:
-                flash('管理员用户请从管理后台登录', 'danger')
-                return redirect(url_for('auth.login'))
+            if not is_admin:
+                flash('您不是管理员，请从博客首页登录', 'danger')
+                return redirect(url_for('blog.login'))
                 
-            # 普通用户登录成功
+            # 管理员登录成功
             login_user(user, remember=form.remember_me.data)
             OperationLogService.log_operation(
                 user=user,
-                action='blog_login',
-                details=f'用户 {user.username} 登录博客'
+                action='admin_login',
+                details=f'管理员 {user.username} 登录后台'
             )
             flash('登录成功', 'success')
-            return redirect(url_for('blog.index'))
+            
+            next_page = request.args.get('next')
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('admin.index'))
         else:
             flash('用户名或密码错误', 'danger')
             

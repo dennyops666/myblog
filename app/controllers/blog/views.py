@@ -266,30 +266,33 @@ def archive(date=None):
 
 @blog_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """博客前台登录"""
+    """博客前台登录视图"""
     if current_user.is_authenticated:
         return redirect(url_for('blog.index'))
         
     form = LoginForm()
     if form.validate_on_submit():
         user = user_service.get_user_by_username(form.username.data)
+        
         if user and user.verify_password(form.password.data):
-            # 检查是否是管理员用户
-            if user.is_admin:
-                flash('管理员用户请从后台登录', 'warning')
-                return redirect(url_for('auth.login'))
-            
-            # 普通用户登录
+            # 检查是否是管理员用户试图从博客前台登录
+            is_admin = False
+            for role in user.roles:
+                if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
+                    is_admin = True
+                    break
+                    
+            if is_admin:
+                flash('管理员用户请从管理后台登录', 'danger')
+                return redirect(url_for('blog.login'))
+                
+            # 普通用户登录成功
             login_user(user, remember=form.remember_me.data)
             flash('登录成功', 'success')
-            
-            next_page = request.args.get('next')
-            if next_page and next_page.startswith('/'):
-                return redirect(next_page)
             return redirect(url_for('blog.index'))
+        else:
+            flash('用户名或密码错误', 'danger')
             
-        flash('用户名或密码错误', 'danger')
-    
     return render_template('blog/login.html', form=form)
 
 @blog_bp.route('/logout')

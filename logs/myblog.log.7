@@ -1,74 +1,16 @@
-2025-02-26 20:40:55,315 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
-2025-02-26 20:40:55,315 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
-2025-02-26 20:40:55,315 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
-2025-02-26 20:40:55,337 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
-2025-02-26 20:40:55,338 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
-2025-02-26 20:40:55,358 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
-2025-02-26 20:40:55,359 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
-2025-02-26 20:40:55,359 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
-2025-02-26 20:40:56,008 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
-2025-02-26 20:40:56,008 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
-2025-02-26 20:40:56,009 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
-2025-02-26 20:40:56,009 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
-2025-02-26 20:40:56,027 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
-2025-02-26 20:40:56,027 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
-2025-02-26 20:40:56,045 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
-2025-02-26 20:40:56,045 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
-2025-02-26 20:40:56,046 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
-2025-02-26 20:41:09,761 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:09,777 INFO: Locating template 'blog/index.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/blog/index.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 20:41:09,788 INFO: Locating template 'blog/layout.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/blog/layout.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 20:41:09,838 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:09,855 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:09,856 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:41:09,856 INFO: Locating template 'errors/404.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/errors/404.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 20:41:09,858 INFO: Locating template 'blog/base.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/blog/base.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 20:41:11,919 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:11,943 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:11,959 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:11,960 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:41:12,116 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,138 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,153 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,154 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:41:12,291 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,319 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,473 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,495 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,645 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,668 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,815 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:12,843 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:36,230 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:36,231 INFO: Locating template 'auth/login.html':
+2025-02-26 21:02:56,769 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:56,786 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:56,786 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:02:56,917 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:56,940 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:57,081 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:57,112 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:57,132 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:57,132 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:02:57,240 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:57,262 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:58,533 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:58,534 INFO: Locating template 'auth/login.html':
     1: trying loader of application 'app'
        class: jinja2.loaders.FileSystemLoader
        encoding: 'utf-8'
@@ -76,36 +18,110 @@
        searchpath:
          - /data/myblog/app/templates
        -> found ('/data/myblog/app/templates/auth/login.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 20:41:36,350 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:36,351 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:41:37,916 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:37,944 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:37,958 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:41:37,959 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:45:33,439 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:45:33,547 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:45:33,547 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:48:14,362 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:14,407 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:14,426 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:14,426 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:48:24,032 INFO: 请求: GET http://192.168.72.128:5000/blog/search?q= [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:24,054 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:24,083 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:24,100 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:24,100 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:48:24,990 INFO: 请求: GET http://192.168.72.128:5000/blog/search?q= [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,014 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,040 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,056 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,057 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 20:48:25,624 INFO: 请求: GET http://192.168.72.128:5000/blog/search?q= [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,647 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,671 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,947 INFO: 请求: GET http://192.168.72.128:5000/blog/search?q= [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:25,974 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:26,001 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:26,351 INFO: 请求: GET http://192.168.72.128:5000/blog/search?q= [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:26,373 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:26,400 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 20:48:26,415 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:58,609 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:02:58,610 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:03:00,937 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:03:00,964 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:03:00,977 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:03:00,978 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:03:19,978 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:03:20,082 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:03:20,083 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:04:28,428 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
+2025-02-26 21:04:28,428 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
+2025-02-26 21:04:28,429 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
+2025-02-26 21:04:28,429 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
+2025-02-26 21:04:28,448 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
+2025-02-26 21:04:28,448 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
+2025-02-26 21:04:28,464 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
+2025-02-26 21:04:28,464 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
+2025-02-26 21:04:28,465 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
+2025-02-26 21:05:34,069 INFO: 请求: GET http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:05:34,071 INFO: Locating template 'blog/login.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/login.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:05:34,077 INFO: Locating template 'blog/base.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/base.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:05:34,139 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:05:34,158 INFO: 请求: GET http://192.168.72.128:5000/static/images/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:25,642 INFO: 请求: GET http://192.168.72.128:5000/admin/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:25,664 INFO: 请求: GET http://192.168.72.128:5000/auth/login?next=http://192.168.72.128:5000/admin/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:25,665 INFO: Locating template 'auth/login.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/auth/login.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:07:25,730 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:25,730 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:07:25,731 INFO: Locating template 'errors/404.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/errors/404.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:07:35,488 INFO: 请求: POST http://192.168.72.128:5000/auth/login?next=http://192.168.72.128:5000/admin/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:35,626 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:35,688 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:07:35,689 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:08:12,514 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
+2025-02-26 21:08:12,514 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
+2025-02-26 21:08:12,514 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
+2025-02-26 21:08:12,514 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
+2025-02-26 21:08:12,529 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
+2025-02-26 21:08:12,529 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
+2025-02-26 21:08:12,544 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
+2025-02-26 21:08:12,545 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
+2025-02-26 21:08:12,545 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
+2025-02-26 21:08:13,078 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
+2025-02-26 21:08:13,079 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
+2025-02-26 21:08:13,079 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
+2025-02-26 21:08:13,079 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
+2025-02-26 21:08:13,094 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
+2025-02-26 21:08:13,094 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
+2025-02-26 21:08:13,109 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
+2025-02-26 21:08:13,109 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
+2025-02-26 21:08:13,110 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
+2025-02-26 21:08:52,004 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:08:52,024 INFO: Locating template 'blog/index.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/index.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:08:52,037 INFO: Locating template 'blog/layout.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/layout.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
+2025-02-26 21:08:52,077 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:08:52,098 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
+2025-02-26 21:08:52,099 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
+2025-02-26 21:08:52,099 INFO: Locating template 'errors/404.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/errors/404.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
