@@ -19,9 +19,16 @@ def index():
     """评论列表页面"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    current_status = request.args.get('status', None, type=int)
     
-    result = comment_service.get_comments(page=page, per_page=per_page)
-    return render_template('admin/comment/list.html', comments=result['comments'])
+    if current_status == 0:
+        result = comment_service.get_pending_comments(page=page, per_page=per_page)
+    else:
+        result = comment_service.get_comments(page=page, per_page=per_page)
+    
+    return render_template('admin/comment/list.html', 
+                         comments=result,  # 直接传递分页对象
+                         current_status=current_status)
 
 @comment_bp.route('/<int:comment_id>/edit', methods=['GET', 'POST'])
 @login_required

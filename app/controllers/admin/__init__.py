@@ -38,11 +38,11 @@ tag_service = TagService()
 comment_service = CommentService()
 
 # 注册子蓝图
-admin_bp.register_blueprint(post_bp)
-admin_bp.register_blueprint(category_bp)
-admin_bp.register_blueprint(tag_bp)
-admin_bp.register_blueprint(comment_bp)
-admin_bp.register_blueprint(user_bp)
+admin_bp.register_blueprint(post_bp, url_prefix='/posts')
+admin_bp.register_blueprint(category_bp, url_prefix='/categories')
+admin_bp.register_blueprint(tag_bp, url_prefix='/tags')
+admin_bp.register_blueprint(comment_bp, url_prefix='/comments')
+admin_bp.register_blueprint(user_bp, url_prefix='/users')
 admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
 def check_auth():

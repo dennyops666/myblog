@@ -15,10 +15,12 @@ class Permission(Flag):
     POST = auto()  # 发文权限
     MODERATE = auto()  # 管理评论权限
     ADMIN = auto()  # 管理员权限
+    SUPER_ADMIN = auto()  # 超级管理员权限
     
     # 预定义的角色权限组合
     VIEWER = VIEW
     USER = VIEW | COMMENT
     EDITOR = VIEW | COMMENT | POST
     MODERATOR = VIEW | COMMENT | POST | MODERATE
-    ADMINISTRATOR = VIEW | COMMENT | POST | MODERATE | ADMIN 
+    ADMINISTRATOR = VIEW | COMMENT | POST | MODERATE | ADMIN
+    SUPER_ADMINISTRATOR = VIEW | COMMENT | POST | MODERATE | ADMIN | SUPER_ADMIN 

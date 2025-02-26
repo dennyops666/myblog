@@ -7,24 +7,30 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp
+from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp, ValidationError
 
 class LoginForm(FlaskForm):
     """登录表单"""
-    username = StringField('用户名', validators=[DataRequired()])
-    password = PasswordField('密码', validators=[DataRequired()])
+    username = StringField('用户名', validators=[
+        DataRequired(message='请输入用户名'),
+        Length(min=3, max=20, message='用户名长度必须在3-20个字符之间')
+    ])
+    password = PasswordField('密码', validators=[
+        DataRequired(message='请输入密码'),
+        Length(min=6, message='密码长度不能小于6个字符')
+    ])
     remember_me = BooleanField('记住我')
-    csrf_token = StringField('CSRF Token')
     submit = SubmitField('登录')
 
     @classmethod
     def from_json(cls, json_data):
         """从 JSON 数据创建表单实例"""
+        if not json_data:
+            return None
         form = cls()
         form.username.data = json_data.get('username')
         form.password.data = json_data.get('password')
         form.remember_me.data = json_data.get('remember_me', False)
-        form.csrf_token.data = json_data.get('csrf_token')
         return form
 
 class RegisterForm(FlaskForm):

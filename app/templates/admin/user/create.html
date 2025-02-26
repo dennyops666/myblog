@@ -1,0 +1,134 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}新建用户{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">新建用户</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.user.create') }}">
+                        {{ form.csrf_token }}
+                        
+                        {% if error %}
+                            <div class="alert alert-danger mb-3" role="alert">
+                                {{ error }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            {{ form.username(class="form-control", id="username") }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">用户名只能包含字母、数字和下划线</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">邮箱</label>
+                            {{ form.email(class="form-control", id="email") }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称</label>
+                            <input type="text" class="form-control" id="nickname" name="nickname">
+                            <div class="form-text">用户显示名称，可选</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            {{ form.password(class="form-control", id="password") }}
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">密码长度至少6位，必须包含字母和数字</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">确认密码</label>
+                            {{ form.confirm_password(class="form-control", id="confirm_password") }}
+                            {% if form.confirm_password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.confirm_password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">用户角色</label>
+                            <div class="form-check">
+                                {% for role in roles %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="roles" value="{{ role.id }}" id="role_{{ role.id }}">
+                                    <label class="form-check-label" for="role_{{ role.id }}">
+                                        {{ role.name }}
+                                        {% if role.description %}
+                                        <small class="text-muted">- {{ role.description }}</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    账号启用
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('admin.user.index') }}" class="btn btn-secondary">返回列表</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    form.addEventListener('submit', function(e) {
+        if (password.value !== confirmPassword.value) {
+            e.preventDefault();
+            alert('两次输入的密码不一致');
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -158,7 +158,7 @@ class CommentService:
             author_id: 作者ID
             
         Returns:
-            dict: 包含状态和消息的字典
+            Pagination: 分页对象
         """
         try:
             query = Comment.query
@@ -172,21 +172,13 @@ class CommentService:
                 query = query.filter_by(author_id=author_id)
                 
             # 分页
-            pagination = query.order_by(Comment.created_at.desc()).paginate(
+            return query.order_by(Comment.created_at.desc()).paginate(
                 page=page, per_page=per_page, error_out=False
             )
             
-            return {
-                'status': 'success',
-                'comments': pagination.items,
-                'total': pagination.total,
-                'pages': pagination.pages,
-                'current_page': pagination.page
-            }
-            
         except Exception as e:
             current_app.logger.error(f"获取评论列表失败: {str(e)}")
-            return {'status': 'error', 'message': '获取评论列表失败，请稍后重试'}
+            raise e
     
     def get_comment_by_id(self, comment_id):
         """根据ID获取评论"""
@@ -235,14 +227,26 @@ class CommentService:
             return False, str(e)
     
     def get_pending_comments(self, page=1, per_page=10):
-        """获取待审核的评论列表"""
-        return Comment.query.filter_by(status=0).order_by(
-            Comment.created_at.desc()
-        ).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+        """获取待审核的评论列表
+        
+        Args:
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        try:
+            return Comment.query.filter_by(status=0).order_by(
+                Comment.created_at.desc()
+            ).paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+        except Exception as e:
+            current_app.logger.error(f"获取待审核评论列表失败: {str(e)}")
+            raise e
     
     def get_comment_stats(self):
         """获取评论统计信息"""

@@ -15,7 +15,10 @@ class OperationLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     action = db.Column(db.String(50), nullable=False)
+    target_type = db.Column(db.String(50))
+    target_id = db.Column(db.Integer)
     details = db.Column(db.Text)
+    ip_address = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(UTC))
     
     # 关系

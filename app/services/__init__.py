@@ -11,6 +11,8 @@ from .tag import TagService
 from .comment import CommentService
 from .post import PostService
 from .user import UserService
+from .role_service import RoleService
+from .operation_log_service import OperationLogService
 
 __all__ = [
     'SecurityService',
@@ -18,6 +20,8 @@ __all__ = [
     'TagService',
     'CommentService',
     'PostService',
-    'UserService'
+    'UserService',
+    'RoleService',
+    'OperationLogService'
 ]
 

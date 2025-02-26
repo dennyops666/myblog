@@ -1,0 +1,60 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}操作日志详情{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>操作日志详情</h2>
+        <a href="{{ url_for('admin.operation_log.index') }}" class="btn btn-secondary">返回列表</a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>基本信息</h5>
+                    <table class="table">
+                        <tr>
+                            <th style="width: 150px;">ID</th>
+                            <td>{{ log.id }}</td>
+                        </tr>
+                        <tr>
+                            <th>操作用户</th>
+                            <td>{{ log.user.username }}</td>
+                        </tr>
+                        <tr>
+                            <th>操作类型</th>
+                            <td>{{ log.operation }}</td>
+                        </tr>
+                        <tr>
+                            <th>目标类型</th>
+                            <td>{{ log.target_type }}</td>
+                        </tr>
+                        <tr>
+                            <th>目标ID</th>
+                            <td>{{ log.target_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>IP地址</th>
+                            <td>{{ log.ip_address }}</td>
+                        </tr>
+                        <tr>
+                            <th>操作时间</th>
+                            <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>操作详情</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            <pre class="mb-0">{{ log.details or '无详细信息' }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

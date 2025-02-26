@@ -86,17 +86,64 @@ class UserService:
         return User.query.filter_by(email=email).first()
     
     @staticmethod
-    def update_user(user, **kwargs):
-        """更新用户信息"""
+    def update_user(user_id: int, username: str = None, email: str = None, 
+                   password: str = None, nickname: str = None, 
+                   is_active: bool = None, role_ids: List[int] = None) -> Dict[str, Any]:
+        """更新用户信息
+        
+        Args:
+            user_id: 用户ID
+            username: 用户名
+            email: 邮箱
+            password: 密码（可选）
+            nickname: 昵称（可选）
+            is_active: 是否激活
+            role_ids: 角色ID列表
+            
+        Returns:
+            dict: 包含更新状态和消息的字典
+        """
         try:
-            for key, value in kwargs.items():
-                if hasattr(user, key):
-                    setattr(user, key, value)
+            user = db.session.get(User, user_id)
+            if not user:
+                return {'status': 'error', 'message': '用户不存在'}
+
+            # 验证用户名唯一性
+            if username and username != user.username:
+                if User.query.filter_by(username=username).first():
+                    return {'status': 'error', 'message': '用户名已存在'}
+                user.username = username
+
+            # 验证邮箱唯一性
+            if email and email != user.email:
+                if User.query.filter_by(email=email).first():
+                    return {'status': 'error', 'message': '邮箱已存在'}
+                user.email = email
+
+            # 更新密码
+            if password:
+                user.set_password(password)
+
+            # 更新昵称
+            if nickname is not None:
+                user.nickname = nickname
+
+            # 更新激活状态
+            if is_active is not None:
+                user.is_active = is_active
+
+            # 更新角色
+            if role_ids is not None:
+                # 将字符串ID转换为整数
+                role_ids = [int(rid) for rid in role_ids]
+                roles = Role.query.filter(Role.id.in_(role_ids)).all()
+                user.roles = roles
+
             db.session.commit()
-            return user
+            return {'status': 'success', 'message': '用户更新成功', 'user': user}
         except Exception as e:
             db.session.rollback()
-            raise ValueError(f"更新用户信息失败：{str(e)}")
+            return {'status': 'error', 'message': f'更新用户失败：{str(e)}'}
     
     @staticmethod
     def delete_user(user):
@@ -199,3 +246,20 @@ class UserService:
         except Exception as e:
             db.session.rollback()
             raise ValueError(f"删除用户失败：{str(e)}")
+
+    def get_user(self, user_id):
+        """根据ID获取用户
+        
+        Args:
+            user_id: 用户ID
+            
+        Returns:
+            dict: 包含用户信息的字典
+        """
+        try:
+            user = db.session.get(User, user_id)
+            if not user:
+                return {'status': 'error', 'message': '用户不存在'}
+            return {'status': 'success', 'user': user}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
