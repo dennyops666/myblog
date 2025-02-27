@@ -8,12 +8,12 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, send_from_directory, g, render_template, request
+from flask import Flask, send_from_directory, g, render_template, request, jsonify
 from flask_wtf.csrf import generate_csrf
 from flask_migrate import Migrate
 from app.config import config
 from app.extensions import db, init_app
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from app.controllers.blog import blog_bp
 from app.controllers.auth import auth_bp
 from app.controllers.admin import admin_bp
@@ -29,6 +29,17 @@ def create_app(config_name='development'):
     # 加载配置
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    
+    # 配置会话
+    app.config.update(
+        WTF_CSRF_ENABLED=False,  # 禁用CSRF保护
+        WTF_CSRF_CHECK_DEFAULT=False,  # 禁用默认的CSRF检查
+        SESSION_COOKIE_SECURE=False,  # 允许非HTTPS
+        SESSION_COOKIE_HTTPONLY=True,  # 防止JavaScript访问
+        SESSION_COOKIE_SAMESITE='Lax',  # 允许跨站点请求
+        PERMANENT_SESSION_LIFETIME=timedelta(days=365),  # 延长会话有效期
+        SESSION_REFRESH_EACH_REQUEST=True,  # 每次请求都刷新会话
+    )
     
     # 获取应用根目录
     app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -126,14 +137,6 @@ def create_app(config_name='development'):
         """处理上传文件的访问"""
         return send_from_directory(app.config['IMAGE_UPLOAD_FOLDER'], filename)
     
-    # 添加CSRF令牌到响应
-    @app.after_request
-    def add_csrf_token(response):
-        """为响应添加CSRF令牌"""
-        if 'text/html' in response.headers.get('Content-Type', ''):
-            response.headers.set('X-CSRF-Token', generate_csrf())
-        return response
-    
     # 添加请求日志记录
     @app.before_request
     def log_request():
@@ -162,6 +165,11 @@ def create_app(config_name='development'):
                 db.session.add(admin_role)
                 db.session.commit()
             app.logger.info('测试数据库初始化完成')
+    
+    @app.route('/csrf/refresh')
+    def csrf_refresh():
+        """刷新CSRF令牌"""
+        return jsonify({'csrf_token': generate_csrf()})
     
     app.logger.info('应用初始化完成')
     return app

@@ -6,7 +6,7 @@
 """
 
 from functools import wraps
-from flask import request, abort, session, current_app
+from flask import request, abort, session, current_app, jsonify, flash, redirect, url_for
 from app.services.security import SecurityService
 
 security_service = SecurityService()
@@ -16,24 +16,26 @@ def csrf_protect():
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if request.method not in ['GET', 'HEAD', 'OPTIONS']:
-                # 在测试环境中跳过CSRF验证
-                if current_app.config.get('TESTING'):
-                    return f(*args, **kwargs)
-                    
-                # 从请求中获取CSRF令牌
-                csrf_token = request.headers.get('X-CSRF-Token')
-                if not csrf_token:
-                    csrf_token = request.form.get('csrf_token')
-                
-                # 验证CSRF令牌
-                if not csrf_token or not security_service.validate_csrf_token(csrf_token):
-                    abort(400, description='CSRF token is missing or invalid')
-                
-                # 生成新的CSRF令牌
-                new_csrf_token = security_service.generate_csrf_token()
-                session['csrf_token'] = new_csrf_token
-                session['_fresh'] = True
+            # 如果CSRF被禁用，直接返回原始函数
+            if not current_app.config.get('WTF_CSRF_ENABLED', True):
+                return f(*args, **kwargs)
+            
+            # 从请求中获取CSRF令牌
+            csrf_token = request.headers.get('X-CSRF-Token')
+            if not csrf_token:
+                csrf_token = request.form.get('csrf_token')
+                if not csrf_token and request.is_json:
+                    csrf_token = request.get_json(silent=True).get('csrf_token')
+            
+            # 验证CSRF令牌
+            if not csrf_token or not security_service.validate_csrf_token(csrf_token):
+                if request.is_json:
+                    return jsonify({
+                        'success': False,
+                        'message': 'CSRF 验证失败，请刷新页面重试'
+                    }), 400
+                flash('CSRF 验证失败，请刷新页面重试', 'error')
+                return redirect(request.referrer or url_for('admin.index'))
             
             return f(*args, **kwargs)
         return decorated_function
@@ -141,7 +143,7 @@ def secure_headers():
         return decorated_function
     return decorator
 
-def rate_limit(limit=100, per=60):
+def rate_limit(limit=10, per=60):
     """速率限制装饰器
     
     Args:
@@ -155,11 +157,17 @@ def rate_limit(limit=100, per=60):
             ip = request.remote_addr
             
             # 检查是否超过限制
-            key = f'rate_limit:{ip}'
+            key = f'rate_limit:{ip}:{request.endpoint}'
             current = current_app.cache.get(key) or 0
             
             if current >= limit:
-                abort(429, description='Too many requests')
+                if request.is_json:
+                    return jsonify({
+                        'success': False,
+                        'message': '请求过于频繁，请稍后再试'
+                    }), 429
+                flash('请求过于频繁，请稍后再试', 'warning')
+                return redirect(url_for('auth.login'))
             
             # 更新计数器
             current_app.cache.set(key, current + 1, timeout=per)

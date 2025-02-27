@@ -41,6 +41,11 @@
             padding: 0.8rem;
             font-size: 1rem;
         }
+        .field-error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -52,36 +57,49 @@
             </div>
             
             <div class="login-form">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+                <div id="alert-container">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
                 
-                <form method="post">
-                    {{ form.csrf_token }}
+                <form id="login-form" method="post" action="{{ url_for('auth.login') }}">
                     <div class="mb-3">
                         <label for="username" class="form-label">用户名</label>
                         {{ form.username(class="form-control", id="username", required=true, autofocus=true) }}
+                        {% if form.username.errors %}
+                            <div class="field-error">{{ form.username.errors[0] }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">密码</label>
                         {{ form.password(class="form-control", id="password", required=true) }}
+                        {% if form.password.errors %}
+                            <div class="field-error">{{ form.password.errors[0] }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3 form-check">
                         {{ form.remember_me(class="form-check-input", id="remember_me") }}
                         <label class="form-check-label" for="remember_me">记住我</label>
                     </div>
-                    {{ form.submit(class="btn btn-primary btn-login") }}
+                    <button type="submit" class="btn btn-primary btn-login">登录</button>
                 </form>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            // 直接提交表单，不阻止默认行为
+            return true;
+        });
+    </script>
 </body>
 </html> 

@@ -11,6 +11,9 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp, Val
 
 class LoginForm(FlaskForm):
     """登录表单"""
+    class Meta:
+        csrf = False  # 禁用CSRF保护
+        
     username = StringField('用户名', validators=[
         DataRequired(message='请输入用户名'),
         Length(min=3, max=20, message='用户名长度必须在3-20个字符之间')
@@ -35,6 +38,9 @@ class LoginForm(FlaskForm):
 
 class RegisterForm(FlaskForm):
     """注册表单"""
+    class Meta:
+        csrf = False  # 禁用CSRF保护
+        
     username = StringField('用户名', validators=[
         DataRequired(message='请输入用户名'),
         Length(min=3, max=20, message='用户名长度必须在3-20个字符之间'),

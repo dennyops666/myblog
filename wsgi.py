@@ -31,14 +31,13 @@ def log_memory_usage():
 app = create_app('production')  # 保持使用生产环境的数据库
 app.config.update(
     DEBUG=True,  # 开启调试模式
-    WTF_CSRF_SSL_STRICT=False,  # 禁用 CSRF 的 SSL 严格模式
-    WTF_CSRF_ENABLED=True,  # 启用 CSRF 保护
-    WTF_CSRF_TIME_LIMIT=3600 * 24,  # 设置 CSRF 令牌有效期为24小时
+    WTF_CSRF_ENABLED=False,  # 完全禁用 CSRF 保护
+    WTF_CSRF_CHECK_DEFAULT=False,  # 禁用默认的CSRF检查
     SESSION_COOKIE_SECURE=False,  # 允许非 HTTPS 的会话 cookie
     SESSION_COOKIE_HTTPONLY=True,  # 防止 JavaScript 访问会话 cookie
     SESSION_COOKIE_SAMESITE='Lax',  # 允许跨站点请求
     PERMANENT_SESSION_LIFETIME=timedelta(days=365),  # 延长会话有效期到1年
-    SESSION_REFRESH_EACH_REQUEST=True,  # 每次请求都刷新会话
+    SESSION_REFRESH_EACH_REQUEST=False,  # 不要每次请求都刷新会话
     REMEMBER_COOKIE_DURATION=timedelta(days=365),  # 记住我 cookie 持续时间
     REMEMBER_COOKIE_SECURE=False,  # 允许非 HTTPS
     REMEMBER_COOKIE_HTTPONLY=True,  # 防止 JavaScript 访问
