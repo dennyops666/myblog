@@ -15,7 +15,7 @@ class Category(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
-    slug = db.Column(db.String(64), unique=True, nullable=False)
+    slug = db.Column(db.String(64), unique=True, nullable=True)
     description = db.Column(db.String(256))
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC),
@@ -27,7 +27,7 @@ class Category(db.Model):
     
     def __init__(self, name, slug=None, description=None):
         self.name = name
-        self.slug = slug or name.lower().replace(' ', '-')
+        self.slug = slug if slug else None
         self.description = description
     
     @property

@@ -10,7 +10,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.admin_category.create') }}">
+            <form method="POST" action="{{ url_for('admin.admin_category.create') }}" id="categoryForm">
                 {{ form.csrf_token }}
                 
                 <div class="mb-3">
@@ -58,4 +58,36 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 每15分钟刷新一次CSRF令牌
+    setInterval(function() {
+        fetch('/csrf/refresh')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
+            })
+            .catch(error => console.error('刷新CSRF令牌失败:', error));
+    }, 15 * 60 * 1000);
+
+    // 表单提交前刷新CSRF令牌
+    document.getElementById('categoryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/csrf/refresh')
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
+                this.submit();
+            })
+            .catch(error => {
+                console.error('刷新CSRF令牌失败:', error);
+                this.submit();
+            });
+    });
+});
+</script>
 {% endblock %} 
