@@ -20,10 +20,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# Flask
-instance/
-.webassets-cache
-.env
+# Virtual Environment
+venv/
+ENV/
 
 # IDE
 .idea/
@@ -31,15 +30,41 @@ instance/
 *.swp
 *.swo
 
-# 测试
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-
-# 数据库
-*.sqlite
+# Flask
+instance/
+.webassets-cache
 *.db
+app.db
+instance/blog.db
+instance/blog-dev.db
+
+# Logs
+logs/
+*.log
+*.log.*
+app.pid
+
+# Application specific
+.env
+.flaskenv
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Test coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Migrations
+migrations/versions/
 
 # 上传文件
 instance/uploads/
@@ -51,15 +76,10 @@ uploads/
 # 会话文件
 instance/sessions/
 
-# Virtual Environment
-venv/
-ENV/
-env/
-
 # Environment variables
 .env
 
 # SSH keys
 *.pub
 yes
-yes.pub 
+yes.pub

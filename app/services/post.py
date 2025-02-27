@@ -366,13 +366,25 @@ class PostService:
             dict: 包含状态和消息的字典
         """
         try:
+            current_app.logger.info(f"开始删除文章，ID: {post_id}")
             post = db.session.get(Post, post_id)
+            
             if not post:
+                current_app.logger.warning(f"文章不存在，ID: {post_id}")
                 return {'status': 'error', 'message': '文章不存在'}
-                
+            
+            current_app.logger.info(f"找到文章，标题: {post.title}")
+            
+            # 删除文章前，先清理相关的评论
+            comments_count = post.comments.count()
+            if comments_count > 0:
+                current_app.logger.info(f"删除文章相关的评论，数量: {comments_count}")
+                post.comments.delete()
+            
             db.session.delete(post)
             db.session.commit()
             
+            current_app.logger.info(f"文章删除成功，ID: {post_id}")
             return {'status': 'success', 'message': '文章删除成功'}
             
         except Exception as e:

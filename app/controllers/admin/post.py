@@ -13,7 +13,7 @@ from app.models.tag import Tag
 from app.extensions import db
 from app.forms.post_form import PostForm
 
-post_bp = Blueprint('post', __name__, url_prefix='/post')
+post_bp = Blueprint('post', __name__, url_prefix='')
 post_service = PostService()
 category_service = CategoryService()
 tag_service = TagService()
@@ -112,11 +112,31 @@ def edit(post_id):
 def delete(post_id):
     """删除文章"""
     try:
-        post_service.delete_post(post_id)
-        flash('文章删除成功', 'success')
+        # 验证 CSRF 令牌
+        csrf_token = request.get_json().get('csrf_token')
+        if not csrf_token:
+            return jsonify({
+                'success': False,
+                'message': 'CSRF 令牌缺失'
+            }), 400
+
+        result = post_service.delete_post(post_id)
+        if result['status'] == 'success':
+            return jsonify({
+                'success': True,
+                'message': '文章删除成功'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': result['message']
+            }), 400
     except Exception as e:
-        flash(str(e), 'error')
-    return redirect(url_for('admin.post.index'))
+        current_app.logger.error(f"删除文章失败: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': '删除文章失败，请稍后重试'
+        }), 500
 
 @post_bp.route('/<int:post_id>/view')
 @login_required
