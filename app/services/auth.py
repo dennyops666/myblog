@@ -27,9 +27,6 @@ class AuthService:
         """初始化认证服务"""
         self.security_service = SecurityService()
         self.user_service = UserService()
-        self.max_login_attempts = 5
-        self.lockout_duration = 30  # 锁定时间（分钟）
-        self._failed_attempts = {}
         self.token_expire_hours = 24  # Token有效期24小时
 
     def register(self, username, email, password):
@@ -96,27 +93,18 @@ class AuthService:
             if not username or not password:
                 return {'success': False, 'message': '用户名和密码不能为空'}
                 
-            # 检查账户锁定状态
-            if self._is_account_locked(username):
-                return {'success': False, 'message': '账户已被锁定，请稍后再试'}
-                
             # 获取用户
             user = self.user_service.get_user_by_username(username)
             if not user:
-                self._record_failed_attempt(username)
                 return {'success': False, 'message': '用户名或密码错误'}
                 
             # 验证密码
             if not user.verify_password(password):
-                self._record_failed_attempt(username)
                 return {'success': False, 'message': '用户名或密码错误'}
                 
             # 检查密码强度
             if not self.security_service.check_password_strength(password):
                 return {'success': False, 'message': '密码不符合安全要求，请修改密码'}
-                
-            # 重置失败尝试次数
-            self._clear_failed_attempts(username)
             
             # 更新用户状态
             user.last_login = datetime.now(UTC)
@@ -289,28 +277,6 @@ class AuthService:
             db.session.rollback()
             current_app.logger.error(f"确认重置密码失败: {str(e)}")
             return {'status': 'error', 'message': '密码重置失败，请稍后重试'}
-
-    def _is_account_locked(self, username):
-        """检查账户是否被锁定"""
-        attempts = self._get_failed_attempts(username)
-        return attempts.get('count', 0) >= self.max_login_attempts and \
-            attempts.get('timestamp', datetime.min) + timedelta(minutes=self.lockout_duration) > datetime.now(UTC)
-
-    def _record_failed_attempt(self, username):
-        """记录失败的登录尝试"""
-        attempts = self._get_failed_attempts(username)
-        attempts['count'] = attempts.get('count', 0) + 1
-        attempts['timestamp'] = datetime.now(UTC)
-        self._failed_attempts[username] = attempts
-
-    def _get_failed_attempts(self, username):
-        """获取失败的登录尝试记录"""
-        return self._failed_attempts.get(username, {'count': 0, 'timestamp': datetime.min})
-
-    def _clear_failed_attempts(self, username):
-        """清除失败的登录尝试记录"""
-        if username in self._failed_attempts:
-            del self._failed_attempts[username]
 
     def authenticate(self, username: str, password: str) -> Optional[User]:
         """验证用户凭据"""

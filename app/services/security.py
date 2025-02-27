@@ -92,10 +92,7 @@ class SecurityService:
         ]
 
         self.session_timeout = 30  # 会话超时时间（分钟）
-        self.max_failed_attempts = 5  # 最大失败尝试次数
-        self.lockout_duration = 30  # 锁定时间（分钟）
         self.password_pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'
-        self._failed_attempts = {}
 
     def validate_csrf_token(self, token=None):
         """验证CSRF令牌"""
@@ -619,29 +616,6 @@ class SecurityService:
     def validate_password_strength(self, password: str) -> bool:
         """验证密码强度"""
         return bool(re.match(self.password_pattern, password))
-    
-    def is_account_locked(self, username: str) -> bool:
-        """检查账户是否被锁定"""
-        if username in self._failed_attempts:
-            attempts, lockout_time = self._failed_attempts[username]
-            if attempts >= self.max_failed_attempts:
-                if datetime.now(UTC) < lockout_time + timedelta(minutes=self.lockout_duration):
-                    return True
-                del self._failed_attempts[username]
-        return False
-    
-    def record_failed_attempt(self, username: str) -> None:
-        """记录失败的登录尝试"""
-        if username in self._failed_attempts:
-            attempts, _ = self._failed_attempts[username]
-            self._failed_attempts[username] = (attempts + 1, datetime.now(UTC))
-        else:
-            self._failed_attempts[username] = (1, datetime.now(UTC))
-    
-    def clear_failed_attempts(self, username: str) -> None:
-        """清除失败的登录尝试记录"""
-        if username in self._failed_attempts:
-            del self._failed_attempts[username]
     
     def is_session_valid(self, session: UserSession) -> bool:
         """检查会话是否有效"""
