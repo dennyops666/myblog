@@ -22,26 +22,11 @@
                                             <a href="{{ url_for('blog.category', category_id=category.id) }}" 
                                                class="text-decoration-none">
                                                 {{ category.name }}
-                                                <small class="text-muted">({{ category.posts|length }})</small>
+                                                <small class="text-muted">({{ category.post_count }})</small>
                                             </a>
                                         </h2>
                                         {% if category.description %}
                                         <p class="card-text text-muted small">{{ category.description }}</p>
-                                        {% endif %}
-                                        
-                                        <!-- 最新文章预览 -->
-                                        {% if category.posts %}
-                                        <div class="list-group list-group-flush mt-3">
-                                            {% for post in category.posts[:3] %}
-                                            <a href="{{ url_for('blog.post', post_id=post.id) }}" 
-                                               class="list-group-item list-group-item-action px-0">
-                                                <div class="d-flex w-100 justify-content-between">
-                                                    <h6 class="mb-1">{{ post.title }}</h6>
-                                                    <small class="text-muted">{{ post.created_at.strftime('%m-%d') }}</small>
-                                                </div>
-                                            </a>
-                                            {% endfor %}
-                                        </div>
                                         {% endif %}
                                     </div>
                                     <div class="card-footer bg-transparent">
@@ -71,9 +56,13 @@
                     <h5 class="mb-0">分类统计</h5>
                 </div>
                 <div class="card-body">
+                    {% set total_posts = 0 %}
+                    {% for category in categories %}
+                        {% set total_posts = total_posts + category.post_count %}
+                    {% endfor %}
                     <p class="mb-0">
                         共有 <strong>{{ categories|length }}</strong> 个分类，
-                        包含 <strong>{{ categories|sum(attribute='posts|length') }}</strong> 篇文章
+                        包含 <strong>{{ total_posts }}</strong> 篇文章
                     </p>
                 </div>
             </div>
@@ -85,12 +74,16 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
-                        {% for category in categories|sort(attribute='posts|length', reverse=True)[:5] %}
-                        <a href="{{ url_for('blog.category', category_id=category.id) }}" 
-                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            {{ category.name }}
-                            <span class="badge bg-primary rounded-pill">{{ category.posts|length }}</span>
-                        </a>
+                        {% set count = 0 %}
+                        {% for category in categories|sort(attribute='post_count', reverse=True) %}
+                            {% if count < 5 %}
+                                <a href="{{ url_for('blog.category', category_id=category.id) }}" 
+                                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    {{ category.name }}
+                                    <span class="badge bg-primary rounded-pill">{{ category.post_count }}</span>
+                                </a>
+                                {% set count = count + 1 %}
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>

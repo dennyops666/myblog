@@ -158,7 +158,9 @@ class CategoryService:
                 'id': category.id,
                 'name': category.name,
                 'slug': category.slug,
-                'post_count': post_count
+                'description': category.description,
+                'post_count': post_count,
+                'posts': {'length': post_count}
             })
             
         return result
