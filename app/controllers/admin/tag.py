@@ -11,6 +11,7 @@ from app.services import TagService
 from app.extensions import db
 from app.forms.tag_form import TagForm
 from app.models.tag import Tag
+from sqlalchemy.exc import IntegrityError
 
 tag_bp = Blueprint('tag', __name__, url_prefix='/tag')
 tag_service = TagService()
@@ -39,6 +40,18 @@ def create():
     form = TagForm()
     if form.validate_on_submit():
         try:
+            # 检查标签名是否已存在
+            existing_tag = Tag.query.filter_by(name=form.name.data).first()
+            if existing_tag:
+                flash('标签名称已存在，请使用其他名称', 'warning')
+                return render_template('admin/tag/create.html', form=form)
+                
+            # 检查别名是否已存在
+            existing_slug = Tag.query.filter_by(slug=form.slug.data).first()
+            if existing_slug:
+                flash('标签别名已存在，请使用其他别名', 'warning')
+                return render_template('admin/tag/create.html', form=form)
+                
             tag = Tag(
                 name=form.name.data,
                 slug=form.slug.data,
@@ -48,9 +61,13 @@ def create():
             db.session.commit()
             flash('标签创建成功', 'success')
             return redirect(url_for('.index'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('标签名称或别名已存在，请修改后重试', 'warning')
+            return render_template('admin/tag/create.html', form=form)
         except Exception as e:
             db.session.rollback()
-            flash(str(e), 'error')
+            flash('创建标签时发生错误，请稍后重试', 'error')
             return render_template('admin/tag/create.html', form=form)
     return render_template('admin/tag/create.html', form=form)
 
@@ -94,9 +111,24 @@ def delete(tag_id):
     try:
         result = tag_service.delete_tag(tag_id)
         if result['status'] == 'success':
+            if request.is_xhr:
+                return jsonify({
+                    'success': True,
+                    'message': result['message']
+                })
             flash(result['message'], 'success')
         else:
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': result['message']
+                })
             flash(result['message'], 'error')
     except Exception as e:
+        if request.is_xhr:
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            })
         flash(str(e), 'error')
     return redirect(url_for('admin.tag.index')) 

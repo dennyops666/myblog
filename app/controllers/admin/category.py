@@ -113,13 +113,30 @@ def delete(id):
     category = Category.query.get_or_404(id)
     try:
         if category.posts.count() > 0:
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '该分类下还有文章，无法删除'
+                })
             flash('该分类下还有文章，无法删除', 'warning')
             return redirect(url_for('.index'))
+            
         db.session.delete(category)
         db.session.commit()
+        
+        if request.is_xhr:
+            return jsonify({
+                'success': True,
+                'message': '分类删除成功'
+            })
         flash('分类删除成功', 'success')
     except Exception as e:
         db.session.rollback()
+        if request.is_xhr:
+            return jsonify({
+                'success': False,
+                'message': '删除分类时发生错误，请稍后重试'
+            })
         flash('删除分类时发生错误，请稍后重试', 'error')
     return redirect(url_for('.index'))
 

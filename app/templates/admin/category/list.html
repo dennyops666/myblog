@@ -37,9 +37,9 @@
                                 <a href="{{ url_for('admin.admin_category.edit', id=category.id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <form action="{{ url_for('admin.admin_category.delete', id=category.id) }}" method="POST" class="d-inline">
+                                <form action="{{ url_for('admin.admin_category.delete', id=category.id) }}" method="POST" class="d-inline delete-form">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('确定要删除这个分类吗？')">
+                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="{{ category.id }}" data-name="{{ category.name }}">
                                         <i class="fas fa-trash"></i> 删除
                                     </button>
                                 </form>
@@ -84,19 +84,79 @@
         </div>
     </div>
 </div>
+
+<!-- 确认删除对话框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除分类 "<span id="categoryName"></span>" 吗？如果分类下有文章将无法删除。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">确定删除</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 删除确认
-    const deleteButtons = document.querySelectorAll('.btn-outline-danger');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('确定要删除这个分类吗？如果分类下有文章将无法删除。')) {
-                e.preventDefault();
-            }
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    let currentForm = null;
+
+    // 删除按钮点击事件
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const categoryName = this.dataset.name;
+            document.getElementById('categoryName').textContent = categoryName;
+            currentForm = this.closest('form');
+            deleteModal.show();
+        });
+    });
+
+    // 确认删除按钮点击事件
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (currentForm) {
+            currentForm.submit();
+        }
+        deleteModal.hide();
+    });
+
+    // 处理删除表单提交
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message || '删除成功');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('danger', data.message || '删除失败');
+                }
+            })
+            .catch(error => {
+                showToast('danger', '操作失败，请稍后重试');
+            });
         });
     });
 });
