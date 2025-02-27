@@ -22,9 +22,16 @@ def login():
     try:
         # 获取next参数
         next_url = request.args.get('next')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
         # 如果已经登录，重定向到管理后台
         if current_user.is_authenticated:
+            if is_ajax:
+                return jsonify({
+                    'success': True,
+                    'message': '已经登录',
+                    'redirect_url': next_url or url_for('admin.index')
+                })
             return redirect(next_url or url_for('admin.index'))
 
         form = LoginForm()
@@ -35,11 +42,21 @@ def login():
             remember_me = request.form.get('remember_me', False)
 
             if not username or not password:
+                if is_ajax:
+                    return jsonify({
+                        'success': False,
+                        'message': '用户名和密码不能为空'
+                    })
                 flash('用户名和密码不能为空', 'danger')
                 return render_template('auth/login.html', form=form)
 
             user = user_service.get_user_by_username(username)
             if not user or not user.verify_password(password):
+                if is_ajax:
+                    return jsonify({
+                        'success': False,
+                        'message': '用户名或密码错误'
+                    })
                 flash('用户名或密码错误', 'danger')
                 return render_template('auth/login.html', form=form)
 
@@ -52,26 +69,44 @@ def login():
                     break
 
             if not is_admin:
+                if is_ajax:
+                    return jsonify({
+                        'success': False,
+                        'message': '您不是管理员，请从博客首页登录',
+                        'redirect_url': url_for('blog.login')
+                    })
                 flash('您不是管理员，请从博客首页登录', 'danger')
                 return redirect(url_for('blog.login'))
 
             # 登录成功处理
             login_user(user, remember=remember_me)
-            flash('登录成功', 'success')
             
             # 如果有next参数且是相对路径，则跳转到next
+            redirect_url = url_for('admin.index')
             if next_url:
                 # 确保next_url是相对路径，防止重定向攻击
                 parsed_next = urlparse(next_url)
                 if not parsed_next.netloc:
-                    return redirect(next_url)
+                    redirect_url = next_url
             
-            # 默认跳转到管理后台首页
-            return redirect(url_for('admin.index'))
+            if is_ajax:
+                return jsonify({
+                    'success': True,
+                    'message': '登录成功',
+                    'redirect_url': redirect_url
+                })
+            
+            flash('登录成功', 'success')
+            return redirect(redirect_url)
 
         return render_template('auth/login.html', form=form)
     except Exception as e:
         current_app.logger.error(f'登录过程中发生错误: {str(e)}\n{traceback.format_exc()}')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'message': '服务器内部错误'
+            }), 500
         flash('服务器内部错误', 'error')
         return render_template('errors/500.html'), 500
 

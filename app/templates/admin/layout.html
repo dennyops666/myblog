@@ -3,10 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}{% endblock %} - 管理后台</title>
     {% block styles %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Toast 容器样式 */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .custom-toast {
+            min-width: 250px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        .custom-toast.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .custom-toast.danger {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .custom-toast.warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .custom-toast.info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .toast-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background-color: rgba(255,255,255,0.85);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .toast-body {
+            padding: 0.75rem;
+        }
+    </style>
     {% endblock %}
 </head>
 <body>
@@ -23,7 +92,7 @@
                         <a class="nav-link" href="{{ url_for('admin.post.index') }}">文章管理</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.category.index') }}">分类管理</a>
+                        <a class="nav-link" href="{{ url_for('admin.admin_category.index') }}">分类管理</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.tag.index') }}">标签管理</a>
@@ -45,10 +114,7 @@
                             <li><a class="dropdown-item" href="{{ url_for('admin.profile') }}">个人资料</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form action="{{ url_for('auth.logout') }}" method="post" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="dropdown-item">退出登录</button>
-                                </form>
+                                <a href="javascript:void(0)" onclick="handleLogout()" class="dropdown-item">退出登录</a>
                             </li>
                         </ul>
                     </li>
@@ -62,19 +128,21 @@
         </div>
     </nav>
 
-    <!-- 消息提示 -->
-    <div class="container-fluid mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
+    <!-- Toast 容器 -->
+    <div id="toast-container"></div>
+
+    <!-- Flash 消息处理 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    showToast('{{ category }}', '{{ message }}');
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
+            });
+            </script>
+        {% endif %}
+    {% endwith %}
 
     <!-- 主要内容 -->
     <main class="py-4">
@@ -83,7 +151,99 @@
 
     {% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Toast 显示函数
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container');
+        
+        // 创建 toast 元素
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        
+        // 设置 toast 内容
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto">${type === 'success' ? '成功' : 
+                                        type === 'danger' ? '错误' : 
+                                        type === 'warning' ? '警告' : '提示'}</strong>
+                <button type="button" class="btn-close" onclick="closeToast(this.parentElement.parentElement)"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        
+        // 添加到容器
+        toastContainer.appendChild(toast);
+        
+        // 3秒后自动关闭
+        setTimeout(() => {
+            closeToast(toast);
+        }, 3000);
+    }
+    
+    // Toast 关闭函数
+    function closeToast(toast) {
+        toast.style.animation = 'slideOut 0.3s ease-in-out forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+    
+    // 全局 AJAX 错误处理
+    $(document).ajaxError(function(event, jqXHR, settings, error) {
+        let message = '操作失败';
+        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+            message = jqXHR.responseJSON.message;
+        }
+        showToast('danger', message);
+    });
+    
+    // 表单提交处理
+    $(document).on('submit', 'form', function(e) {
+        const form = $(this);
+        if (form.data('ajax') === false) return true;
+        
+        e.preventDefault();
+        $.ajax({
+            url: form.attr('action'),
+            type: form.attr('method') || 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message || '操作成功');
+                    if (response.redirect) {
+                        setTimeout(() => {
+                            window.location.href = response.redirect;
+                        }, 1000);
+                    }
+                } else {
+                    showToast('danger', response.message || '操作失败');
+                }
+            }
+        });
+    });
+    
+    // 处理退出登录
+    function handleLogout() {
+        $.ajax({
+            url: '{{ url_for("auth.logout") }}',
+            type: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message || '退出成功');
+                    setTimeout(() => {
+                        window.location.href = response.redirect || '{{ url_for("auth.login") }}';
+                    }, 1000);
+                } else {
+                    showToast('danger', response.message || '退出失败');
+                }
+            }
+        });
+    }
+    </script>
     {% endblock %}
 </body>
 </html> 

@@ -46,9 +46,79 @@
             font-size: 0.875rem;
             margin-top: 0.25rem;
         }
+        
+        /* Toast 样式 */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .custom-toast {
+            min-width: 250px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        .custom-toast.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .custom-toast.danger {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .custom-toast.warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .custom-toast.info {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .toast-header {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background-color: rgba(255,255,255,0.85);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .toast-body {
+            padding: 0.75rem;
+        }
     </style>
 </head>
 <body>
+    <!-- Toast 容器 -->
+    <div id="toast-container"></div>
+    
     <div class="container">
         <div class="login-container">
             <div class="login-header">
@@ -57,20 +127,20 @@
             </div>
             
             <div class="login-form">
-                <div id="alert-container">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
+                <!-- Flash 消息处理 -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
+                                showToast('{{ category }}', '{{ message }}');
                             {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                </div>
+                        });
+                        </script>
+                    {% endif %}
+                {% endwith %}
                 
-                <form id="login-form" method="post" action="{{ url_for('auth.login') }}">
+                <form id="login-form" method="post" action="{{ url_for('auth.login') }}" onsubmit="return handleSubmit(event)">
                     <div class="mb-3">
                         <label for="username" class="form-label">用户名</label>
                         {{ form.username(class="form-control", id="username", required=true, autofocus=true) }}
@@ -89,17 +159,122 @@
                         {{ form.remember_me(class="form-check-input", id="remember_me") }}
                         <label class="form-check-label" for="remember_me">记住我</label>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-login">登录</button>
+                    <button type="submit" class="btn btn-primary btn-login" id="submit-btn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        登录
+                    </button>
                 </form>
             </div>
         </div>
     </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            // 直接提交表单，不阻止默认行为
-            return true;
-        });
+    // Toast 显示函数
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container');
+        
+        // 创建 toast 元素
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        
+        // 设置 toast 内容
+        toast.innerHTML = `
+            <div class="toast-header">
+                <strong class="me-auto">${type === 'success' ? '成功' : 
+                                        type === 'danger' ? '错误' : 
+                                        type === 'warning' ? '警告' : '提示'}</strong>
+                <button type="button" class="btn-close" onclick="closeToast(this.parentElement.parentElement)"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        
+        // 添加到容器
+        toastContainer.appendChild(toast);
+        
+        // 3秒后自动关闭
+        setTimeout(() => {
+            closeToast(toast);
+        }, 3000);
+    }
+    
+    // Toast 关闭函数
+    function closeToast(toast) {
+        toast.style.animation = 'slideOut 0.3s ease-in-out forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+    
+    // 表单提交处理
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const submitBtn = form.querySelector('#submit-btn');
+        const spinner = submitBtn.querySelector('.spinner-border');
+        const username = form.querySelector('#username').value;
+        const password = form.querySelector('#password').value;
+        const remember = form.querySelector('#remember_me').checked;
+        
+        if (!username || !password) {
+            showToast('danger', '请填写用户名和密码');
+            return false;
+        }
+        
+        // 禁用提交按钮并显示加载动画
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    username: username,
+                    password: password,
+                    remember_me: remember
+                })
+            });
+            
+            // 检查响应状态
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            
+            // 获取响应类型
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                // JSON响应
+                const data = await response.json();
+                if (data.success) {
+                    showToast('success', data.message || '登录成功');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/admin';
+                    }, 1000);
+                } else {
+                    showToast('danger', data.message || '登录失败');
+                }
+            } else {
+                // 非JSON响应（可能是重定向）
+                window.location.href = response.url;
+            }
+        } catch (error) {
+            console.error('登录请求失败:', error);
+            showToast('danger', '登录请求失败，请稍后重试');
+        } finally {
+            // 恢复提交按钮状态
+            submitBtn.disabled = false;
+            spinner.classList.add('d-none');
+        }
+        
+        return false;
+    }
     </script>
 </body>
 </html> 
