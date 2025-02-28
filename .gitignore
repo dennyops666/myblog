@@ -70,9 +70,6 @@ migrations/versions/
 instance/uploads/
 uploads/
 
-# 日志
-*.log
-
 # 会话文件
 instance/sessions/
 
@@ -83,3 +80,6 @@ instance/sessions/
 *.pub
 yes
 yes.pub
+
+# 测试文件
+test_*.py

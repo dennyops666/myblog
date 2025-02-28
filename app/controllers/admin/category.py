@@ -5,14 +5,20 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required
-from app.models.category import Category
-from app.forms.category_form import CategoryForm
+from app.services import CategoryService
 from app.extensions import db
+from app.forms.category_form import CategoryForm
+from app.models.category import Category
 from sqlalchemy.exc import IntegrityError
 
-category_bp = Blueprint('admin_category', __name__, url_prefix='/categories')
+category_bp = Blueprint('admin_category', __name__)
+category_service = CategoryService()
+
+def is_ajax():
+    """检查是否是 AJAX 请求"""
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 @category_bp.route('/')
 @login_required
@@ -30,90 +36,205 @@ def index():
 @category_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create():
+    """创建分类"""
     form = CategoryForm()
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        current_app.logger.debug(f'表单数据: {request.form}')
+        current_app.logger.debug(f'表单验证结果: {form.validate()}')
+        if form.errors:
+            current_app.logger.debug(f'表单错误: {form.errors}')
+            
         try:
-            # 检查分类名是否已存在
-            existing_name = Category.query.filter_by(name=form.name.data).first()
-            if existing_name:
-                flash('分类名称已存在，请使用其他名称', 'warning')
-                return render_template('admin/category/create.html', form=form)
-            
-            # 如果提供了slug，检查是否已存在
-            if form.slug.data:
-                existing_slug = Category.query.filter_by(slug=form.slug.data).first()
-                if existing_slug:
-                    flash('分类别名已存在，请使用其他别名', 'warning')
+            if form.validate_on_submit():
+                # 检查分类名是否已存在
+                existing_name = Category.query.filter_by(name=form.name.data).first()
+                if existing_name:
+                    message = '分类名称已存在，请使用其他名称'
+                    if is_ajax():
+                        return jsonify({'success': False, 'message': message, 'errors': {'name': [message]}})
+                    flash(message, 'warning')
                     return render_template('admin/category/create.html', form=form)
-            
-            category = Category(
-                name=form.name.data,
-                slug=form.slug.data if form.slug.data else None,
-                description=form.description.data
-            )
-            db.session.add(category)
-            db.session.commit()
-            flash('分类创建成功', 'success')
-            return redirect(url_for('.index'))
-        except IntegrityError:
-            db.session.rollback()
-            flash('分类名称或别名已存在，请修改后重试', 'warning')
-            return render_template('admin/category/create.html', form=form)
+                
+                # 处理别名
+                slug = form.slug.data.strip() if form.slug.data else None
+                current_app.logger.debug(f'处理后的别名: {slug}')
+                
+                # 如果提供了有效的slug，检查是否已存在
+                if slug:
+                    existing_slug = Category.query.filter_by(slug=slug).first()
+                    if existing_slug:
+                        message = '分类别名已存在，请使用其他别名'
+                        if is_ajax():
+                            return jsonify({'success': False, 'message': message, 'errors': {'slug': [message]}})
+                        flash(message, 'warning')
+                        return render_template('admin/category/create.html', form=form)
+                
+                try:
+                    category = Category(
+                        name=form.name.data,
+                        slug=slug,
+                        description=form.description.data
+                    )
+                    db.session.add(category)
+                    db.session.commit()
+                    current_app.logger.debug('分类创建成功')
+                    
+                    message = '分类创建成功'
+                    if is_ajax():
+                        return jsonify({
+                            'success': True,
+                            'message': message,
+                            'redirect_url': url_for('.index')
+                        })
+                    flash(message, 'success')
+                    return redirect(url_for('.index'))
+                except IntegrityError as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'数据库错误: {str(e)}')
+                    message = '创建分类失败，请稍后重试'
+                    if is_ajax():
+                        return jsonify({
+                            'success': False,
+                            'message': message,
+                            'errors': {'name': [message]}
+                        })
+                    flash(message, 'warning')
+                    return render_template('admin/category/create.html', form=form)
+            else:
+                # 表单验证失败
+                current_app.logger.debug(f'表单验证失败: {form.errors}')
+                if is_ajax():
+                    return jsonify({
+                        'success': False,
+                        'message': '表单验证失败，请检查输入',
+                        'errors': form.errors
+                    })
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f'{getattr(form, field).label.text}: {error}', 'error')
+                return render_template('admin/category/create.html', form=form)
+                
         except Exception as e:
+            current_app.logger.error(f'创建分类时发生错误: {str(e)}')
             db.session.rollback()
-            flash('创建分类时发生错误，请稍后重试', 'error')
+            message = '创建分类时发生错误，请稍后重试'
+            if is_ajax():
+                return jsonify({'success': False, 'message': message})
+            flash(message, 'error')
             return render_template('admin/category/create.html', form=form)
+            
     return render_template('admin/category/create.html', form=form)
 
 @category_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(id):
+    """编辑分类"""
     category = Category.query.get_or_404(id)
     form = CategoryForm(obj=category)
-    if form.validate_on_submit():
-        try:
-            # 检查名称是否已被其他分类使用
-            existing = Category.query.filter(
-                Category.name == form.name.data,
-                Category.id != id
-            ).first()
-            if existing:
-                flash('分类名称已存在，请使用其他名称', 'warning')
-                return render_template('admin/category/edit.html', form=form, category=category)
+    
+    if request.method == 'POST':
+        current_app.logger.debug(f'表单数据: {request.form}')
+        current_app.logger.debug(f'表单验证结果: {form.validate()}')
+        current_app.logger.debug(f'表单验证结果(validate_on_submit): {form.validate_on_submit()}')
+        current_app.logger.debug(f'CSRF Token: {request.form.get("csrf_token")}')
+        current_app.logger.debug(f'请求头: {dict(request.headers)}')
+        
+        if form.errors:
+            current_app.logger.debug(f'表单错误: {form.errors}')
             
-            # 如果提供了slug，检查是否已被其他分类使用
-            if form.slug.data:
-                existing = Category.query.filter(
-                    Category.slug == form.slug.data,
+        try:
+            if form.validate_on_submit():
+                current_app.logger.debug('表单验证通过，开始处理数据')
+                # 检查分类名是否已存在（排除当前分类）
+                existing_name = Category.query.filter(
+                    Category.name == form.name.data,
                     Category.id != id
                 ).first()
-                if existing:
-                    flash('分类别名已存在，请使用其他别名', 'warning')
+                if existing_name:
+                    message = '分类名称已存在，请使用其他名称'
+                    if is_ajax():
+                        return jsonify({'success': False, 'message': message, 'errors': {'name': [message]}})
+                    flash(message, 'warning')
                     return render_template('admin/category/edit.html', form=form, category=category)
-            
-            category.name = form.name.data
-            category.slug = form.slug.data if form.slug.data else None
-            category.description = form.description.data
-            db.session.commit()
-            flash('分类更新成功', 'success')
-            return redirect(url_for('.index'))
-        except IntegrityError:
-            db.session.rollback()
-            flash('分类名称或别名已存在，请修改后重试', 'warning')
-            return render_template('admin/category/edit.html', form=form, category=category)
+                
+                # 处理别名
+                slug = form.slug.data.strip() if form.slug.data else None
+                current_app.logger.debug(f'处理后的别名: {slug}')
+                
+                # 如果提供了有效的slug，检查是否已存在（排除当前分类）
+                if slug:
+                    existing_slug = Category.query.filter(
+                        Category.slug == slug,
+                        Category.id != id
+                    ).first()
+                    if existing_slug:
+                        message = '分类别名已存在，请使用其他别名'
+                        if is_ajax():
+                            return jsonify({'success': False, 'message': message, 'errors': {'slug': [message]}})
+                        flash(message, 'warning')
+                        return render_template('admin/category/edit.html', form=form, category=category)
+                
+                try:
+                    category.name = form.name.data
+                    category.slug = slug
+                    category.description = form.description.data
+                    db.session.commit()
+                    current_app.logger.debug('分类更新成功')
+                    
+                    message = '分类更新成功'
+                    if is_ajax():
+                        return jsonify({
+                            'success': True,
+                            'message': message,
+                            'redirect_url': url_for('.index')
+                        })
+                    flash(message, 'success')
+                    return redirect(url_for('.index'))
+                except IntegrityError as e:
+                    db.session.rollback()
+                    current_app.logger.error(f'数据库错误: {str(e)}')
+                    message = '更新分类失败，请稍后重试'
+                    if is_ajax():
+                        return jsonify({
+                            'success': False,
+                            'message': message,
+                            'errors': {'_error': [message]}
+                        })
+                    flash(message, 'warning')
+                    return render_template('admin/category/edit.html', form=form, category=category)
+            else:
+                # 表单验证失败
+                current_app.logger.debug(f'表单验证失败: {form.errors}')
+                if is_ajax():
+                    return jsonify({
+                        'success': False,
+                        'message': '表单验证失败，请检查输入',
+                        'errors': form.errors
+                    })
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f'{getattr(form, field).label.text}: {error}', 'error')
+                return render_template('admin/category/edit.html', form=form, category=category)
+                
         except Exception as e:
+            current_app.logger.error(f'更新分类时发生错误: {str(e)}')
             db.session.rollback()
-            flash('更新分类时发生错误，请稍后重试', 'error')
+            message = '更新分类时发生错误，请稍后重试'
+            if is_ajax():
+                return jsonify({'success': False, 'message': message})
+            flash(message, 'error')
             return render_template('admin/category/edit.html', form=form, category=category)
+    
     return render_template('admin/category/edit.html', form=form, category=category)
 
 @category_bp.route('/<int:id>/delete', methods=['POST'])
 @login_required
 def delete(id):
-    category = Category.query.get_or_404(id)
+    """删除分类"""
     try:
+        category = Category.query.get_or_404(id)
         if category.posts.count() > 0:
-            if request.is_xhr:
+            if is_ajax():
                 return jsonify({
                     'success': False,
                     'message': '该分类下还有文章，无法删除'
@@ -124,20 +245,22 @@ def delete(id):
         db.session.delete(category)
         db.session.commit()
         
-        if request.is_xhr:
+        if is_ajax():
             return jsonify({
                 'success': True,
                 'message': '分类删除成功'
             })
         flash('分类删除成功', 'success')
+        
     except Exception as e:
         db.session.rollback()
-        if request.is_xhr:
+        if is_ajax():
             return jsonify({
                 'success': False,
                 'message': '删除分类时发生错误，请稍后重试'
             })
         flash('删除分类时发生错误，请稍后重试', 'error')
+        
     return redirect(url_for('.index'))
 
 @category_bp.route('/search')
