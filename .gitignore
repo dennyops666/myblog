@@ -34,9 +34,7 @@ ENV/
 instance/
 .webassets-cache
 *.db
-app.db
-instance/blog.db
-instance/blog-dev.db
+!migrations/versions/*.py
 
 # Logs
 logs/
@@ -63,9 +61,6 @@ coverage.xml
 *.cover
 .hypothesis/
 
-# Migrations
-migrations/versions/
-
 # 上传文件
 instance/uploads/
 uploads/
@@ -75,6 +70,8 @@ instance/sessions/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 
 # SSH keys
 *.pub
@@ -83,3 +80,26 @@ yes.pub
 
 # 测试文件
 test_*.py
+
+# New additions
+*.pyc
+.env
+.venv
+venv/
+ENV/
+instance/
+*.db
+*.sqlite
+*.sqlite3
+.DS_Store
+.idea/
+.vscode/
+*.log
+logs/
+*.pid
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
