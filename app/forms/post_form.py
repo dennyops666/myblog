@@ -17,7 +17,7 @@ from flask import current_app
 class PostForm(FlaskForm):
     """文章表单"""
     class Meta:
-        csrf = True
+        csrf = False  # 禁用 CSRF 保护
         # 禁用在错误消息前添加字段标签
         strip_string_fields = True
         render_kw = {'strip': True}
