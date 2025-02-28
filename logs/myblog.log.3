@@ -1,101 +1,146 @@
-2025-02-26 21:21:51,773 INFO: Locating template 'admin/layout.html':
+2025-02-28 22:03:47,068 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/7/edit
+None
+2025-02-28 22:03:47,068 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?t=1740750765912', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HCNQ.kSqW3BIzXIq98HKEYPJQB_lv358'}
+None
+2025-02-28 22:03:47,073 INFO: 开始处理文章编辑请求，文章ID: 7
+None
+2025-02-28 22:03:47,074 DEBUG: 请求方法: GET
+None
+2025-02-28 22:03:47,086 INFO: 开始加载分类选项...
+None
+2025-02-28 22:03:47,089 INFO: 成功获取到 6 个分类
+None
+2025-02-28 22:03:47,096 DEBUG: 加载表单数据: 6 个分类, 5 个标签
+None
+2025-02-28 22:03:47,096 INFO: Locating template 'admin/post/edit.html':
     1: trying loader of application 'app'
        class: jinja2.loaders.FileSystemLoader
        encoding: 'utf-8'
        followlinks: False
        searchpath:
          - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/admin/layout.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 21:21:51,825 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:51,826 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:21:56,721 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:56,750 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:56,766 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:56,766 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:21:59,438 INFO: 请求: GET http://192.168.72.128:5000/admin/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:59,475 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:21:59,475 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:22:01,806 INFO: 请求: GET http://192.168.72.128:5000/admin/users/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:01,809 WARNING: Forbidden: 403 Forbidden: 您没有管理员权限，无法访问此页面 [in /data/myblog/app/extensions.py:138]
-2025-02-26 21:22:01,809 INFO: Locating template 'errors/403.html':
+       -> found ('/data/myblog/app/templates/admin/post/edit.html')
+None
+2025-02-28 22:03:47,120 INFO: Locating template 'admin/layout.html':
     1: trying loader of application 'app'
        class: jinja2.loaders.FileSystemLoader
        encoding: 'utf-8'
        followlinks: False
        searchpath:
          - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/errors/403.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 21:22:01,836 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:01,851 INFO: 请求: GET http://192.168.72.128:5000/static/images/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:03,289 INFO: 请求: GET http://192.168.72.128:5000/admin/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:03,323 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:03,323 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:22:05,484 INFO: 请求: POST http://192.168.72.128:5000/auth/logout [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:05,485 INFO: 用户 test 已登出 [in /data/myblog/app/controllers/auth/__init__.py:64]
-2025-02-26 21:22:05,506 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:05,507 INFO: Locating template 'auth/login.html':
+       -> found ('/data/myblog/app/templates/admin/layout.html')
+None
+2025-02-28 22:03:51,721 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+None
+2025-02-28 22:03:51,721 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '214', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HCQw.4o8HWsgomuayPv_vpwOtMbVHiv0'}
+None
+2025-02-28 22:03:51,721 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+None
+2025-02-28 22:03:51,723 INFO: 开始处理文章编辑请求，文章ID: 7
+None
+2025-02-28 22:03:51,723 DEBUG: 请求方法: POST
+None
+2025-02-28 22:03:51,723 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
+None
+2025-02-28 22:03:51,725 INFO: 开始加载分类选项...
+None
+2025-02-28 22:03:51,726 INFO: 成功获取到 6 个分类
+None
+2025-02-28 22:03:51,727 INFO: 开始验证表单数据...
+None
+2025-02-28 22:03:51,734 INFO: 表单验证通过，开始更新文章...
+None
+2025-02-28 22:03:51,734 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,735 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,745 INFO: 开始清除缓存
+None
+2025-02-28 22:03:51,753 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+None
+2025-02-28 22:03:51,753 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '614', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary9m4BPB2dCNIPxfAE', 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HCQw.4o8HWsgomuayPv_vpwOtMbVHiv0'}
+None
+2025-02-28 22:03:51,754 INFO: 文章 7 更新完成，当前分类ID=5
+None
+2025-02-28 22:03:51,754 INFO: 文章更新成功，ID: 7
+None
+2025-02-28 22:03:51,754 DEBUG: 更新后的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,754 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+None
+2025-02-28 22:03:51,760 INFO: 开始处理文章编辑请求，文章ID: 7
+None
+2025-02-28 22:03:51,760 DEBUG: 请求方法: POST
+None
+2025-02-28 22:03:51,760 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
+None
+2025-02-28 22:03:51,770 INFO: 开始加载分类选项...
+None
+2025-02-28 22:03:51,772 INFO: 成功获取到 6 个分类
+None
+2025-02-28 22:03:51,775 INFO: 开始验证表单数据...
+None
+2025-02-28 22:03:51,781 INFO: 表单验证通过，开始更新文章...
+None
+2025-02-28 22:03:51,782 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,782 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,792 INFO: 开始清除缓存
+None
+2025-02-28 22:03:51,802 INFO: 文章 7 更新完成，当前分类ID=5
+None
+2025-02-28 22:03:51,803 INFO: 文章更新成功，ID: 7
+None
+2025-02-28 22:03:51,803 DEBUG: 更新后的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+None
+2025-02-28 22:03:51,831 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?t=1740751432415
+None
+2025-02-28 22:03:51,832 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HCQw.4o8HWsgomuayPv_vpwOtMbVHiv0'}
+None
+2025-02-28 22:03:51,884 INFO: Locating template 'admin/post/list.html':
     1: trying loader of application 'app'
        class: jinja2.loaders.FileSystemLoader
        encoding: 'utf-8'
        followlinks: False
        searchpath:
          - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/auth/login.html') [in /home/ops/.local/lib/python3.12/site-packages/flask/debughelpers.py:178]
-2025-02-26 21:22:05,569 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:05,570 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:22:24,350 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:24,381 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:24,396 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:24,397 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:22:34,372 INFO: 请求: POST http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:34,499 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:34,556 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:22:34,557 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:14,713 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:14,773 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:14,773 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:20,581 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:20,620 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:20,636 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:20,637 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:26,305 INFO: 请求: GET http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:26,337 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:26,352 INFO: 请求: GET http://192.168.72.128:5000/static/images/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:30,524 INFO: 请求: POST http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:30,646 INFO: 请求: GET http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:30,676 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:30,697 INFO: 请求: GET http://192.168.72.128:5000/static/images/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:42,753 INFO: 请求: POST http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:42,912 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:42,948 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:42,965 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:42,966 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:53,618 INFO: 请求: GET http://192.168.72.128:5000/blog/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:53,640 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:53,670 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:53,687 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:53,687 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:56,707 INFO: 请求: GET http://192.168.72.128:5000/blog/ [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:56,737 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:56,750 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:56,751 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:23:58,846 INFO: 请求: POST http://192.168.72.128:5000/auth/logout [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:58,848 INFO: 用户 test 已登出 [in /data/myblog/app/controllers/auth/__init__.py:64]
-2025-02-26 21:23:58,869 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:58,925 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:23:58,926 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:26:17,671 INFO: 请求: POST http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:26:17,815 INFO: 请求: GET http://192.168.72.128:5000/auth/login [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:26:17,878 INFO: 请求: GET http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:141]
-2025-02-26 21:26:17,879 WARNING: 页面未找到: http://192.168.72.128:5000/favicon.ico [in /data/myblog/app/__init__.py:109]
-2025-02-26 21:35:18,766 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
-2025-02-26 21:35:18,767 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
-2025-02-26 21:35:18,767 INFO: 调试模式: True [in /data/myblog/app/__init__.py:71]
-2025-02-26 21:35:18,767 INFO: 日志文件: /data/myblog/logs/myblog.log [in /data/myblog/app/__init__.py:72]
-2025-02-26 21:35:18,783 INFO: 扩展初始化完成 [in /data/myblog/app/__init__.py:85]
-2025-02-26 21:35:18,783 INFO: 数据库迁移初始化完成 [in /data/myblog/app/__init__.py:89]
-2025-02-26 21:35:18,797 INFO: 蓝图注册完成 [in /data/myblog/app/__init__.py:96]
-2025-02-26 21:35:18,798 INFO: 过滤器初始化完成 [in /data/myblog/app/__init__.py:115]
-2025-02-26 21:35:18,798 INFO: 应用初始化完成 [in /data/myblog/app/__init__.py:166]
-2025-02-26 21:35:30,077 INFO: MyBlog 启动 [in /data/myblog/app/__init__.py:69]
-2025-02-26 21:35:30,077 INFO: 配置模式: development [in /data/myblog/app/__init__.py:70]
+       -> found ('/data/myblog/app/templates/admin/post/list.html')
+None
+2025-02-28 22:03:51,958 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?t=1740751432415
+None
+2025-02-28 22:03:51,959 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?t=1740751432415', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HCRw.rdlDju7ay5S1hHtbcbH-9PZ95Pc'}
+None
+2025-02-28 22:03:52,065 INFO: Locating template 'admin/post/list.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/admin/post/list.html')
+None
+2025-02-28 22:07:08,398 INFO: MyBlog 启动
+None
+2025-02-28 22:07:08,399 INFO: 配置模式: development
+None
+2025-02-28 22:07:08,399 INFO: 调试模式: True
+None
+2025-02-28 22:07:08,399 INFO: 日志文件: /data/myblog/logs/myblog.log
+None
+2025-02-28 22:07:08,431 INFO: 扩展初始化完成
+None
+2025-02-28 22:07:08,431 INFO: 数据库迁移初始化完成
+None
+2025-02-28 22:07:08,456 INFO: 蓝图注册完成
+None
+2025-02-28 22:07:08,457 INFO: 过滤器初始化完成
+None
+2025-02-28 22:07:08,458 INFO: 应用初始化完成
+None
+2025-02-28 22:07:08,508 INFO: MyBlog 启动
+None
+2025-02-28 22:07:08,509 INFO: 配置模式: development
+None
+2025-02-28 22:07:08,509 INFO: 调试模式: True
+None

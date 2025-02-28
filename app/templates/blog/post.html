@@ -6,6 +6,7 @@
 {{ super() }}
 <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <style>
 {{ post.highlight_css|safe }}
 
@@ -211,7 +212,8 @@
                                     <div class="comment-actions">
                                         <button class="btn btn-sm btn-link reply-btn" 
                                                 data-comment-id="{{ comment.id }}"
-                                                data-author-name="{{ comment.author_name }}">
+                                                data-author-name="{{ comment.author_name }}"
+                                                data-nickname="{{ comment.author_name }}">
                                             回复
                                         </button>
                                     </div>
@@ -253,32 +255,35 @@
 
                     <!-- 评论表单 -->
                     <div class="comment-form mt-4">
-                        <h5 class="mb-3">发表评论</h5>
-                        <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}">
-                            {{ form.csrf_token }}
-                            {{ form.parent_id }}
+                        <h5>发表评论</h5>
+                        <form id="commentForm" method="post">
+                            <input type="hidden" id="post_id" value="{{ post.id }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             
                             <div class="mb-3">
                                 <label for="content" class="form-label">评论内容</label>
-                                {{ form.content(class="form-control", rows=5) }}
+                                <textarea class="form-control" id="content" name="content" rows="3" required 
+                                          placeholder="写下你的评论..."></textarea>
                             </div>
                             
                             <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="author_name" class="form-label">昵称</label>
-                                    {{ form.author_name(class="form-control") }}
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="nickname" class="form-label">昵称</label>
+                                        <input type="text" class="form-control" id="nickname" name="nickname" required>
+                                    </div>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="author_email" class="form-label">邮箱</label>
-                                    {{ form.author_email(class="form-control") }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="author_website" class="form-label">网站</label>
-                                    {{ form.author_website(class="form-control") }}
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">邮箱</label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <button type="submit" class="btn btn-primary">提交评论</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> 提交评论
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -316,57 +321,78 @@
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 代码高亮
-    Prism.highlightAll();
-    
-    // 图片点击放大
-    const images = document.querySelectorAll('.article-content img');
-    images.forEach(img => {
-        img.addEventListener('click', () => {
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            modal.style.display = 'flex';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            modal.style.zIndex = '9999';
-            
-            const modalImg = document.createElement('img');
-            modalImg.src = img.src;
-            modalImg.style.maxWidth = '90%';
-            modalImg.style.maxHeight = '90%';
-            modalImg.style.objectFit = 'contain';
-            
-            modal.appendChild(modalImg);
-            document.body.appendChild(modal);
-            
-            modal.addEventListener('click', () => {
-                modal.remove();
-            });
+    const commentForm = document.getElementById('commentForm');
+    const replyButtons = document.querySelectorAll('.reply-btn');
+    const commentInput = document.getElementById('content');
+    let parentId = null;
+
+    // 处理回复按钮点击
+    replyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            parentId = this.dataset.commentId;
+            const nickname = this.dataset.nickname;
+            commentInput.placeholder = `回复 ${nickname}...`;
+            commentInput.focus();
+            // 滚动到评论框
+            commentForm.scrollIntoView({ behavior: 'smooth' });
         });
     });
-    
-    // 评论回复功能
-    const replyBtns = document.querySelectorAll('.reply-btn');
-    const commentForm = document.querySelector('.comment-form');
-    const parentIdInput = document.querySelector('#parent_id');
-    
-    replyBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const commentId = btn.dataset.commentId;
-            const authorName = btn.dataset.authorName;
+
+    // 处理评论提交
+    commentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            content: document.getElementById('content').value.trim(),
+            nickname: document.getElementById('nickname').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            parent_id: parentId ? parseInt(parentId) : null
+        };
+
+        // 验证表单数据
+        if (!formData.content) {
+            alert('请输入评论内容');
+            return;
+        }
+        if (!formData.nickname) {
+            alert('请输入昵称');
+            return;
+        }
+        if (!formData.email) {
+            alert('请输入邮箱');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/blog/post/{{ post.id }}/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
             
-            parentIdInput.value = commentId;
-            commentForm.scrollIntoView({ behavior: 'smooth' });
-            
-            const contentTextarea = commentForm.querySelector('#content');
-            contentTextarea.value = `@${authorName} `;
-            contentTextarea.focus();
-        });
+            if (result.status === 'success') {
+                // 清空表单
+                commentForm.reset();
+                parentId = null;
+                commentInput.placeholder = '写下你的评论...';
+                
+                // 显示成功消息
+                alert(result.message || '评论提交成功！');
+                
+                // 刷新页面以显示新评论
+                location.reload();
+            } else {
+                alert(result.message || '评论提交失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('评论提交失败，请重试');
+        }
     });
 });
 </script>

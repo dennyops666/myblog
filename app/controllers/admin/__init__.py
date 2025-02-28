@@ -51,10 +51,8 @@ admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
 # 为所有视图添加安全装饰器
 for endpoint, view_func in admin_bp.view_functions.items():
-    admin_bp.view_functions[endpoint] = csrf_protect()(
-        xss_protect()(
-            sql_injection_protect()(view_func)
-        )
+    admin_bp.view_functions[endpoint] = xss_protect()(
+        sql_injection_protect()(view_func)
     )
 
 def check_auth():

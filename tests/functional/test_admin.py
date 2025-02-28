@@ -67,7 +67,7 @@ def test_category_management(client, auth, test_category):
     auth.login()
     
     # 创建分类
-    response = client.post('/admin/category/create', data={
+    response = client.post('/admin/admin_category/create', data={
         'csrf_token': generate_csrf(),
         'name': 'New Category',
         'slug': 'new-category',
@@ -77,7 +77,7 @@ def test_category_management(client, auth, test_category):
     
     # 编辑分类
     category = Category.query.filter_by(name='New Category').first()
-    response = client.post(f'/admin/category/{category.id}/edit', data={
+    response = client.post(f'/admin/admin_category/{category.id}/edit', data={
         'csrf_token': generate_csrf(),
         'name': 'Updated Category',
         'slug': 'updated-category',
@@ -86,7 +86,7 @@ def test_category_management(client, auth, test_category):
     assert response.status_code == 200
     
     # 删除分类
-    response = client.post(f'/admin/category/{category.id}/delete', data={
+    response = client.post(f'/admin/admin_category/{category.id}/delete', data={
         'csrf_token': generate_csrf()
     }, follow_redirects=True)
     assert response.status_code == 200

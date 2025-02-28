@@ -74,11 +74,38 @@ stop() {
     echo "正在停止 $APP_NAME..."
     if [ -f "$PID_FILE" ]; then
         pid=$(cat "$PID_FILE")
-        kill "$pid"
+        if ps -p "$pid" > /dev/null; then
+            # 先尝试正常停止
+            kill "$pid"
+            # 等待最多10秒
+            for i in {1..10}; do
+                if ! ps -p "$pid" > /dev/null; then
+                    break
+                fi
+                sleep 1
+            done
+            # 如果进程还在运行，强制终止
+            if ps -p "$pid" > /dev/null; then
+                echo "正常停止失败，正在强制终止..."
+                kill -9 "$pid"
+            fi
+        else
+            echo "$APP_NAME 未运行 (PID 文件存在但进程不存在)"
+        fi
         rm -f "$PID_FILE"
         echo "$APP_NAME 已停止"
     else
-        echo "$APP_NAME 未运行"
+        # 尝试查找并停止所有相关进程
+        pids=$(pgrep -f "gunicorn.*app:create_app()")
+        if [ -n "$pids" ]; then
+            echo "找到运行中的进程，正在停止..."
+            for pid in $pids; do
+                kill "$pid" 2>/dev/null || kill -9 "$pid" 2>/dev/null
+            done
+            echo "$APP_NAME 已停止"
+        else
+            echo "$APP_NAME 未运行"
+        fi
     fi
 }
 

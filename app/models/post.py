@@ -33,7 +33,7 @@ class Post(db.Model):
     __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
+    title = db.Column(db.String(255), nullable=False, unique=True)
     content = db.Column(db.Text, nullable=False)
     html_content = db.Column(db.Text)
     _toc = db.Column('toc', db.Text, default='[]')

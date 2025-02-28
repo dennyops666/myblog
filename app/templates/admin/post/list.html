@@ -112,6 +112,12 @@
 {{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // 检查是否需要刷新页面
+    if (sessionStorage.getItem('refreshPostList') === 'true') {
+        sessionStorage.removeItem('refreshPostList');
+        location.reload();
+    }
+
     const deleteModal = new bootstrap.Modal(document.getElementById('deletePostModal'));
     let postIdToDelete = null;
 

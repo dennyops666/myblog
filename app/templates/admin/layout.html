@@ -10,36 +10,48 @@
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
     <style>
         /* Toast 容器样式 */
-        #toast-container {
+        .toast-container {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
+            pointer-events: none;
         }
         
-        .custom-toast {
+        .toast {
+            pointer-events: auto;
             min-width: 250px;
             margin-bottom: 10px;
             background-color: #fff;
             border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 1 !important;
         }
         
-        .custom-toast.success {
-            border-left: 4px solid #28a745;
+        .toast.bg-light {
+            background-color: #fff !important;
         }
         
-        .custom-toast.danger {
-            border-left: 4px solid #dc3545;
+        .toast.border-success {
+            border-left: 4px solid #28a745 !important;
         }
         
-        .custom-toast.warning {
-            border-left: 4px solid #ffc107;
+        .toast.border-danger {
+            border-left: 4px solid #dc3545 !important;
         }
         
-        .custom-toast.info {
-            border-left: 4px solid #17a2b8;
+        .toast.border-warning {
+            border-left: 4px solid #ffc107 !important;
+        }
+        
+        .toast.border-info {
+            border-left: 4px solid #17a2b8 !important;
+        }
+        
+        .toast-body {
+            padding: 0.75rem 1rem;
+            color: #333;
+            font-size: 0.9rem;
         }
         
         @keyframes slideIn {
@@ -53,32 +65,16 @@
             }
         }
         
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-        
-        .toast-header {
-            display: flex;
-            align-items: center;
-            padding: 0.5rem 0.75rem;
-            background-color: rgba(255,255,255,0.85);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        
-        .toast-body {
-            padding: 0.75rem;
+        .toast.showing {
+            animation: slideIn 0.3s ease-in-out;
         }
     </style>
     {% endblock %}
 </head>
 <body>
+    <!-- Toast 容器 - 移动到 body 开始位置 -->
+    <div class="toast-container"></div>
+
     <!-- 导航栏 -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
@@ -128,9 +124,6 @@
         </div>
     </nav>
 
-    <!-- Toast 容器 -->
-    <div id="toast-container"></div>
-
     <!-- Flash 消息处理 -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -146,7 +139,9 @@
 
     <!-- 主要内容 -->
     <main class="py-4">
-        {% block content %}{% endblock %}
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
     {% block scripts %}
@@ -156,11 +151,11 @@
     <script>
     // Toast 显示函数
     function showToast(type, message) {
-        const toastContainer = document.getElementById('toast-container');
+        const toastContainer = document.querySelector('.toast-container');
         
         // 创建 toast 元素
         const toast = document.createElement('div');
-        toast.className = `custom-toast ${type}`;
+        toast.className = `toast ${type} showing`;
         
         // 设置 toast 内容
         toast.innerHTML = `
@@ -186,7 +181,7 @@
     
     // Toast 关闭函数
     function closeToast(toast) {
-        toast.style.animation = 'slideOut 0.3s ease-in-out forwards';
+        toast.classList.remove('showing');
         setTimeout(() => {
             toast.remove();
         }, 300);

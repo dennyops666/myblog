@@ -23,6 +23,7 @@ import uuid
 import secrets
 from flask import url_for, current_app
 import json
+from app.models.user import User
 
 class PostService:
     # 缓存配置
@@ -181,40 +182,71 @@ class PostService:
     @staticmethod
     def _clear_post_cache(post_id: int) -> None:
         """清理文章相关的所有缓存"""
-        # 清理单篇文章缓存
-        cache.delete(PostService.CACHE_KEY_POST.format(post_id))
-        
-        # 清理置顶文章缓存
-        cache.delete(PostService.CACHE_KEY_STICKY)
-        
-        # 清理分类文章缓存
-        post = PostService.get_post(post_id)
-        if post and post.category_id:
-            # 清理该分类下所有页的缓存
-            for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                cache.delete(PostService.CACHE_KEY_CATEGORY.format(
-                    post.category_id, page, 10
-                ))
-        
-        # 清理标签文章缓存
-        if post and post.tags:
-            for tag in post.tags:
+        try:
+            # 获取文章对象
+            post = Post.query.get(post_id)
+            if not post:
+                return
+
+            # 清理单篇文章缓存
+            cache.delete(PostService.CACHE_KEY_POST.format(post_id))
+            
+            # 清理置顶文章缓存
+            cache.delete(PostService.CACHE_KEY_STICKY)
+            
+            # 清理分类文章缓存
+            if post.category_id:
+                # 清理该分类下所有页的缓存
                 for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                    cache.delete(PostService.CACHE_KEY_TAG.format(
-                        tag.id, page, 10
+                    cache.delete(PostService.CACHE_KEY_CATEGORY.format(
+                        post.category_id, page, 10
                     ))
-        
-        # 清理时间归档缓存
-        if post and post.created_at:
-            year = post.created_at.year
-            month = post.created_at.month
+                    cache.delete(f'category:{post.category_id}:{page}:10')
+                    cache.delete(f'post_list:category:{post.category_id}:{page}:10')
+            
+            # 清理标签文章缓存
+            if post.tags:
+                for tag in post.tags:
+                    for page in range(1, PostService.MAX_CACHE_PAGES + 1):
+                        cache.delete(PostService.CACHE_KEY_TAG.format(
+                            tag.id, page, 10
+                        ))
+                        cache.delete(f'tag:{tag.id}:{page}:10')
+                        cache.delete(f'post_list:tag:{tag.id}:{page}:10')
+            
+            # 清理时间归档缓存
+            if post.created_at:
+                year = post.created_at.year
+                month = post.created_at.month
+                for page in range(1, PostService.MAX_CACHE_PAGES + 1):
+                    cache.delete(PostService.CACHE_KEY_TIME.format(
+                        year, month, page, 10
+                    ))
+                    cache.delete(f'archive:{year}:{month}:{page}:10')
+            
+            # 清理相关文章缓存
+            cache.delete(PostService.CACHE_KEY_RELATED.format(post_id, 5))
+            cache.delete(f'related_posts_{post_id}_5')
+            
+            # 清理搜索缓存
             for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                cache.delete(PostService.CACHE_KEY_TIME.format(
-                    year, month, page, 10
-                ))
-        
-        # 清理相关文章缓存
-        cache.delete(PostService.CACHE_KEY_RELATED.format(post_id, 5))
+                cache.delete(f'search:*:{page}:10')
+            
+            # 清理文章列表缓存
+            for page in range(1, PostService.MAX_CACHE_PAGES + 1):
+                cache.delete(f'post_list:{page}:10')
+                
+            # 清理分类列表缓存
+            cache.delete('category_list')
+            cache.delete('categories')
+            
+            # 强制提交数据库会话
+            db.session.commit()
+            
+            current_app.logger.info(f'已清理文章 {post_id} 的所有相关缓存')
+        except Exception as e:
+            current_app.logger.error(f'清理文章缓存失败: {str(e)}')
+            db.session.rollback()
     
     @staticmethod
     def _build_search_query(search_text: str) -> Any:
@@ -325,36 +357,96 @@ class PostService:
             summary: 摘要
             category_id: 分类ID
             tags: 标签列表
-            status: 状态
+            status: 文章状态
             
         Returns:
-            Post: 更新后的文章对象
+            Post: 更新后的文章对象，如果更新失败则返回 None
         """
         try:
-            post = db.session.get(Post, post_id)
+            post = Post.query.get(post_id)
             if not post:
+                current_app.logger.error(f"文章不存在，ID: {post_id}")
                 return None
-                
+            
+            # 保存原始分类ID用于后续缓存清理
+            old_category_id = post.category_id
+            
+            # 记录更新前的信息
+            current_app.logger.debug(f"更新前的文章信息: 标题={post.title}, 分类ID={post.category_id}, 状态={post.status}")
+            
+            # 更新分类
+            if category_id is not None:
+                try:
+                    new_category_id = int(category_id)
+                    if new_category_id != old_category_id:
+                        new_category = Category.query.get(new_category_id)
+                        if new_category:
+                            current_app.logger.info(f"更新分类: 从 {old_category_id} 更改为 {new_category_id}")
+                            post.category_id = new_category_id
+                            db.session.flush()  # 立即刷新，确保更新生效
+                            db.session.commit()  # 立即提交分类更改
+                            current_app.logger.info(f"分类更新成功，新分类ID: {post.category_id}")
+                        else:
+                            current_app.logger.error(f"未找到ID为 {new_category_id} 的分类")
+                            return None
+                except ValueError:
+                    current_app.logger.error(f"分类ID格式错误: {category_id}")
+                    return None
+            
             if title is not None:
                 post.title = title
             if content is not None:
                 post.content = content
-                post.update_html_content()
+                post.update_html_content()  # 更新HTML内容
             if summary is not None:
                 post.summary = summary
-            if category_id is not None:
-                post.category_id = category_id
-            if tags is not None:
-                post.tags = tags
             if status is not None:
                 post.status = status
-                
+            if tags is not None:
+                # 清除旧标签
+                post.tags.clear()
+                # 添加新标签
+                for tag in tags:
+                    post.tags.append(tag)
+            
+            # 更新时间戳
             post.updated_at = datetime.now(UTC)
+            
+            # 提交所有更改
             db.session.commit()
+            
+            # 清除相关的缓存键
+            current_app.logger.info("开始清除缓存")
+            cache_keys = [
+                f'post:{post_id}',
+                'post_list',
+                f'category_posts:{old_category_id}' if old_category_id else None,
+                f'category_posts:{post.category_id}' if post.category_id else None,
+                'categories',  # 清除分类列表缓存
+                'category_list'  # 清除分类列表缓存
+            ]
+            
+            # 使用 Redis 的 pipeline 批量删除缓存
+            if hasattr(current_app, 'redis'):
+                current_app.logger.info("使用 Redis pipeline 删除缓存")
+                pipe = current_app.redis.pipeline()
+                for key in cache_keys:
+                    if key:
+                        current_app.logger.info(f"删除缓存键: {key}")
+                        pipe.delete(key)
+                pipe.execute()
+            
+            # 重新加载文章以确保所有关系都被正确加载
+            db.session.refresh(post)
+            current_app.logger.info(f"文章 {post_id} 更新完成，当前分类ID={post.category_id}")
+            
             return post
+            
         except Exception as e:
+            current_app.logger.error(f"更新文章失败: {str(e)}")
+            current_app.logger.exception(e)  # 记录完整的异常堆栈
             db.session.rollback()
-            raise e
+            raise
 
     def delete_post(self, post_id):
         """删除文章
@@ -758,7 +850,7 @@ class PostService:
 
     def get_posts_paginated(self, page=1, per_page=10, category_id=None, tag_id=None, 
                           author_id=None, status=None):
-        """获取分页文章列表
+        """获取分页的文章列表
         
         Args:
             page: 页码
@@ -769,24 +861,76 @@ class PostService:
             status: 文章状态
             
         Returns:
-            Pagination: 分页对象
+            Pagination 对象
         """
-        query = Post.query
-        
-        if category_id:
-            query = query.filter_by(category_id=category_id)
-        
-        if tag_id:
-            query = query.filter(Post.tags.any(id=tag_id))
-        
-        if author_id:
-            query = query.filter_by(author_id=author_id)
+        try:
+            # 清理缓存
+            cache_keys = [
+                'post_list',
+                f'post_list:{page}:{per_page}',
+                f'category_posts:{category_id}' if category_id else None,
+                f'tag_posts:{tag_id}' if tag_id else None
+            ]
             
-        if status:
-            query = query.filter_by(status=status)
+            # 使用 Redis 的 pipeline 批量删除缓存
+            if hasattr(current_app, 'redis'):
+                pipe = current_app.redis.pipeline()
+                for key in cache_keys:
+                    if key:
+                        pipe.delete(key)
+                pipe.execute()
             
-        return query.order_by(Post.created_at.desc()).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+            # 强制刷新数据库会话
+            db.session.expire_all()
+            db.session.commit()
+            
+            # 强制创建新的数据库连接
+            db.session.execute(text('SELECT 1'))
+            
+            # 构建基础查询
+            query = Post.query
+            
+            # 使用 joinedload 预加载关联数据
+            query = query.options(
+                db.joinedload(Post.category),
+                db.joinedload(Post.author),
+                db.joinedload(Post.tags)
+            )
+            
+            # 应用过滤条件
+            if category_id:
+                query = query.filter(Post.category_id == category_id)
+            if tag_id:
+                query = query.filter(Post.tags.any(id=tag_id))
+            if author_id:
+                query = query.filter(Post.author_id == author_id)
+            if status:
+                query = query.filter(Post.status == status)
+            
+            # 按创建时间倒序排序
+            query = query.order_by(Post.created_at.desc())
+            
+            # 执行分页查询
+            pagination = query.paginate(page=page, per_page=per_page)
+            
+            # 预加载每个文章的关联数据
+            if pagination.items:
+                for post in pagination.items:
+                    db.session.refresh(post)
+                    if post.category:
+                        db.session.refresh(post.category)
+                    if post.author:
+                        db.session.refresh(post.author)
+                    for tag in post.tags:
+                        db.session.refresh(tag)
+            
+            # 再次提交会话以确保所有更改都被保存
+            db.session.commit()
+            
+            return pagination
+            
+        except Exception as e:
+            current_app.logger.error(f"获取分页文章列表失败: {str(e)}")
+            current_app.logger.exception(e)
+            db.session.rollback()
+            raise

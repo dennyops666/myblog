@@ -13,7 +13,7 @@ from flask_bcrypt import Bcrypt
 from flask_caching import Cache
 from flask_talisman import Talisman
 from flask_session import Session
-from flask import request, jsonify, redirect, url_for, current_app, session, g, flash, render_template
+from flask import request, jsonify, redirect, url_for, current_app, session, g, flash, render_template, make_response
 from datetime import datetime, UTC
 import secrets
 import os
@@ -34,47 +34,66 @@ sess = Session()
 def init_login_manager(app):
     """初始化Flask-Login"""
     login_manager.init_app(app)
-    login_manager.session_protection = 'strong'
+    login_manager.session_protection = None  # 禁用会话保护，避免频繁失效
     login_manager.login_view = 'auth.login'
     login_manager.login_message = '请先登录'
     login_manager.login_message_category = 'info'
+    login_manager.refresh_view = 'auth.login'
+    login_manager.needs_refresh_message = '会话已过期，请重新登录'
+    login_manager.needs_refresh_message_category = 'info'
     
     @login_manager.unauthorized_handler
     def unauthorized():
         """未授权访问处理"""
         if request.is_json:
-            return jsonify({'error': '请先登录'}), 401
+            return jsonify({
+                'success': False,
+                'message': '请先登录',
+                'csrf_token': generate_csrf()
+            }), 401
         return redirect(url_for('auth.login', next=request.url))
     
     @login_manager.user_loader
     def load_user(user_id):
         """加载用户"""
         from app.models import User
-        return User.query.get(int(user_id))
+        try:
+            user = User.query.get(int(user_id))
+            if user:
+                session.modified = True  # 标记会话已修改，确保会话不会过期
+            return user
+        except Exception as e:
+            current_app.logger.error(f"加载用户失败: {str(e)}")
+            return None
 
 def init_csrf(app):
-    """初始化 CSRF 保护"""
+    """初始化CSRF保护"""
     csrf.init_app(app)
     
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        """处理 CSRF 错误"""
-        # 检查是否是 AJAX 请求
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        """处理CSRF错误"""
+        if request.is_json:
             return jsonify({
-                'code': 400,
-                'message': '无效的 CSRF 令牌，请刷新页面重试'
+                'success': False,
+                'message': '会话已过期，请刷新页面重试',
+                'csrf_token': generate_csrf()
             }), 400
-        
-        flash('页面已过期，请重新提交', 'danger')
-        return redirect(request.referrer or url_for('admin.index'))
-    
+        flash('会话已过期，请刷新页面重试', 'danger')
+        return redirect(url_for('auth.login'))
+
     @app.after_request
     def add_csrf_token(response):
-        """为响应添加 CSRF 令牌"""
+        """为每个响应添加CSRF令牌"""
         if response.mimetype == 'text/html':
-            csrf_token = generate_csrf()
-            response.set_cookie('csrf_token', csrf_token, secure=False, httponly=False, samesite='Lax')
+            response.set_cookie(
+                'csrf_token',
+                generate_csrf(),
+                max_age=3600,  # 1小时
+                secure=False,  # 开发环境不要求HTTPS
+                httponly=False,  # 允许JavaScript访问
+                samesite='Lax'  # 允许跨站请求
+            )
         return response
 
 def init_db(app):

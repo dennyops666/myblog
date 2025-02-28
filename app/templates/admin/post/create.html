@@ -175,7 +175,8 @@ $(document).ready(function() {
             contentType: false,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-CSRFToken': $('#csrf_token').val()
             },
             success: function(response) {
                 console.log('Response:', response);  // 添加调试日志

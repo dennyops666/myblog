@@ -62,7 +62,7 @@ class CommentService:
                 parent_id=parent_id,
                 nickname=nickname,
                 email=email,
-                status=1  # 默认已审核
+                status=1 if author_id else 0  # 已登录用户评论直接通过，匿名评论需要审核
             )
             
             db.session.add(comment)

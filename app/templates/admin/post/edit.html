@@ -39,7 +39,6 @@
         <div class="col-md-12">
             <h1 class="h2 mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
             <form method="POST" id="postForm">
-                {{ form.csrf_token }}
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group mb-3">
@@ -124,7 +123,7 @@
                                 </div>
 
                                 <div class="form-group mt-3">
-                                    <button type="submit" class="btn btn-primary">保存</button>
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
                                     <a href="{{ url_for('admin.post.index') }}" class="btn btn-secondary">取消</a>
                                 </div>
                             </div>
@@ -156,240 +155,117 @@
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-$(document).ready(function() {
-    // 调试信息
-    console.log('表单数据:', {
-        categoryChoices: {{ form.category_id.choices|tojson|safe }},
-        currentCategory: {% if post %}{{ post.category_id|default('null', true)|tojson|safe }}{% else %}null{% endif %}
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    let isSubmitting = false;
+    const form = document.getElementById('postForm');
+    const submitBtn = document.getElementById('submitBtn');
 
-    // 初始化分类选择器
-    const $categorySelect = $('#category_id');
-    
-    $categorySelect.select2({
+    // 初始化Select2
+    $('#category_id').select2({
         theme: 'bootstrap-5',
-        width: '100%',
-        language: 'zh-CN',
-        placeholder: '请选择分类',
-        allowClear: true,
-        minimumInputLength: 0,
-        dropdownParent: $categorySelect.parent(),
-        escapeMarkup: function(markup) {
-            return markup;
-        },
-        templateResult: function(data) {
-            if (data.loading) {
-                return '搜索中...';
-            }
-            return data.text;
-        },
-        templateSelection: function(data) {
-            return data.text;
-        }
+        placeholder: '请选择分类'
     });
 
-    // 设置当前选中的分类
-    {% if post and post.category_id %}
-    $categorySelect.val({{ post.category_id }}).trigger('change');
-    {% endif %}
-
-    // 监听选择器事件
-    $categorySelect
-        .on('select2:opening', function(e) {
-            console.log('选择器正在打开');
-            console.log('当前选项:', $(this).find('option').map(function() {
-                return {
-                    value: $(this).val(),
-                    text: $(this).text()
-                };
-            }).get());
-        })
-        .on('select2:select', function(e) {
-            console.log('已选择:', e.params.data);
-        })
-        .on('select2:close', function(e) {
-            console.log('选择器已关闭');
-        });
-
-    // 初始化标签选择器
+    // 初始化标签选择
     $('#tags').select2({
         theme: 'bootstrap-5',
-        placeholder: '选择标签',
-        allowClear: true,
-        width: '100%'
+        placeholder: '选择或输入标签',
+        tags: true,
+        tokenSeparators: [',', ' ']
     });
 
-    // 初始化 EasyMDE
+    // 初始化编辑器
     const easyMDE = new EasyMDE({
         element: document.getElementById('content'),
         spellChecker: false,
         autosave: {
             enabled: true,
-            uniqueId: "postEditor",
+            uniqueId: 'post_edit_{{ post.id if post else "new" }}',
             delay: 1000,
-        },
-        toolbar: [
-            "bold", "italic", "heading", "|",
-            "quote", "code", "unordered-list", "ordered-list", "|",
-            "link", "image", "table", "|",
-            "preview", "side-by-side", "fullscreen", "|",
-            "guide"
-        ]
-    });
-
-    // 预览功能
-    const previewDiv = document.getElementById('preview');
-    const toggleBtn = document.getElementById('togglePreview');
-    let previewVisible = false;
-
-    async function updatePreview() {
-        const content = easyMDE.value();
-        try {
-            const response = await fetch('{{ url_for("admin.post.preview") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                },
-                body: JSON.stringify({ content: content })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                previewDiv.innerHTML = data.html;
-            } else {
-                previewDiv.innerHTML = '<div class="alert alert-danger">预览加载失败：' + data.message + '</div>';
-            }
-        } catch (error) {
-            previewDiv.innerHTML = '<div class="alert alert-danger">预览加载失败，请稍后重试</div>';
-            console.error('预览请求失败:', error);
-        }
-    }
-
-    toggleBtn.addEventListener('click', function() {
-        previewVisible = !previewVisible;
-        previewDiv.classList.toggle('d-none');
-        if (previewVisible) {
-            updatePreview();
-            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 关闭预览';
-        } else {
-            toggleBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
         }
     });
 
-    // 监听编辑器内容变化
-    easyMDE.codemirror.on("change", debounce(function() {
-        if (previewVisible) {
-            updatePreview();
-        }
-    }, 500));
-
-    // 防抖函数
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
-
-    // 处理表单提交
-    $('#postForm').on('submit', function(e) {
+    form.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (isSubmitting) return;
         
-        // 禁用提交按钮
-        const submitBtn = $(this).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
-        
-        // 获取编辑器内容
-        const content = easyMDE.value();
-        
-        // 准备表单数据
-        const formData = new FormData(this);
-        formData.set('content', content);
-        
-        // 发送AJAX请求
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+
+        const formData = new FormData(form);
+        formData.set('content', easyMDE.value());
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            success: function(response) {
-                console.log('Response:', response);
-                if (response.success) {
-                    // 直接跳转，不显示 Toast
-                    window.location.href = response.redirect_url;
-                } else {
-                    // 恢复提交按钮
-                    submitBtn.prop('disabled', false).html(originalText);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log('Error:', xhr.responseJSON);
-                
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // 处理表单验证错误
-                    const errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(function(field) {
-                        const errorMsg = errors[field].join(', ');
-                        // 获取字段的中文标签
-                        let fieldLabel = '';
-                        switch(field) {
-                            case 'title':
-                                fieldLabel = '标题';
-                                break;
-                            case 'content':
-                                fieldLabel = '内容';
-                                break;
-                            case 'category_id':
-                                fieldLabel = '分类';
-                                break;
-                            case 'status':
-                                fieldLabel = '状态';
-                                break;
-                            case 'tags':
-                                fieldLabel = '标签';
-                                break;
-                            case 'summary':
-                                fieldLabel = '摘要';
-                                break;
-                            default:
-                                fieldLabel = field;
-                        }
-                        
-                        // 只添加表单字段下的错误提示
-                        const fieldElement = $(`#${field}`);
-                        if (fieldElement.length) {
-                            fieldElement.addClass('is-invalid');
-                            // 移除已存在的错误提示
-                            fieldElement.siblings('.invalid-feedback').remove();
-                            // 添加错误提示
-                            const feedback = $('<div>').addClass('invalid-feedback d-block').text(`${fieldLabel}: ${errorMsg}`);
-                            fieldElement.after(feedback);
-                            
-                            // 3秒后移除高亮
-                            setTimeout(function() {
-                                fieldElement.removeClass('is-invalid');
-                            }, 3000);
-                        }
-                    });
-                }
-                
-                // 恢复提交按钮
-                submitBtn.prop('disabled', false).html(originalText);
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', '保存成功');
+                // 清除编辑器的自动保存内容
+                localStorage.removeItem(`smde_post_edit_{{ post.id if post else "new" }}`);
+                // 添加时间戳参数以防止缓存
+                const listPageUrl = '{{ url_for("admin.post.index") }}' + '?t=' + new Date().getTime();
+                // 使用 sessionStorage 存储一个标记，表示需要刷新列表页
+                sessionStorage.setItem('refreshPostList', 'true');
+                window.location.href = listPageUrl;
+            } else {
+                showToast('error', data.message || '保存失败，请稍后重试');
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '保存';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', '保存失败，请稍后重试');
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '保存';
         });
     });
+
+    function showToast(type, message) {
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+        toastContainer.style.zIndex = '5';
+        
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        document.body.appendChild(toastContainer);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toastContainer.remove();
+        });
+    }
 });
 </script>
 {% endblock %} 

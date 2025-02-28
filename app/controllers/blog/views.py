@@ -120,8 +120,17 @@ def create_comment(post_id):
             return jsonify({'status': 'error', 'message': '无效的请求数据'}), 400
             
         content = data.get('content')
+        if not content:
+            return jsonify({'status': 'error', 'message': '评论内容不能为空'}), 400
+            
         nickname = data.get('nickname')
+        if not nickname:
+            return jsonify({'status': 'error', 'message': '请输入昵称'}), 400
+            
         email = data.get('email')
+        if not email:
+            return jsonify({'status': 'error', 'message': '请输入邮箱'}), 400
+            
         parent_id = data.get('parent_id')
         
         # 获取当前用户ID（如果已登录）
@@ -141,7 +150,7 @@ def create_comment(post_id):
             # 返回成功响应
             return jsonify({
                 'status': 'success',
-                'message': result['message'],
+                'message': '评论提交成功',
                 'comment': {
                     'id': result['comment'].id,
                     'content': result['comment'].content,
@@ -230,7 +239,7 @@ def about():
 @blog_bp.route('/categories')
 def categories():
     """分类列表页面"""
-    categories = category_service.get_all_categories()
+    categories = category_service.get_categories_with_post_count()
     return render_template('blog/categories.html', categories=categories)
 
 @blog_bp.route('/tags')

@@ -18,6 +18,7 @@ from app.controllers.blog import blog_bp
 from app.controllers.auth import auth_bp
 from app.controllers.admin import admin_bp
 from app.controllers.admin.upload import upload_bp
+import traceback
 
 # 创建 migrate 实例
 migrate = Migrate()
@@ -55,15 +56,15 @@ def create_app(config_name='development'):
         os.chmod(log_file, 0o666)
     file_handler = RotatingFileHandler(log_file, maxBytes=10240, backupCount=10)
     file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        '%(asctime)s %(levelname)s: %(message)s\n%(exc_info)s'
     ))
-    file_handler.setLevel(logging.INFO)
+    file_handler.setLevel(logging.DEBUG)
     app.logger.addHandler(file_handler)
     
     # 配置控制台日志处理器
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        '%(asctime)s %(levelname)s: %(message)s\n%(exc_info)s'
     ))
     console_handler.setLevel(logging.DEBUG)
     app.logger.addHandler(console_handler)
@@ -110,7 +111,7 @@ def create_app(config_name='development'):
     @app.errorhandler(500)
     def internal_error(error):
         """处理500错误"""
-        app.logger.error(f'服务器错误: {str(error)}')
+        app.logger.error(f'服务器错误: {str(error)}\n{traceback.format_exc()}')
         db.session.rollback()
         return render_template('errors/500.html'), 500
 
@@ -147,6 +148,12 @@ def create_app(config_name='development'):
             app.logger.debug(f'JSON数据: {request.get_json()}')
         elif request.form:
             app.logger.debug(f'表单数据: {dict(request.form)}')
+            
+    # 添加 AJAX 请求识别
+    @app.before_request
+    def handle_xhr():
+        """处理 AJAX 请求"""
+        request.is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
     # 添加上下文处理器
     @app.context_processor

@@ -18,9 +18,9 @@ class Config:
     # 安全配置
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600  # CSRF 令牌有效期（秒）
-    WTF_CSRF_SSL_STRICT = True  # 默认强制 HTTPS
+    WTF_CSRF_SSL_STRICT = False  # 开发环境不强制 HTTPS
     WTF_CSRF_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}  # 需要 CSRF 保护的方法
-    SESSION_COOKIE_SECURE = True  # 默认强制 HTTPS
+    SESSION_COOKIE_SECURE = False  # 开发环境不强制 HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
@@ -67,6 +67,13 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_SQLALCHEMY_TABLE = 'sessions'
     SESSION_REFRESH_EACH_REQUEST = True
+    
+    # 登录配置
+    LOGIN_DISABLED = False
+    REMEMBER_COOKIE_DURATION = timedelta(days=7)
+    REMEMBER_COOKIE_SECURE = False
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
     
     @staticmethod
     def init_app(app):

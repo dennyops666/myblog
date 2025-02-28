@@ -13,7 +13,7 @@ from datetime import datetime, UTC
 
 def init_db():
     """初始化数据库"""
-    app = create_app('development')
+    app = create_app('production')
     with app.app_context():
         # 创建所有表
         db.drop_all()

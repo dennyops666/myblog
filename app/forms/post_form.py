@@ -38,36 +38,25 @@ class PostForm(FlaskForm):
             current_app.logger.info(f"成功获取到 {len(categories)} 个分类")
             
             # 设置分类选项
-            choices = [(c.id, c.name) for c in categories]
-            self.category_id.choices = choices
-            current_app.logger.info(f"分类选项设置完成: {choices}")
+            self.category_id.choices = [(c.id, c.name) for c in categories]
             
             # 如果是编辑模式且有 obj 参数，设置当前选中的分类
             if 'obj' in kwargs and kwargs['obj'] and hasattr(kwargs['obj'], 'category_id'):
-                current_app.logger.info(f"编辑模式，当前文章对象: {kwargs['obj']}")
-                current_app.logger.info(f"当前文章分类ID: {kwargs['obj'].category_id}")
                 if kwargs['obj'].category_id:
                     self.category_id.data = kwargs['obj'].category_id
-                    current_app.logger.info(f"设置当前分类ID: {self.category_id.data}")
-                    # 验证分类ID是否在选项中
-                    if any(c[0] == kwargs['obj'].category_id for c in choices):
-                        current_app.logger.info("当前分类ID在选项列表中")
-                    else:
-                        current_app.logger.warning("当前分类ID不在选项列表中")
                 
         except Exception as e:
             current_app.logger.error(f"加载分类失败: {str(e)}")
-            current_app.logger.exception(e)  # 记录完整的异常堆栈
+            current_app.logger.exception(e)
             self.category_id.choices = []
             
         # 加载所有标签
         try:
             tags = Tag.query.order_by(Tag.name).all()
             self.tags.choices = [(t.id, t.name) for t in tags]
-            current_app.logger.info(f"成功加载 {len(tags)} 个标签")
         except Exception as e:
             current_app.logger.error(f"加载标签失败: {str(e)}")
-            current_app.logger.exception(e)  # 记录完整的异常堆栈
+            current_app.logger.exception(e)
             self.tags.choices = []
 
     csrf_token = HiddenField()
@@ -85,13 +74,10 @@ class PostForm(FlaskForm):
                 # 如果是编辑模式，且标题未改变，则跳过验证
                 if hasattr(self, 'obj') and self.obj and self.obj.id == post.id:
                     return
-                field.errors = ['文章标题已存在，请使用其他标题']
-                return False
+                raise ValidationError('文章标题已存在，请使用其他标题')
         except Exception as e:
             current_app.logger.error(f"验证文章标题时发生错误: {str(e)}")
-            field.errors = ['系统在验证文章标题时遇到问题，请刷新页面重试']
-            return False
-        return True
+            raise ValidationError('系统在验证文章标题时遇到问题，请刷新页面重试')
             
     content = TextAreaField('内容', validators=[
         DataRequired(message='内容不能为空')
@@ -106,47 +92,4 @@ class PostForm(FlaskForm):
     status = SelectField('状态', choices=[
         (str(PostStatus.DRAFT.value), '草稿'),
         (str(PostStatus.PUBLISHED.value), '发布')
-    ], validators=[DataRequired(message='请选择状态')])
-
-    def __init__(self, *args, **kwargs):
-        """初始化表单"""
-        super(PostForm, self).__init__(*args, **kwargs)
-        
-        # 加载所有分类
-        try:
-            current_app.logger.info("开始加载分类选项...")
-            categories = Category.query.order_by(Category.name).all()
-            current_app.logger.info(f"成功获取到 {len(categories)} 个分类")
-            
-            # 设置分类选项
-            choices = [(c.id, c.name) for c in categories]
-            self.category_id.choices = choices
-            current_app.logger.info(f"分类选项设置完成: {choices}")
-            
-            # 如果是编辑模式且有 obj 参数，设置当前选中的分类
-            if 'obj' in kwargs and kwargs['obj'] and hasattr(kwargs['obj'], 'category_id'):
-                current_app.logger.info(f"编辑模式，当前文章对象: {kwargs['obj']}")
-                current_app.logger.info(f"当前文章分类ID: {kwargs['obj'].category_id}")
-                if kwargs['obj'].category_id:
-                    self.category_id.data = kwargs['obj'].category_id
-                    current_app.logger.info(f"设置当前分类ID: {self.category_id.data}")
-                    # 验证分类ID是否在选项中
-                    if any(c[0] == kwargs['obj'].category_id for c in choices):
-                        current_app.logger.info("当前分类ID在选项列表中")
-                    else:
-                        current_app.logger.warning("当前分类ID不在选项列表中")
-                
-        except Exception as e:
-            current_app.logger.error(f"加载分类失败: {str(e)}")
-            current_app.logger.exception(e)  # 记录完整的异常堆栈
-            self.category_id.choices = []
-            
-        # 加载所有标签
-        try:
-            tags = Tag.query.order_by(Tag.name).all()
-            self.tags.choices = [(t.id, t.name) for t in tags]
-            current_app.logger.info(f"成功加载 {len(tags)} 个标签")
-        except Exception as e:
-            current_app.logger.error(f"加载标签失败: {str(e)}")
-            current_app.logger.exception(e)  # 记录完整的异常堆栈
-            self.tags.choices = [] 
+    ], validators=[DataRequired(message='请选择状态')]) 
