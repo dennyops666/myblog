@@ -296,6 +296,100 @@ $(document).ready(function() {
             timeout = setTimeout(later, wait);
         };
     }
+
+    // 处理表单提交
+    $('#postForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // 禁用提交按钮
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+        
+        // 获取编辑器内容
+        const content = easyMDE.value();
+        
+        // 准备表单数据
+        const formData = new FormData(this);
+        formData.set('content', content);
+        
+        // 发送AJAX请求
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Response:', response);
+                if (response.success) {
+                    // 直接跳转，不显示 Toast
+                    window.location.href = response.redirect_url;
+                } else {
+                    // 恢复提交按钮
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error:', xhr.responseJSON);
+                
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    // 处理表单验证错误
+                    const errors = xhr.responseJSON.errors;
+                    Object.keys(errors).forEach(function(field) {
+                        const errorMsg = errors[field].join(', ');
+                        // 获取字段的中文标签
+                        let fieldLabel = '';
+                        switch(field) {
+                            case 'title':
+                                fieldLabel = '标题';
+                                break;
+                            case 'content':
+                                fieldLabel = '内容';
+                                break;
+                            case 'category_id':
+                                fieldLabel = '分类';
+                                break;
+                            case 'status':
+                                fieldLabel = '状态';
+                                break;
+                            case 'tags':
+                                fieldLabel = '标签';
+                                break;
+                            case 'summary':
+                                fieldLabel = '摘要';
+                                break;
+                            default:
+                                fieldLabel = field;
+                        }
+                        
+                        // 只添加表单字段下的错误提示
+                        const fieldElement = $(`#${field}`);
+                        if (fieldElement.length) {
+                            fieldElement.addClass('is-invalid');
+                            // 移除已存在的错误提示
+                            fieldElement.siblings('.invalid-feedback').remove();
+                            // 添加错误提示
+                            const feedback = $('<div>').addClass('invalid-feedback d-block').text(`${fieldLabel}: ${errorMsg}`);
+                            fieldElement.after(feedback);
+                            
+                            // 3秒后移除高亮
+                            setTimeout(function() {
+                                fieldElement.removeClass('is-invalid');
+                            }, 3000);
+                        }
+                    });
+                }
+                
+                // 恢复提交按钮
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
 });
 </script>
 {% endblock %} 
