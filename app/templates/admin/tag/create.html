@@ -10,29 +10,144 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.tag.create') }}">
+            <form method="POST" action="{{ url_for('admin.tag.create') }}" id="tagForm">
                 {{ form.csrf_token }}
                 
                 <div class="mb-3">
-                    <label for="name" class="form-label">名称</label>
+                    <label for="name" class="form-label">名称 <span class="text-danger">*</span></label>
                     {{ form.name(class="form-control") }}
+                    <div class="invalid-feedback" id="name-error" style="display: none;"></div>
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.name.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="slug" class="form-label">别名</label>
+                    <label for="slug" class="form-label">别名（可选）</label>
                     {{ form.slug(class="form-control") }}
+                    <div class="invalid-feedback" id="slug-error" style="display: none;"></div>
+                    <small class="form-text text-muted">用于URL的友好显示，如果不填写将使用系统生成的值</small>
+                    {% if form.slug.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.slug.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
                     <label for="description" class="form-label">描述</label>
                     {{ form.description(class="form-control", rows=3) }}
+                    <div class="invalid-feedback" id="description-error" style="display: none;"></div>
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.description.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary">保存</button>
+                    <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary me-2">返回</a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('tagForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // 清除所有错误提示
+    function clearErrors() {
+        const errorDivs = document.querySelectorAll('.invalid-feedback');
+        errorDivs.forEach(div => {
+            div.style.display = 'none';
+            div.textContent = '';
+        });
+        
+        const inputs = form.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+    }
+    
+    // 显示字段错误
+    function showFieldError(fieldName, errorMessage) {
+        const errorDiv = document.getElementById(`${fieldName}-error`);
+        const input = form.querySelector(`#${fieldName}`);
+        if (errorDiv && input) {
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            input.classList.add('is-invalid');
+        }
+    }
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        clearErrors();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+        
+        const formData = new FormData(this);
+        console.log('提交的表单数据:', Object.fromEntries(formData));
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrf_token')
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('服务器响应状态:', response.status);
+            return response.json().catch(error => {
+                console.error('JSON解析错误:', error);
+                throw new Error('服务器响应格式错误');
+            });
+        })
+        .then(data => {
+            console.log('服务器响应数据:', data);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '保存';
+            
+            if (data.success) {
+                showToast('success', data.message);
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1000);
+            } else {
+                showToast('danger', data.message);
+                
+                // 显示字段错误
+                if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, errors]) => {
+                        showFieldError(field, errors.join(', '));
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('请求错误:', error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '保存';
+            showToast('danger', '保存失败，请稍后重试');
+        });
+    });
+});
+</script>
 {% endblock %} 
