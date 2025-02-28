@@ -114,7 +114,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = new bootstrap.Modal(document.getElementById('deletePostModal'));
     let postIdToDelete = null;
-    let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     // 点击删除按钮时显示确认模态框
     document.querySelectorAll('.delete-post').forEach(button => {
@@ -134,12 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`/admin/posts/${postIdToDelete}/delete`, {
             method: 'POST',
             headers: {
-                'X-CSRF-Token': csrfToken,
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                csrf_token: csrfToken
+                csrf_token: document.querySelector('meta[name="csrf-token"]').content
             })
         })
         .then(response => response.json())

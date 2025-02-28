@@ -394,7 +394,7 @@ class PostService:
             
     @staticmethod
     def get_post(post_id: int) -> Optional[Post]:
-        """获取指定ID的文章
+        """获取文章
         
         Args:
             post_id: 文章ID
@@ -403,7 +403,7 @@ class PostService:
             Post: 文章对象，如果不存在则返回None
         """
         try:
-            return db.session.get(Post, post_id)
+            return Post.query.get(post_id)
         except Exception as e:
             current_app.logger.error(f"获取文章失败: {str(e)}")
             return None

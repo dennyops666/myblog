@@ -13,7 +13,7 @@ from app.models.tag import Tag
 from app.extensions import db
 from app.forms.post_form import PostForm
 
-post_bp = Blueprint('post', __name__, url_prefix='')
+post_bp = Blueprint('post', __name__, url_prefix='/posts')
 post_service = PostService()
 category_service = CategoryService()
 tag_service = TagService()
@@ -52,6 +52,9 @@ def create():
     """创建文章"""
     form = PostForm()
     if request.method == 'POST':
+        current_app.logger.info("开始处理文章创建请求...")
+        current_app.logger.debug(f"表单数据: {request.form}")
+        
         if form.validate_on_submit():
             try:
                 status = PostStatus(form.status.data)
@@ -60,19 +63,59 @@ def create():
                     content=form.content.data,
                     author_id=current_user.id,
                     category_id=form.category_id.data,
-                    tags=[Tag.query.get(tag_id) for tag_id in form.tags.data],
+                    tags=[Tag.query.get(tag_id) for tag_id in form.tags.data] if form.tags.data else None,
                     status=status
                 )
-                flash('文章创建成功', 'success')
-                return redirect(url_for('admin.post.index'))
-            except Exception as e:
+                
+                if post:  # 确保文章创建成功
+                    if request.is_xhr:
+                        current_app.logger.info("文章创建成功，返回JSON响应")
+                        return jsonify({
+                            'success': True,
+                            'message': '文章创建成功',
+                            'redirect_url': url_for('admin.post.index')
+                        })
+                    
+                    flash('文章创建成功', 'success')
+                    return redirect(url_for('admin.post.index'))
+                else:
+                    raise ValueError('文章创建失败')
+                    
+            except ValueError as e:
+                current_app.logger.error(f"创建文章失败(ValueError): {str(e)}")
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': str(e)
+                    }), 400
                 flash(str(e), 'error')
                 return render_template('admin/post/create.html', form=form)
+                
+            except Exception as e:
+                current_app.logger.error(f"创建文章失败: {str(e)}")
+                current_app.logger.exception(e)  # 记录完整的异常堆栈
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': '创建文章失败，请稍后重试',
+                        'error': str(e)
+                    }), 500
+                flash('创建文章失败，请稍后重试', 'error')
+                return render_template('admin/post/create.html', form=form)
         else:
+            current_app.logger.warning(f"表单验证失败: {form.errors}")
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '表单验证失败',
+                    'errors': form.errors
+                }), 400
+                
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f'{getattr(form, field).label.text}: {error}', 'error')
             return render_template('admin/post/create.html', form=form)
+            
     return render_template('admin/post/create.html', form=form)
 
 @post_bp.route('/<int:post_id>/edit', methods=['GET', 'POST'])
@@ -81,30 +124,69 @@ def edit(post_id):
     """编辑文章"""
     post = post_service.get_post(post_id)
     if not post:
+        if request.is_xhr:
+            return jsonify({'success': False, 'message': '文章不存在'}), 404
         flash('文章不存在', 'error')
         return redirect(url_for('admin.post.index'))
         
     form = PostForm(obj=post)
+    form.obj = post  # 添加这行，用于标题唯一性验证
     if request.method == 'POST' and form.validate_on_submit():
         try:
             status = PostStatus(form.status.data)
+            category_id = int(form.category_id.data) if form.category_id.data else None
             post = post_service.update_post(
                 post_id=post_id,
                 title=form.title.data,
                 content=form.content.data,
                 summary=form.summary.data,
-                category_id=form.category_id.data,
+                category_id=category_id,
                 tags=[Tag.query.get(tag_id) for tag_id in form.tags.data],
                 status=status
             )
             if post:
+                if request.is_xhr:
+                    return jsonify({
+                        'success': True,
+                        'message': '文章更新成功',
+                        'redirect_url': url_for('admin.post.index')
+                    })
                 flash('文章更新成功', 'success')
                 return redirect(url_for('admin.post.index'))
             else:
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': '文章更新失败'
+                    }), 400
                 flash('文章更新失败', 'error')
+        except (ValueError, TypeError) as e:
+            error_message = f'表单数据无效: {str(e)}'
+            current_app.logger.error(f"更新文章失败: {str(e)}")
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': error_message
+                }), 400
+            flash(error_message, 'error')
         except Exception as e:
-            flash(str(e), 'error')
-        return redirect(url_for('admin.post.index'))
+            error_message = '更新文章失败，请稍后重试'
+            current_app.logger.error(f"更新文章失败: {str(e)}")
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': error_message
+                }), 500
+            flash(error_message, 'error')
+        return redirect(url_for('admin.post.edit', post_id=post_id))
+    
+    if request.is_xhr and not form.validate():
+        return jsonify({
+            'success': False,
+            'message': '表单验证失败',
+            'errors': form.errors
+        }), 400
+        
     return render_template('admin/post/edit.html', form=form, post=post)
 
 @post_bp.route('/<int:post_id>/delete', methods=['POST'])
@@ -112,12 +194,12 @@ def edit(post_id):
 def delete(post_id):
     """删除文章"""
     try:
-        # 验证 CSRF 令牌
+        # 从 JSON 请求中获取 CSRF token
         csrf_token = request.get_json().get('csrf_token')
         if not csrf_token:
             return jsonify({
                 'success': False,
-                'message': 'CSRF 令牌缺失'
+                'message': 'CSRF token 不能为空'
             }), 400
 
         result = post_service.delete_post(post_id)
