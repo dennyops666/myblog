@@ -71,12 +71,7 @@
                             <div class="card-body">
                                 <div class="form-group mb-3">
                                     {{ form.category_id.label(class="form-label") }}
-                                    <select name="category_id" id="category_id" class="form-select">
-                                        <option value="">请选择分类</option>
-                                        {% for value, label in form.category_id.choices %}
-                                        <option value="{{ value }}" {% if post and post.category_id == value %}selected{% endif %}>{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
                                     {% if form.category_id.errors %}
                                     <div class="invalid-feedback d-block">
                                         {% for error in form.category_id.errors %}
@@ -163,7 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化Select2
     $('#category_id').select2({
         theme: 'bootstrap-5',
-        placeholder: '请选择分类'
+        placeholder: '请选择分类',
+        width: '100%',
+        allowClear: false
     });
 
     // 初始化标签选择
@@ -171,7 +168,8 @@ document.addEventListener('DOMContentLoaded', function() {
         theme: 'bootstrap-5',
         placeholder: '选择或输入标签',
         tags: true,
-        tokenSeparators: [',', ' ']
+        tokenSeparators: [',', ' '],
+        width: '100%'
     });
 
     // 初始化编辑器

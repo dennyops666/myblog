@@ -31,34 +31,46 @@ def index():
         
         # 强制刷新数据库会话，确保获取最新数据
         db.session.expire_all()
-        db.session.commit()
         
-        # 使用 PostService 的方法获取文章列表，包含预加载的分类信息
-        posts = post_service.get_posts_paginated(
-            page=page,
-            per_page=per_page,
-            status=status if status != 'all' else None
+        # 使用 joinedload 预加载关联数据
+        query = Post.query.options(
+            db.joinedload(Post.category),
+            db.joinedload(Post.author)
         )
         
-        if posts and posts.items:
-            # 预处理数据，避免在模板中触发延迟加载
+        # 添加状态过滤
+        if status != 'all':
+            query = query.filter(Post.status == status)
+            
+        # 按创建时间倒序排序并执行分页
+        posts = query.order_by(Post.created_at.desc()).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+        
+        # 确保所有关联数据都被加载
+        if posts.items:
             for post in posts.items:
-                # 强制刷新关联对象
                 db.session.refresh(post)
                 if post.category:
                     db.session.refresh(post.category)
                 if post.author:
                     db.session.refresh(post.author)
         
+        # 提交会话以确保所有更改都被保存
+        db.session.commit()
+        
         # 设置响应头，禁止缓存
         response = make_response(render_template('admin/post/list.html', posts=posts))
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
+        response.headers['Expires'] = '0'
         return response
         
     except Exception as e:
-        current_app.logger.error(f'获取文章列表失败: {str(e)}')
+        current_app.logger.error(f"获取文章列表失败: {str(e)}")
+        current_app.logger.exception(e)
         flash('获取文章列表失败，请稍后重试', 'error')
         return redirect(url_for('admin.index'))
 
@@ -140,10 +152,17 @@ def edit(post_id):
     """编辑文章"""
     current_app.logger.info(f"开始处理文章编辑请求，文章ID: {post_id}")
     current_app.logger.debug(f"请求方法: {request.method}")
+    
     if request.method == 'POST':
-        current_app.logger.debug(f"表单数据: {request.form}")
-        
-    post = post_service.get_post(post_id)
+        current_app.logger.info("收到POST请求，记录原始表单数据...")
+        current_app.logger.debug(f"原始表单数据: {request.form.to_dict()}")
+    
+    # 获取文章并预加载关联数据
+    post = Post.query.options(
+        db.joinedload(Post.category),
+        db.joinedload(Post.tags)
+    ).get(post_id)
+    
     if not post:
         current_app.logger.warning(f"文章不存在，ID: {post_id}")
         if request.is_xhr:
@@ -156,14 +175,22 @@ def edit(post_id):
     
     if request.method == 'POST':
         current_app.logger.info("开始验证表单数据...")
+        current_app.logger.debug(f"表单对象数据: category_id={form.category_id.data}, status={form.status.data}")
+        current_app.logger.debug(f"请求表单数据: category_id={request.form.get('category_id')}, status={request.form.get('status')}")
+        
         if form.validate_on_submit():
             try:
                 current_app.logger.info("表单验证通过，开始更新文章...")
                 status = PostStatus(form.status.data)
-                category_id = int(form.category_id.data) if form.category_id.data else None
+                category_id = int(request.form.get('category_id')) if request.form.get('category_id') else None
                 
                 # 记录更新前的文章信息
                 current_app.logger.debug(f"更新前的文章信息: 标题={post.title}, 分类ID={post.category_id}, 状态={post.status}")
+                current_app.logger.debug(f"准备更新的数据: category_id={category_id}, status={status}")
+                
+                # 强制刷新数据库会话
+                db.session.expire_all()
+                db.session.commit()
                 
                 updated_post = post_service.update_post(
                     post_id=post_id,
@@ -179,6 +206,11 @@ def edit(post_id):
                     current_app.logger.info(f"文章更新成功，ID: {post_id}")
                     # 记录更新后的文章信息
                     current_app.logger.debug(f"更新后的文章信息: 标题={updated_post.title}, 分类ID={updated_post.category_id}, 状态={updated_post.status}")
+                    
+                    # 强制刷新更新后的文章对象
+                    db.session.refresh(updated_post)
+                    if updated_post.category:
+                        db.session.refresh(updated_post.category)
                     
                     if request.is_xhr:
                         return jsonify({
@@ -196,6 +228,7 @@ def edit(post_id):
                             'message': '文章更新失败'
                         }), 400
                     flash('文章更新失败', 'error')
+                    return render_template('admin/post/edit.html', form=form, post=post)
                     
             except (ValueError, TypeError) as e:
                 error_message = f'表单数据无效: {str(e)}'
@@ -206,6 +239,7 @@ def edit(post_id):
                         'message': error_message
                     }), 400
                 flash(error_message, 'error')
+                return render_template('admin/post/edit.html', form=form, post=post)
                 
             except Exception as e:
                 error_message = '更新文章失败，请稍后重试'
@@ -218,8 +252,7 @@ def edit(post_id):
                         'error': str(e)
                     }), 500
                 flash(error_message, 'error')
-                
-            return redirect(url_for('admin.post.edit', post_id=post_id))
+                return render_template('admin/post/edit.html', form=form, post=post)
         else:
             current_app.logger.warning(f"表单验证失败: {form.errors}")
             if request.is_xhr:
@@ -231,6 +264,7 @@ def edit(post_id):
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f'{getattr(form, field).label.text}: {error}', 'error')
+            return render_template('admin/post/edit.html', form=form, post=post)
     
     # 获取分类和标签数据
     categories = Category.query.all()

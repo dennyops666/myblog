@@ -40,10 +40,12 @@ class PostForm(FlaskForm):
             # 设置分类选项
             self.category_id.choices = [(c.id, c.name) for c in categories]
             
-            # 如果是编辑模式且有 obj 参数，设置当前选中的分类
-            if 'obj' in kwargs and kwargs['obj'] and hasattr(kwargs['obj'], 'category_id'):
-                if kwargs['obj'].category_id:
-                    self.category_id.data = kwargs['obj'].category_id
+            # 只在非POST请求（即GET请求）时设置默认分类
+            if not args or not args[0]:  # 如果没有表单数据（非POST请求）
+                if 'obj' in kwargs and kwargs['obj'] and hasattr(kwargs['obj'], 'category_id'):
+                    if kwargs['obj'].category_id:
+                        self.category_id.data = kwargs['obj'].category_id
+                        current_app.logger.debug(f"设置默认分类ID: {kwargs['obj'].category_id}")
                 
         except Exception as e:
             current_app.logger.error(f"加载分类失败: {str(e)}")
@@ -54,6 +56,12 @@ class PostForm(FlaskForm):
         try:
             tags = Tag.query.order_by(Tag.name).all()
             self.tags.choices = [(t.id, t.name) for t in tags]
+            
+            # 只在非POST请求时设置默认标签
+            if not args or not args[0]:  # 如果没有表单数据（非POST请求）
+                if 'obj' in kwargs and kwargs['obj']:
+                    self.tags.data = [tag.id for tag in kwargs['obj'].tags]
+                    
         except Exception as e:
             current_app.logger.error(f"加载标签失败: {str(e)}")
             current_app.logger.exception(e)

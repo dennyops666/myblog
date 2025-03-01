@@ -103,3 +103,5 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
+app.pid
+logs/*.log*

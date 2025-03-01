@@ -363,7 +363,8 @@ class PostService:
             Post: 更新后的文章对象，如果更新失败则返回 None
         """
         try:
-            post = Post.query.get(post_id)
+            # 使用 joinedload 预加载分类关系
+            post = Post.query.options(db.joinedload(Post.category)).get(post_id)
             if not post:
                 current_app.logger.error(f"文章不存在，ID: {post_id}")
                 return None
@@ -383,8 +384,8 @@ class PostService:
                         if new_category:
                             current_app.logger.info(f"更新分类: 从 {old_category_id} 更改为 {new_category_id}")
                             post.category_id = new_category_id
+                            post.category = new_category  # 直接更新关系
                             db.session.flush()  # 立即刷新，确保更新生效
-                            db.session.commit()  # 立即提交分类更改
                             current_app.logger.info(f"分类更新成功，新分类ID: {post.category_id}")
                         else:
                             current_app.logger.error(f"未找到ID为 {new_category_id} 的分类")
@@ -392,7 +393,7 @@ class PostService:
                 except ValueError:
                     current_app.logger.error(f"分类ID格式错误: {category_id}")
                     return None
-            
+
             if title is not None:
                 post.title = title
             if content is not None:
@@ -417,13 +418,22 @@ class PostService:
             
             # 清除相关的缓存键
             current_app.logger.info("开始清除缓存")
+            # 清理所有可能受影响的缓存
+            self._clear_post_cache(post.id)  # 使用现有的清理缓存方法
+            
+            # 额外清理分类相关的缓存
             cache_keys = [
                 f'post:{post_id}',
                 'post_list',
                 f'category_posts:{old_category_id}' if old_category_id else None,
                 f'category_posts:{post.category_id}' if post.category_id else None,
                 'categories',  # 清除分类列表缓存
-                'category_list'  # 清除分类列表缓存
+                'category_list',  # 清除分类列表缓存
+                f'post_list:category:{old_category_id}:*' if old_category_id else None,  # 清除旧分类的文章列表缓存
+                f'post_list:category:{post.category_id}:*' if post.category_id else None,  # 清除新分类的文章列表缓存
+                'category_list_with_count',  # 清除带文章计数的分类列表缓存
+                f'category:{old_category_id}:*' if old_category_id else None,  # 清除旧分类的所有相关缓存
+                f'category:{post.category_id}:*' if post.category_id else None  # 清除新分类的所有相关缓存
             ]
             
             # 使用 Redis 的 pipeline 批量删除缓存
@@ -432,12 +442,19 @@ class PostService:
                 pipe = current_app.redis.pipeline()
                 for key in cache_keys:
                     if key:
-                        current_app.logger.info(f"删除缓存键: {key}")
-                        pipe.delete(key)
+                        if '*' in key:  # 如果是通配符模式，使用 keys 命令查找匹配的键
+                            matching_keys = current_app.redis.keys(key)
+                            for matching_key in matching_keys:
+                                current_app.logger.info(f"删除缓存键: {matching_key}")
+                                pipe.delete(matching_key)
+                        else:
+                            current_app.logger.info(f"删除缓存键: {key}")
+                            pipe.delete(key)
                 pipe.execute()
             
             # 重新加载文章以确保所有关系都被正确加载
-            db.session.refresh(post)
+            db.session.expire(post)  # 使对象过期，强制重新加载
+            db.session.refresh(post)  # 重新加载对象
             current_app.logger.info(f"文章 {post_id} 更新完成，当前分类ID={post.category_id}")
             
             return post
