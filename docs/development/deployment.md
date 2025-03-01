@@ -1,4 +1,4 @@
-# MyBlog 部署文档
+image.png# MyBlog 部署文档
 
 ## 1. 系统要求
 

@@ -12,6 +12,9 @@ from app.models.post import PostStatus
 
 class PostForm(FlaskForm):
     """文章表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     title = StringField('标题', validators=[DataRequired(), Length(1, 200)])
     content = TextAreaField('内容', validators=[DataRequired()])
     summary = TextAreaField('摘要', validators=[Optional(), Length(0, 500)])
@@ -27,18 +30,27 @@ class PostForm(FlaskForm):
 
 class CategoryForm(FlaskForm):
     """分类表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     name = StringField('名称', validators=[DataRequired(), Length(1, 64)])
     slug = StringField('别名', validators=[DataRequired(), Length(1, 64)])
     description = TextAreaField('描述', validators=[Optional(), Length(0, 200)])
 
 class TagForm(FlaskForm):
     """标签表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     name = StringField('名称', validators=[DataRequired(), Length(1, 64)])
     slug = StringField('别名', validators=[DataRequired(), Length(1, 64)])
     description = TextAreaField('描述', validators=[Optional(), Length(0, 200)])
 
 class ProfileForm(FlaskForm):
     """个人资料表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     username = StringField('用户名', validators=[DataRequired(), Length(1, 64)])
     email = StringField('邮箱', validators=[DataRequired(), Email(), Length(1, 120)])
     password = PasswordField('新密码', validators=[Optional(), Length(6, 128)])
@@ -52,6 +64,9 @@ class ProfileForm(FlaskForm):
 
 class LoginForm(FlaskForm):
     """管理员登录表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     username = StringField('用户名', validators=[DataRequired(), Length(1, 64)])
     password = PasswordField('密码', validators=[DataRequired(), Length(6, 128)])
     remember_me = BooleanField('记住我') 

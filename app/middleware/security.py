@@ -174,4 +174,9 @@ def rate_limit(limit=10, per=60):
             
             return f(*args, **kwargs)
         return decorated_function
-    return decorator 
+    return decorator
+
+def validate_csrf():
+    """验证 CSRF Token"""
+    # 禁用 CSRF 验证
+    return True 

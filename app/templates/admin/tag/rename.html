@@ -62,7 +62,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('admin.post.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 <a href="{{ url_for('blog.post', post_id=post.id) }}" class="btn btn-sm btn-info" target="_blank">

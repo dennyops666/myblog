@@ -4,6 +4,9 @@ from wtforms.validators import DataRequired, Length, Email
 
 class CommentForm(FlaskForm):
     """评论表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     nickname = StringField('昵称', validators=[
         DataRequired(message='请输入昵称'),
         Length(min=2, max=20, message='昵称长度必须在2-20个字符之间')

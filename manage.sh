@@ -19,8 +19,8 @@ activate_venv() {
 # 设置环境变量
 set_env() {
     export FLASK_APP=app
-    export FLASK_ENV=production
-    export FLASK_DEBUG=0
+    export FLASK_ENV=development
+    export FLASK_DEBUG=1
 }
 
 # 检查服务状态
@@ -57,12 +57,19 @@ start() {
     activate_venv
     set_env
     
-    gunicorn "app:create_app()" \
+    gunicorn "app:create_app('development')" \
         --bind "$HOST:$PORT" \
-        --workers $WORKERS \
+        --workers 1 \
+        --timeout 120 \
+        --reload \
         --pid "$PID_FILE" \
         --log-file "$LOG_FILE" \
         --error-logfile "$ERROR_LOG" \
+        --log-level debug \
+        --capture-output \
+        --enable-stdio-inheritance \
+        --user ops \
+        --group ops \
         --daemon
     
     sleep 2

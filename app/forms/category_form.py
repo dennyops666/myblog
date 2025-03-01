@@ -11,6 +11,9 @@ from wtforms.validators import DataRequired, Length, Optional, ValidationError
 
 class CategoryForm(FlaskForm):
     """分类表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     name = StringField('名称', validators=[
         DataRequired(message='名称不能为空'),
         Length(min=1, max=50, message='名称长度必须在1-50个字符之间')

@@ -29,8 +29,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     
     # 安全配置
-    WTF_CSRF_ENABLED = True
-    WTF_CSRF_CHECK_DEFAULT = True
+    WTF_CSRF_ENABLED = False  # 禁用 CSRF 保护
+    WTF_CSRF_CHECK_DEFAULT = False  # 禁用 CSRF 检查
     WTF_CSRF_TIME_LIMIT = 3600
     SESSION_PROTECTION = 'strong'
     

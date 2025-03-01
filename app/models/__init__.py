@@ -9,7 +9,7 @@ from app.extensions import db
 
 # 导入所有模型
 from .user import User
-from .post import Post
+from .post import Post, PostStatus
 from .category import Category
 from .tag import Tag
 from .comment import Comment
@@ -21,6 +21,7 @@ __all__ = [
     'db',
     'User',
     'Post',
+    'PostStatus',
     'Category',
     'Tag',
     'Comment',

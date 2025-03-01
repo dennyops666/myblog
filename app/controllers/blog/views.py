@@ -39,19 +39,24 @@ def index():
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['POSTS_PER_PAGE']
     
-    result = post_service.get_post_list(page, per_page)
+    pagination = post_service.get_post_list(page, per_page)
     archives = post_service.get_archives()
     categories = category_service.get_all_categories()
+    
+    current_app.logger.info("正在获取标签列表...")
     tags = tag_service.get_all_tags()
+    current_app.logger.info(f"获取到 {len(tags)} 个标签")
+    for tag in tags:
+        current_app.logger.info(f"标签: {tag.name}, 文章数: {tag.post_count}")
     
     return render_template('blog/index.html',
-                         posts=result,
+                         posts=pagination,
                          archives=archives,
                          categories=categories,
                          tags=tags)
 
-@blog_bp.route('/post/<int:post_id>')
-def post(post_id):
+@blog_bp.route('/post_detail/<int:post_id>')
+def post_detail(post_id):
     """文章详情页"""
     try:
         # 获取文章
@@ -111,7 +116,7 @@ def post(post_id):
         flash('获取文章详情失败', 'error')
         return render_template('blog/error.html', error_message='获取文章详情失败'), 500
 
-@blog_bp.route('/post/<int:post_id>/comment', methods=['POST'])
+@blog_bp.route('/post_detail/<int:post_id>/comment', methods=['POST'])
 def create_comment(post_id):
     """创建评论"""
     try:

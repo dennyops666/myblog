@@ -1,134 +1,136 @@
-2025-02-28 22:07:33,519 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:19:41,001 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '623', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary1CvYk0d3rgqNBA5o', 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Wg.Vj2W_KQBM2UnU-8H_22JD8R2I8s'}
 None
-2025-02-28 22:07:33,519 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?t=1740751432415', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HDGw.PhhtbWraU8YHTSobu5LYWwgtJyA'}
+2025-03-01 20:19:41,003 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
 None
-2025-02-28 22:07:33,524 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:19:41,005 INFO: 开始加载分类选项...
 None
-2025-02-28 22:07:33,524 DEBUG: 请求方法: GET
+2025-03-01 20:19:41,006 INFO: 成功获取到 6 个分类
 None
-2025-02-28 22:07:33,533 INFO: 开始加载分类选项...
+2025-03-01 20:19:41,006 DEBUG: 设置默认分类ID: 1
 None
-2025-02-28 22:07:33,537 INFO: 成功获取到 6 个分类
+2025-03-01 20:19:41,006 INFO: 开始加载标签选项...
 None
-2025-02-28 22:07:33,541 DEBUG: 加载表单数据: 6 个分类, 5 个标签
+2025-03-01 20:19:41,007 INFO: 成功获取到 5 个标签
 None
-2025-02-28 22:07:33,542 INFO: Locating template 'admin/post/edit.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/admin/post/edit.html')
+2025-03-01 20:19:41,007 DEBUG: 设置默认标签: 1
 None
-2025-02-28 22:07:33,561 INFO: Locating template 'admin/layout.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/admin/layout.html')
+2025-03-01 20:19:41,007 INFO: 开始处理文章编辑请求，文章ID: 7
 None
-2025-02-28 22:07:37,962 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:19:41,007 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
 None
-2025-02-28 22:07:37,963 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '214', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HDJQ.CXEJ-YzhxCA0E1PRhLSb0W5UkFM'}
+2025-03-01 20:19:41,009 INFO: 表单验证通过，开始更新文章...
 None
-2025-02-28 22:07:37,964 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+2025-03-01 20:19:41,010 INFO: 成功处理 1 个标签
 None
-2025-02-28 22:07:37,965 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:19:41,010 DEBUG: 标签列表: ['个人博客']
 None
-2025-02-28 22:07:37,965 DEBUG: 请求方法: POST
+2025-03-01 20:19:41,010 INFO: 处理后的标签列表: ['个人博客']
 None
-2025-02-28 22:07:37,965 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
+2025-03-01 20:19:41,011 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.PUBLISHED
 None
-2025-02-28 22:07:37,967 INFO: 开始加载分类选项...
+2025-03-01 20:19:41,018 INFO: 开始清除缓存
 None
-2025-02-28 22:07:37,968 INFO: 成功获取到 6 个分类
+2025-03-01 20:19:41,023 INFO: 文章 7 更新完成，当前分类ID=1
 None
-2025-02-28 22:07:37,969 INFO: 开始验证表单数据...
+2025-03-01 20:19:41,023 INFO: 文章更新成功，ID: 7
 None
-2025-02-28 22:07:37,977 INFO: 表单验证通过，开始更新文章...
+2025-03-01 20:19:41,032 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
 None
-2025-02-28 22:07:37,977 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:41,032 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '68', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Wg.Vj2W_KQBM2UnU-8H_22JD8R2I8s'}
 None
-2025-02-28 22:07:37,977 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:41,033 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
 None
-2025-02-28 22:07:37,988 INFO: 开始清除缓存
+2025-03-01 20:19:41,035 INFO: 开始加载分类选项...
 None
-2025-02-28 22:07:37,998 INFO: 文章 7 更新完成，当前分类ID=5
+2025-03-01 20:19:41,036 INFO: 成功获取到 6 个分类
 None
-2025-02-28 22:07:37,998 INFO: 文章更新成功，ID: 7
+2025-03-01 20:19:41,036 DEBUG: 设置默认分类ID: 1
 None
-2025-02-28 22:07:37,998 DEBUG: 更新后的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:41,036 INFO: 开始加载标签选项...
 None
-2025-02-28 22:07:38,278 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?t=1740751658114
+2025-03-01 20:19:41,037 INFO: 成功获取到 5 个标签
 None
-2025-02-28 22:07:38,278 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?t=1740751658114', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HDKg.-CgkAVN1JE4sjGL8z0iYu2lkpYM'}
+2025-03-01 20:19:41,037 DEBUG: 设置默认标签: 1
 None
-2025-02-28 22:07:38,340 INFO: Locating template 'admin/post/list.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/admin/post/list.html')
+2025-03-01 20:19:41,037 INFO: 开始处理文章编辑请求，文章ID: 7
 None
-2025-02-28 22:07:38,353 INFO: Locating template 'admin/layout.html':
-    1: trying loader of application 'app'
-       class: jinja2.loaders.FileSystemLoader
-       encoding: 'utf-8'
-       followlinks: False
-       searchpath:
-         - /data/myblog/app/templates
-       -> found ('/data/myblog/app/templates/admin/layout.html')
+2025-03-01 20:19:41,037 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
 None
-2025-02-28 22:09:07,033 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:19:41,039 INFO: 表单验证通过，开始更新文章...
 None
-2025-02-28 22:09:07,033 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?t=1740751658114', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HDKg.dpiy12Ek-SG5vBYBhv72sbAIdBo'}
+2025-03-01 20:19:41,040 INFO: 成功处理 1 个标签
 None
-2025-02-28 22:09:07,036 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:19:41,040 DEBUG: 标签列表: ['个人博客']
 None
-2025-02-28 22:09:07,036 DEBUG: 请求方法: GET
+2025-03-01 20:19:41,040 INFO: 处理后的标签列表: ['个人博客']
 None
-2025-02-28 22:09:07,037 INFO: 开始加载分类选项...
+2025-03-01 20:19:41,041 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.DRAFT
 None
-2025-02-28 22:09:07,039 INFO: 成功获取到 6 个分类
+2025-03-01 20:19:41,046 INFO: 开始清除缓存
 None
-2025-02-28 22:09:07,041 DEBUG: 加载表单数据: 6 个分类, 5 个标签
+2025-03-01 20:19:41,051 INFO: 文章 7 更新完成，当前分类ID=1
 None
-2025-02-28 22:09:09,604 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:19:41,051 INFO: 文章更新成功，ID: 7
 None
-2025-02-28 22:09:09,604 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '214', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HDgw.VbNYnu1gOvliE-PvBu3ufLEwpWw'}
+2025-03-01 20:19:41,060 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?_=1740831583576
 None
-2025-02-28 22:09:09,605 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+2025-03-01 20:19:41,060 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Wg.Vj2W_KQBM2UnU-8H_22JD8R2I8s'}
 None
-2025-02-28 22:09:09,607 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:19:43,762 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?_=1740831583576
 None
-2025-02-28 22:09:09,607 DEBUG: 请求方法: POST
+2025-03-01 20:19:43,762 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7XQ.SbviHwX39CXbB371qRzYMAf2OJg'}
 None
-2025-02-28 22:09:09,607 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
+2025-03-01 20:19:50,876 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/7/edit
 None
-2025-02-28 22:09:09,612 INFO: 开始加载分类选项...
+2025-03-01 20:19:50,877 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?_=1740831583576', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Xw.ynmbkvNO0zZmUjX2wKPWDBSVVpA'}
 None
-2025-02-28 22:09:09,635 INFO: 成功获取到 6 个分类
+2025-03-01 20:19:50,881 INFO: 开始加载分类选项...
 None
-2025-02-28 22:09:09,637 INFO: 开始验证表单数据...
+2025-03-01 20:19:50,883 INFO: 成功获取到 6 个分类
 None
-2025-02-28 22:09:09,644 INFO: 表单验证通过，开始更新文章...
+2025-03-01 20:19:50,883 DEBUG: 设置默认分类ID: 1
 None
-2025-02-28 22:09:09,644 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:50,884 INFO: 开始加载标签选项...
 None
-2025-02-28 22:09:09,645 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:50,886 INFO: 成功获取到 5 个标签
 None
-2025-02-28 22:09:09,656 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?t=1740751749661
+2025-03-01 20:19:50,887 DEBUG: 设置默认标签: 1
 None
-2025-02-28 22:09:09,658 INFO: 开始清除缓存
+2025-03-01 20:19:53,906 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
 None
-2025-02-28 22:09:09,730 INFO: 文章 7 更新完成，当前分类ID=5
+2025-03-01 20:19:53,906 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '623', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundarykPPh146kls6mdqAs', 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Zg.K8lh4ydxIwczqjm_nkip2cxhU7g'}
 None
-2025-02-28 22:09:09,730 INFO: 文章更新成功，ID: 7
+2025-03-01 20:19:53,907 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
 None
-2025-02-28 22:09:09,730 DEBUG: 更新后的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:19:53,910 INFO: 开始加载分类选项...
+None
+2025-03-01 20:19:53,910 INFO: 成功获取到 6 个分类
+None
+2025-03-01 20:19:53,911 DEBUG: 设置默认分类ID: 1
+None
+2025-03-01 20:19:53,911 INFO: 开始加载标签选项...
+None
+2025-03-01 20:19:53,912 INFO: 成功获取到 5 个标签
+None
+2025-03-01 20:19:53,912 DEBUG: 设置默认标签: 1
+None
+2025-03-01 20:19:53,912 INFO: 开始处理文章编辑请求，文章ID: 7
+None
+2025-03-01 20:19:53,912 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+None
+2025-03-01 20:19:53,914 INFO: 表单验证通过，开始更新文章...
+None
+2025-03-01 20:19:53,916 INFO: 成功处理 1 个标签
+None
+2025-03-01 20:19:53,916 DEBUG: 标签列表: ['个人博客']
+None
+2025-03-01 20:19:53,916 INFO: 处理后的标签列表: ['个人博客']
+None
+2025-03-01 20:19:53,917 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.DRAFT
+None
+2025-03-01 20:19:53,921 INFO: 开始清除缓存
+None
+2025-03-01 20:19:53,927 INFO: 文章 7 更新完成，当前分类ID=1
+None
+2025-03-01 20:19:53,927 INFO: 文章更新成功，ID: 7
 None

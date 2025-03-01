@@ -93,19 +93,13 @@ class Post(db.Model):
     
     @staticmethod
     def render_markdown(content):
-        """将 Markdown 内容渲染为 HTML
-        
-        Args:
-            content: Markdown 格式的内容
-            
-        Returns:
-            str: 渲染后的 HTML 内容
-        """
-        if not content:
-            return ''
-            
+        """渲染 Markdown 内容为 HTML"""
         try:
-            extras = {
+            if not content:
+                return ''
+            
+            # 使用 markdown2 渲染内容
+            html_content = markdown2.markdown(content, extras={
                 'fenced-code-blocks': None,
                 'tables': None,
                 'header-ids': None,
@@ -114,12 +108,31 @@ class Post(db.Model):
                 'metadata': None,
                 'code-friendly': None,
                 'break-on-newline': True
-            }
-            html = markdown2.markdown(str(content), extras=extras)
-            return html if html else ''
+            })
+            
+            # 处理代码块的语法高亮
+            soup = BeautifulSoup(html_content, 'html.parser')
+            for pre in soup.find_all('pre'):
+                code = pre.find('code')
+                if code:
+                    # 获取语言类型
+                    lang = None
+                    classes = code.get('class', [])
+                    if classes:
+                        lang = classes[0].replace('language-', '')
+                    
+                    # 添加类名以支持语法高亮
+                    if lang:
+                        code['class'] = code.get('class', []) + [f'language-{lang}', 'hljs']
+                    else:
+                        code['class'] = code.get('class', []) + ['hljs']
+            
+            return str(soup)
+        
         except Exception as e:
-            current_app.logger.error(f"渲染 Markdown 内容失败: {str(e)}")
-            return str(content)
+            current_app.logger.error(f"渲染 Markdown 内容时发生错误: {str(e)}")
+            current_app.logger.exception(e)
+            return content
 
     def update_html_content(self):
         """更新文章的 HTML 内容"""

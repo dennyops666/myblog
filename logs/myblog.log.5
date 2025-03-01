@@ -1,78 +1,40 @@
-2025-02-28 21:57:54,744 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:18:26,148 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,745 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '214', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HA2g.JO0bGMe2spjRzB9XKledRczUD_I'}
+2025-03-01 20:18:26,293 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
 None
-2025-02-28 21:57:54,746 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+2025-03-01 20:18:26,293 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,751 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:18:26,317 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
 None
-2025-02-28 21:57:54,751 DEBUG: 请求方法: POST
+2025-03-01 20:18:26,318 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,751 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
+2025-03-01 20:18:26,453 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
 None
-2025-02-28 21:57:54,763 INFO: 开始加载分类选项...
+2025-03-01 20:18:26,454 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,766 INFO: 成功获取到 6 个分类
+2025-03-01 20:18:26,481 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
 None
-2025-02-28 21:57:54,768 INFO: 开始验证表单数据...
+2025-03-01 20:18:26,481 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,776 INFO: 表单验证通过，开始更新文章...
+2025-03-01 20:18:26,623 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
 None
-2025-02-28 21:57:54,776 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:18:26,624 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,777 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
+2025-03-01 20:18:26,648 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
 None
-2025-02-28 21:57:54,795 INFO: 开始清除缓存
+2025-03-01 20:18:26,649 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,806 INFO: 文章 7 更新完成，当前分类ID=5
+2025-03-01 20:18:26,810 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
 None
-2025-02-28 21:57:54,806 INFO: 文章更新成功，ID: 7
+2025-03-01 20:18:26,810 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:57:54,806 ERROR: 更新文章失败(未知错误): 'dict' object has no attribute 'title'
+2025-03-01 20:18:26,836 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
 None
-2025-02-28 21:57:54,806 ERROR: 'dict' object has no attribute 'title'
-(<class 'AttributeError'>, AttributeError("'dict' object has no attribute 'title'"), <traceback object at 0x769bd693a900>)
-Traceback (most recent call last):
-  File "/data/myblog/app/controllers/admin/post.py", line 181, in edit
-    current_app.logger.debug(f"更新后的文章信息: 标题={post.title}, 分类ID={post.category_id}, 状态={post.status}")
-                                                       ^^^^^^^^^^
-AttributeError: 'dict' object has no attribute 'title'
-2025-02-28 21:58:19,567 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-01 20:18:26,837 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:58:19,567 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '614', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundarymu5j7A2m9eSrZ4Sj', 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=gamG3iiPQmLr2cuQVXqLvfaxe-vl8Hjl9IlEDI5_UM4; remember_token=1|9326ad545ec45389d8884c1ac2ca473f77151aa7ad73378342ec9d3758a8a4a7f3a4d15ed4fe02792653c1466c37bcce0ad27b244c65a9a0d226586dcf44dabe; csrf_token=ImYzNjVmYjY4ZjU3YTM2MDExMDcwODEwNDk2OTg3ZWNhMjYzOWE2NzMi.Z8HA2g.JO0bGMe2spjRzB9XKledRczUD_I'}
+2025-03-01 20:18:26,987 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
 None
-2025-02-28 21:58:19,569 DEBUG: 表单数据: {'title': 'test', 'content': '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03', 'category_id': '6', 'status': 'draft', 'summary': 'test01'}
+2025-03-01 20:18:26,987 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Eg.P_7oFwlgX9fi9W9NIXkse7FvIOY'}
 None
-2025-02-28 21:58:19,571 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-01 20:18:27,013 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
 None
-2025-02-28 21:58:19,571 DEBUG: 请求方法: POST
-None
-2025-02-28 21:58:19,571 DEBUG: 表单数据: ImmutableMultiDict([('title', 'test'), ('content', '<p>test</p>\r\n<p>test</p><p>test</p><p>test</p><p>test</p>\r\n\r\ntest01\r\ntest02\r\ntest03'), ('category_id', '6'), ('status', 'draft'), ('summary', 'test01')])
-None
-2025-02-28 21:58:19,572 INFO: 开始加载分类选项...
-None
-2025-02-28 21:58:19,573 INFO: 成功获取到 6 个分类
-None
-2025-02-28 21:58:19,574 INFO: 开始验证表单数据...
-None
-2025-02-28 21:58:19,575 INFO: 表单验证通过，开始更新文章...
-None
-2025-02-28 21:58:19,575 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
-None
-2025-02-28 21:58:19,576 DEBUG: 更新前的文章信息: 标题=test, 分类ID=5, 状态=PostStatus.DRAFT
-None
-2025-02-28 21:58:19,581 INFO: 开始清除缓存
-None
-2025-02-28 21:58:19,583 INFO: 文章 7 更新完成，当前分类ID=5
-None
-2025-02-28 21:58:19,583 INFO: 文章更新成功，ID: 7
-None
-2025-02-28 21:58:19,583 ERROR: 更新文章失败(未知错误): 'dict' object has no attribute 'title'
-None
-2025-02-28 21:58:19,583 ERROR: 'dict' object has no attribute 'title'
-(<class 'AttributeError'>, AttributeError("'dict' object has no attribute 'title'"), <traceback object at 0x769bd63c71c0>)
-Traceback (most recent call last):
-  File "/data/myblog/app/controllers/admin/post.py", line 181, in edit
-    current_app.logger.debug(f"更新后的文章信息: 标题={post.title}, 分类ID={post.category_id}, 状态={post.status}")
-                                                       ^^^^^^^^^^
-AttributeError: 'dict' object has no attribute 'title'

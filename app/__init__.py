@@ -23,13 +23,17 @@ import traceback
 # 创建 migrate 实例
 migrate = Migrate()
 
-def create_app(config_name='development'):
+def create_app(config_name='production'):
     """创建Flask应用实例"""
     app = Flask(__name__)
     
     # 加载配置
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    
+    # 禁用 CSRF 保护
+    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False
     
     # 配置会话
     app.config.update(

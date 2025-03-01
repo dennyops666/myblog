@@ -11,6 +11,9 @@ from wtforms.validators import DataRequired, Length, Email, Optional
 
 class CommentForm(FlaskForm):
     """评论表单"""
+    class Meta:
+        csrf = False  # 禁用 CSRF 保护
+        
     content = TextAreaField('评论内容', validators=[DataRequired(), Length(1, 1000)])
     author_name = StringField('昵称', validators=[DataRequired(), Length(1, 64)])
     author_email = StringField('邮箱', validators=[DataRequired(), Email(), Length(1, 120)])

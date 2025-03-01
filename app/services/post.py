@@ -179,75 +179,59 @@ class PostService:
             current_app.logger.error(f"删除图片失败: {str(e)}")
             return False
 
-    @staticmethod
-    def _clear_post_cache(post_id: int) -> None:
-        """清理文章相关的所有缓存"""
+    def _clear_post_cache(self, post_id):
+        """清除文章相关的所有缓存
+        
+        Args:
+            post_id: 文章ID
+        """
         try:
             # 获取文章对象
             post = Post.query.get(post_id)
             if not post:
                 return
-
-            # 清理单篇文章缓存
-            cache.delete(PostService.CACHE_KEY_POST.format(post_id))
             
-            # 清理置顶文章缓存
-            cache.delete(PostService.CACHE_KEY_STICKY)
+            # 清除文章详情缓存
+            cache.delete(self.CACHE_KEY_POST.format(post_id))
             
-            # 清理分类文章缓存
+            # 清除分类相关缓存
             if post.category_id:
-                # 清理该分类下所有页的缓存
-                for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                    cache.delete(PostService.CACHE_KEY_CATEGORY.format(
-                        post.category_id, page, 10
-                    ))
-                    cache.delete(f'category:{post.category_id}:{page}:10')
-                    cache.delete(f'post_list:category:{post.category_id}:{page}:10')
+                for page in range(1, self.MAX_CACHE_PAGES + 1):
+                    cache.delete(self.CACHE_KEY_CATEGORY.format(post.category_id, page, 10))
             
-            # 清理标签文章缓存
-            if post.tags:
-                for tag in post.tags:
-                    for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                        cache.delete(PostService.CACHE_KEY_TAG.format(
-                            tag.id, page, 10
-                        ))
-                        cache.delete(f'tag:{tag.id}:{page}:10')
-                        cache.delete(f'post_list:tag:{tag.id}:{page}:10')
+            # 清除标签相关缓存
+            for tag in post.tags:
+                for page in range(1, self.MAX_CACHE_PAGES + 1):
+                    cache.delete(self.CACHE_KEY_TAG.format(tag.id, page, 10))
             
-            # 清理时间归档缓存
-            if post.created_at:
-                year = post.created_at.year
-                month = post.created_at.month
-                for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                    cache.delete(PostService.CACHE_KEY_TIME.format(
-                        year, month, page, 10
-                    ))
-                    cache.delete(f'archive:{year}:{month}:{page}:10')
+            # 清除时间归档缓存
+            year = post.created_at.year
+            month = post.created_at.month
+            for page in range(1, self.MAX_CACHE_PAGES + 1):
+                cache.delete(self.CACHE_KEY_TIME.format(year, month, page, 10))
             
-            # 清理相关文章缓存
-            cache.delete(PostService.CACHE_KEY_RELATED.format(post_id, 5))
-            cache.delete(f'related_posts_{post_id}_5')
+            # 清除相关文章缓存
+            cache.delete(self.CACHE_KEY_RELATED.format(post_id, 5))
             
-            # 清理搜索缓存
-            for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                cache.delete(f'search:*:{page}:10')
+            # 清除搜索缓存
+            for page in range(1, self.MAX_CACHE_PAGES + 1):
+                cache.delete(self.CACHE_KEY_SEARCH.format('', page, 10))
             
-            # 清理文章列表缓存
-            for page in range(1, PostService.MAX_CACHE_PAGES + 1):
-                cache.delete(f'post_list:{page}:10')
-                
-            # 清理分类列表缓存
-            cache.delete('category_list')
-            cache.delete('categories')
+            # 清除置顶文章缓存
+            if post.is_sticky:
+                cache.delete(self.CACHE_KEY_STICKY)
             
-            # 强制提交数据库会话
-            db.session.commit()
+            # 强制刷新数据库会话中的对象
+            db.session.refresh(post)
+            if post.category:
+                db.session.refresh(post.category)
+            for tag in post.tags:
+                db.session.refresh(tag)
             
-            current_app.logger.info(f'已清理文章 {post_id} 的所有相关缓存')
         except Exception as e:
-            current_app.logger.error(f'清理文章缓存失败: {str(e)}')
-            db.session.rollback()
-    
+            current_app.logger.error(f"清除缓存失败: {str(e)}")
+            current_app.logger.exception(e)
+
     @staticmethod
     def _build_search_query(search_text: str) -> Any:
         """构建搜索查询
@@ -571,7 +555,12 @@ class PostService:
         Returns:
             Pagination: 分页对象
         """
-        query = Post.query
+        # 使用 joinedload 预加载关联数据
+        query = Post.query.options(
+            db.joinedload(Post.category),
+            db.joinedload(Post.author),
+            db.joinedload(Post.tags)  # 预加载标签关系
+        )
         
         if not include_private:
             query = query.filter_by(is_private=False)
@@ -584,6 +573,9 @@ class PostService:
         
         if author:
             query = query.filter_by(author_id=author)
+        
+        # 过滤已发布的文章
+        query = query.filter_by(status=PostStatus.PUBLISHED)
         
         return query.order_by(Post.created_at.desc()).paginate(
             page=page,

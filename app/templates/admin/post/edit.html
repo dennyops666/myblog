@@ -30,6 +30,10 @@
 }
 .CodeMirror {
     border-radius: 0 0 4px 4px;
+    min-height: 400px;
+}
+.EasyMDEContainer {
+    width: 100%;
 }
 #preview {
     padding: 20px;
@@ -90,31 +94,38 @@
     <div class="row">
         <div class="col-md-12">
             <h1 class="h2 mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h1>
-            <form method="POST" id="postForm">
+            <form method="POST" action="{{ url_for('admin.post.edit', post_id=post.id) }}" id="postForm">
                 <div class="row">
                     <div class="col-md-8">
-                        <div class="form-group mb-3">
-                            {{ form.title.label(class="form-label") }}
-                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
-                            {% if form.title.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.title.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    {{ form.title.label(class="form-label") }}
+                                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                                    {% if form.title.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.title.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                        <div class="form-group mb-3">
-                            {{ form.content.label(class="form-label") }}
-                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else "")) }}
-                            {% if form.content.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.content.errors %}
-                                {{ error }}
-                                {% endfor %}
+                                <div class="form-group mb-3">
+                                    {{ form.content.label(class="form-label") }}
+                                    <div id="editor-container">
+                                        {{ form.content(class="form-control d-none" + (" is-invalid" if form.content.errors else ""), value=post.content if post else "") }}
+                                        <textarea id="editor-area" class="form-control">{{ post.content if post else "" }}</textarea>
+                                    </div>
+                                    {% if form.content.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.content.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -139,7 +150,11 @@
                                     {% if form.tags.errors %}
                                         {% set tag_class = tag_class + " is-invalid" %}
                                     {% endif %}
-                                    {{ form.tags(class=tag_class, multiple="multiple", data_allow_new="true") }}
+                                    <select name="tags" id="tags" class="{{ tag_class }}" multiple="multiple" data-allow-new="true">
+                                        {% for tag_id, tag_name in form.available_tags %}
+                                        <option value="{{ tag_id }}">{{ tag_name }}</option>
+                                        {% endfor %}
+                                    </select>
                                     {% if form.tags.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.tags.errors %}
@@ -243,145 +258,247 @@ window.addEventListener('load', function() {
                 }
                 
                 // 检查是否已存在相同的标签
-                const existingTag = $(this.$element).find('option').filter(function() {
+                const existingTag = $(this).find('option').filter(function() {
                     return $(this).text().toLowerCase() === term.toLowerCase();
                 });
                 
                 if (existingTag.length > 0) {
-                    return null;  // 如果标签已存在，不创建新标签
+                    return null;
                 }
                 
                 return {
-                    id: term,  // 使用标签名作为临时ID
+                    id: term,
                     text: term,
                     newTag: true
                 };
             }
-        }).on('select2:select', function(e) {
-            const data = e.params.data;
-            if (data.newTag) {
-                // 如果是新标签，添加到选项列表中
-                const newOption = new Option(data.text, data.id, true, true);
-                $(this).append(newOption).trigger('change');
-            }
         });
+
+        // 设置默认选中的标签
+        const defaultTags = '{{ form.tags.data or "" }}'.split(',').filter(Boolean);
+        if (defaultTags.length > 0) {
+            $('#tags').val(defaultTags).trigger('change');
+        }
     }
 
     // 初始化编辑器
     if (typeof EasyMDE !== 'undefined') {
-        easyMDE = new EasyMDE({
-            element: document.getElementById('content'),
-            spellChecker: false,
-            autosave: {
-                enabled: true,
-                uniqueId: 'post_edit_' + '{{ post.id if post else "new" }}',
-                delay: 1000,
+        const editorArea = document.getElementById('editor-area');
+        const contentInput = document.getElementById('content');
+        
+        if (editorArea && contentInput) {
+            // 将原始内容设置到编辑区域
+            const initialContent = contentInput.value || editorArea.value;
+            editorArea.value = initialContent;
+            
+            easyMDE = new EasyMDE({
+                element: editorArea,
+                spellChecker: false,
+                status: false,
+                autosave: {
+                    enabled: true,
+                    uniqueId: 'post_edit_' + '{{ post.id if post else "new" }}',
+                    delay: 1000,
+                },
+                toolbar: [
+                    'bold', 'italic', 'heading',
+                    '|', 'quote', 'code', 'unordered-list', 'ordered-list',
+                    '|', 'link', 'image',
+                    '|', 'preview', 'side-by-side', 'fullscreen',
+                    '|', 'guide'
+                ]
+            });
+
+            // 监听编辑器变化
+            easyMDE.codemirror.on('change', function() {
+                const value = easyMDE.value();
+                contentInput.value = value;
+                
+                // 移除错误状态
+                if (value.trim()) {
+                    contentInput.classList.remove('is-invalid');
+                    editorArea.classList.remove('is-invalid');
+                    const editorElement = document.querySelector('.EasyMDEContainer');
+                    if (editorElement) {
+                        editorElement.classList.remove('is-invalid');
+                    }
+                }
+            });
+            
+            // 设置初始内容
+            if (initialContent) {
+                easyMDE.value(initialContent);
             }
+        }
+    }
+
+    // 监听标题输入变化
+    const titleInput = document.getElementById('title');
+    if (titleInput) {
+        titleInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
         });
+        
+        // 设置初始值
+        if ('{{ post.title if post else "" }}') {
+            titleInput.value = '{{ post.title if post else "" }}';
+        }
     }
 
     // 处理预览切换
     if (previewBtn) {
         previewBtn.addEventListener('click', function() {
-            console.log('Preview button clicked');
-            isPreviewVisible = !isPreviewVisible;
-            if (isPreviewVisible) {
-                const content = easyMDE ? easyMDE.value() : '';
-                
-                fetch('{{ url_for("admin.post.preview") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ content: content })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        previewContainer.innerHTML = data.html;
-                        previewContainer.classList.remove('d-none');
-                        previewBtn.innerHTML = '<i class="fas fa-edit"></i> 返回编辑';
-                        
-                        // 高亮代码块
-                        if (typeof hljs !== 'undefined') {
-                            document.querySelectorAll('pre code').forEach((block) => {
-                                hljs.highlightBlock(block);
-                            });
-                        }
-                    } else {
-                        showToast('error', data.message || '预览失败，请稍后重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('error', '预览失败，请稍后重试');
-                });
-            } else {
-                previewContainer.classList.add('d-none');
-                previewBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
-            }
-        });
-    }
-
-    // 处理表单提交
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log('Form submitted');
+            const content = easyMDE ? easyMDE.value() : '';
             
-            if (isSubmitting) {
-                console.log('Already submitting');
+            if (!content.trim()) {
+                showToast('error', '没有内容可以预览');
                 return;
             }
             
-            isSubmitting = true;
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+            // 如果当前是预览状态，则切换回编辑状态
+            if (isPreviewVisible) {
+                previewContainer.classList.add('d-none');
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
+                isPreviewVisible = false;
+                return;
             }
-
-            const formData = new FormData(form);
-            if (easyMDE) {
-                formData.set('content', easyMDE.value());
-            }
-
-            fetch(form.action, {
+            
+            // 发送预览请求
+            fetch('{{ url_for("admin.post.preview") }}', {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ content: content })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Response status:', response.status);
+                    return response.text().then(text => {
+                        console.error('Response text:', text);
+                        throw new Error(`预览请求失败 (${response.status})`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    showToast('success', '保存成功');
-                    localStorage.removeItem('smde_post_edit_' + '{{ post.id if post else "new" }}');
-                    sessionStorage.setItem('refreshPostList', 'true');
-                    window.location.href = '{{ url_for("admin.post.index") }}' + '?t=' + new Date().getTime();
-                } else {
-                    showToast('error', data.message || '保存失败，请稍后重试');
-                    isSubmitting = false;
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '保存';
+                    previewContainer.innerHTML = data.html;
+                    previewContainer.classList.remove('d-none');
+                    previewBtn.innerHTML = '<i class="fas fa-edit"></i> 返回编辑';
+                    isPreviewVisible = true;
+                    
+                    // 高亮代码块
+                    if (typeof hljs !== 'undefined') {
+                        document.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightBlock(block);
+                        });
                     }
+                } else {
+                    throw new Error(data.message || '预览失败');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('error', '保存失败，请稍后重试');
-                isSubmitting = false;
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '保存';
-                }
+                showToast('error', error.message || '预览失败，请稍后重试');
+                isPreviewVisible = false;
+                previewContainer.classList.add('d-none');
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
             });
         });
     }
+
+    // 表单提交处理
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (isSubmitting) return;
+
+        let hasError = false;
+        
+        // 验证标题
+        const titleInput = document.getElementById('title');
+        if (!titleInput.value.trim()) {
+            titleInput.classList.add('is-invalid');
+            showToast('error', '请输入文章标题');
+            hasError = true;
+        }
+        
+        // 验证内容
+        const contentInput = document.getElementById('content');
+        const editorArea = document.getElementById('editor-area');
+        const contentValue = easyMDE ? easyMDE.value() : contentInput.value;
+        
+        if (!contentValue.trim()) {
+            contentInput.classList.add('is-invalid');
+            editorArea.classList.add('is-invalid');
+            const editorElement = document.querySelector('.EasyMDEContainer');
+            if (editorElement) {
+                editorElement.classList.add('is-invalid');
+            }
+            showToast('error', '请输入文章内容');
+            hasError = true;
+        }
+        
+        if (hasError) {
+            return;
+        }
+        
+        // 在提交前更新编辑器内容到表单
+        if (easyMDE) {
+            contentInput.value = easyMDE.value();
+        }
+        
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        
+        // 获取表单数据
+        const formData = new FormData(form);
+        
+        // 获取标签数据
+        const selectedTags = $('#tags').val();
+        if (selectedTags) {
+            formData.set('tags', selectedTags.join(','));
+        }
+        
+        // 发送请求
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', '保存成功');
+                // 清除编辑器的自动保存内容
+                if (easyMDE) {
+                    localStorage.removeItem('smde_post_edit_' + '{{ post.id if post else "new" }}');
+                }
+                // 添加时间戳参数以防止缓存
+                const timestamp = new Date().getTime();
+                // 重定向到文章列表页面
+                window.location.href = data.redirect_url + '?_=' + timestamp;
+            } else {
+                throw new Error(data.message || '保存失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', error.message || '保存失败，请重试');
+        })
+        .finally(() => {
+            isSubmitting = false;
+            submitBtn.disabled = false;
+        });
+    });
 
     function showToast(type, message) {
         const toastContainer = document.createElement('div');
