@@ -6,7 +6,7 @@
 """
 
 from flask import current_app
-from app.models import Tag, db
+from app.models import Tag, db, Post, PostStatus
 from app.extensions import db
 from app.services import SecurityService
 from typing import List, Optional, Dict
@@ -80,7 +80,19 @@ class TagService:
         Returns:
             list: 标签列表
         """
-        return Tag.query.all()
+        current_app.logger.info("TagService: 正在获取所有标签...")
+        tags = Tag.query.all()
+        
+        # 为每个标签计算已发布文章的数量
+        for tag in tags:
+            from app.models import Post, PostStatus
+            tag.post_count = Post.query.filter(
+                Post.tags.any(id=tag.id),
+                Post.status == PostStatus.PUBLISHED
+            ).count()
+            
+        current_app.logger.info(f"TagService: 获取到 {len(tags)} 个标签")
+        return tags
     
     def update_tag(self, tag_id: int, name: str = None, 
                   slug: str = None, description: str = None) -> Dict:
@@ -159,22 +171,23 @@ class TagService:
         Returns:
             Pagination: 分页对象
         """
-        # 使用join和子查询优化查询性能
+        # 先获取所有标签
         query = Tag.query.order_by(Tag.created_at.desc())
         
-        # 添加文章数量统计
-        from app.models import Post
-        for tag in query:
-            tag.post_count = Post.query.filter(
-                Post.tags.any(id=tag.id)
-            ).count()
-        
-        # 分页
+        # 执行分页查询
         pagination = query.paginate(
             page=page,
             per_page=per_page,
             error_out=False
         )
+        
+        # 为分页后的标签计算文章数量
+        for tag in pagination.items:
+            from app.models import Post, PostStatus
+            tag.post_count = Post.query.filter(
+                Post.tags.any(id=tag.id),
+                Post.status == PostStatus.PUBLISHED
+            ).count()
         
         return pagination
     
@@ -198,10 +211,14 @@ class TagService:
         # 获取每个标签的文章数量
         tag_post_counts = []
         for tag in Tag.query.all():
+            post_count = Post.query.filter(
+                Post.tags.any(id=tag.id),
+                Post.status == PostStatus.PUBLISHED
+            ).count()
             tag_post_counts.append({
                 'id': tag.id,
                 'name': tag.name,
-                'post_count': tag.posts.count()
+                'post_count': post_count
             })
         
         return {

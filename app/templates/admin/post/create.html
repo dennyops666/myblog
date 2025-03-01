@@ -75,6 +75,21 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="tags" class="form-label">标签</label>
+                    <select name="tags" id="tags" class="form-select select2" multiple="multiple" data-allow-new="true">
+                        {% for tag in tags %}
+                        <option value="{{ tag.id }}">{{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.tags.errors %}
+                        {% for error in form.tags.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="form-text">选择已有标签或输入新标签（按回车或空格添加）</div>
+                </div>
+
+                <div class="mb-3">
                     <label for="status" class="form-label">状态</label>
                     {{ form.status(class="form-select") }}
                     {% if form.status.errors %}
@@ -104,6 +119,45 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/zh-CN.js"></script>
 <script>
 $(document).ready(function() {
+    // 初始化 Select2
+    $('#category_id').select2({
+        theme: 'bootstrap-5',
+        placeholder: '请选择分类',
+        width: '100%',
+        allowClear: false
+    });
+
+    // 初始化标签选择
+    $('#tags').select2({
+        theme: 'bootstrap-5',
+        placeholder: '选择或输入标签',
+        tags: true,
+        tokenSeparators: [',', ' '],
+        width: '100%',
+        language: 'zh-CN',
+        createTag: function(params) {
+            const term = $.trim(params.term);
+            if (term === '') {
+                return null;
+            }
+            
+            // 检查是否已存在相同的标签
+            const existingTag = $(this.$element).find('option').filter(function() {
+                return $(this).text().toLowerCase() === term.toLowerCase();
+            });
+            
+            if (existingTag.length > 0) {
+                return null;  // 如果标签已存在，不创建新标签
+            }
+            
+            return {
+                id: term,  // 使用标签名作为临时ID
+                text: term,
+                newTag: true
+            };
+        }
+    });
+
     // 初始化富文本编辑器
     $('#content').summernote({
         height: 300,
@@ -124,29 +178,6 @@ $(document).ready(function() {
                     uploadImage(files[i]);
                 }
             }
-        }
-    });
-
-    // 初始化分类选择
-    $('#category_id').select2({
-        theme: 'bootstrap-5',
-        width: '100%',
-        language: 'zh-CN',
-        placeholder: '请选择分类',
-        allowClear: true,
-        minimumInputLength: 0,
-        dropdownParent: $('#category_id').parent(),
-        escapeMarkup: function(markup) {
-            return markup;
-        },
-        templateResult: function(data) {
-            if (data.loading) {
-                return '搜索中...';
-            }
-            return data.text;
-        },
-        templateSelection: function(data) {
-            return data.text;
         }
     });
 

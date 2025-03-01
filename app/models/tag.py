@@ -7,6 +7,7 @@
 
 from app.extensions import db
 from datetime import datetime, UTC
+from flask import current_app
 
 # 文章-标签关联表
 post_tags = db.Table('post_tags',
@@ -30,7 +31,7 @@ class Tag(db.Model):
     
     # 关系
     posts = db.relationship('Post', secondary='post_tags', back_populates='tags',
-                          lazy='dynamic')
+                          lazy='select')  # 使用 select 加载策略
     
     _post_count = None
     
@@ -43,7 +44,15 @@ class Tag(db.Model):
     def post_count(self):
         """获取标签下的文章数量"""
         if self._post_count is None:
-            self._post_count = self.posts.count()
+            from app.models.post import Post, PostStatus
+            
+            current_app.logger.info(f"计算标签 '{self.name}' 的文章数量...")
+            self._post_count = Post.query.join(Post.tags).filter(
+                Post.status == PostStatus.PUBLISHED,
+                Tag.id == self.id
+            ).count()
+            current_app.logger.info(f"标签 '{self.name}' 的文章数量: {self._post_count}")
+            
         return self._post_count
     
     @post_count.setter

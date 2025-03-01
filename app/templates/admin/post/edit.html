@@ -7,6 +7,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet">
 <style>
 .select2-container--bootstrap-5 .select2-selection {
     min-height: 38px;
@@ -29,6 +30,57 @@
 }
 .CodeMirror {
     border-radius: 0 0 4px 4px;
+}
+#preview {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+#preview img {
+    max-width: 100%;
+    height: auto;
+}
+#preview table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+#preview table th,
+#preview table td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+#preview pre {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+#preview code {
+    padding: 0.2em 0.4em;
+    font-size: 85%;
+    background-color: rgba(175, 184, 193, 0.2);
+    border-radius: 6px;
+}
+#preview pre code {
+    padding: 0;
+    font-size: 100%;
+    background-color: transparent;
+    border-radius: 0;
+}
+#preview blockquote {
+    padding: 0.5rem 1rem;
+    margin: 0 0 1rem;
+    border-left: 4px solid #dee2e6;
+    color: #6c757d;
+}
+#preview h1, #preview h2, #preview h3,
+#preview h4, #preview h5, #preview h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 </style>
 {% endblock %}
@@ -83,7 +135,11 @@
 
                                 <div class="form-group mb-3">
                                     {{ form.tags.label(class="form-label") }}
-                                    {{ form.tags(class="form-control select2" + (" is-invalid" if form.tags.errors else "")) }}
+                                    {% set tag_class = "form-control select2" %}
+                                    {% if form.tags.errors %}
+                                        {% set tag_class = tag_class + " is-invalid" %}
+                                    {% endif %}
+                                    {{ form.tags(class=tag_class, multiple="multiple", data_allow_new="true") }}
                                     {% if form.tags.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.tags.errors %}
@@ -91,6 +147,7 @@
                                         {% endfor %}
                                     </div>
                                     {% endif %}
+                                    <div class="form-text">选择已有标签或输入新标签（按回车或空格添加）</div>
                                 </div>
 
                                 <div class="form-group mb-3">
@@ -145,94 +202,186 @@
 {% block scripts %}
 {{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/zh-CN.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('load', function() {
     let isSubmitting = false;
     const form = document.getElementById('postForm');
     const submitBtn = document.getElementById('submitBtn');
+    const previewBtn = document.getElementById('togglePreview');
+    const previewContainer = document.getElementById('preview');
+    let isPreviewVisible = false;
+    let easyMDE;
 
-    // 初始化Select2
-    $('#category_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: '请选择分类',
-        width: '100%',
-        allowClear: false
-    });
+    // 确保 jQuery 已加载
+    if (typeof jQuery !== 'undefined') {
+        // 初始化Select2
+        $('#category_id').select2({
+            theme: 'bootstrap-5',
+            placeholder: '请选择分类',
+            width: '100%',
+            allowClear: false
+        });
 
-    // 初始化标签选择
-    $('#tags').select2({
-        theme: 'bootstrap-5',
-        placeholder: '选择或输入标签',
-        tags: true,
-        tokenSeparators: [',', ' '],
-        width: '100%'
-    });
+        // 初始化标签选择
+        $('#tags').select2({
+            theme: 'bootstrap-5',
+            placeholder: '选择或输入标签',
+            tags: true,
+            tokenSeparators: [',', ' '],
+            width: '100%',
+            language: 'zh-CN',
+            createTag: function(params) {
+                const term = $.trim(params.term);
+                if (term === '') {
+                    return null;
+                }
+                
+                // 检查是否已存在相同的标签
+                const existingTag = $(this.$element).find('option').filter(function() {
+                    return $(this).text().toLowerCase() === term.toLowerCase();
+                });
+                
+                if (existingTag.length > 0) {
+                    return null;  // 如果标签已存在，不创建新标签
+                }
+                
+                return {
+                    id: term,  // 使用标签名作为临时ID
+                    text: term,
+                    newTag: true
+                };
+            }
+        }).on('select2:select', function(e) {
+            const data = e.params.data;
+            if (data.newTag) {
+                // 如果是新标签，添加到选项列表中
+                const newOption = new Option(data.text, data.id, true, true);
+                $(this).append(newOption).trigger('change');
+            }
+        });
+    }
 
     // 初始化编辑器
-    const easyMDE = new EasyMDE({
-        element: document.getElementById('content'),
-        spellChecker: false,
-        autosave: {
-            enabled: true,
-            uniqueId: 'post_edit_{{ post.id if post else "new" }}',
-            delay: 1000,
-        }
-    });
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (isSubmitting) return;
-        
-        isSubmitting = true;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
-
-        const formData = new FormData(form);
-        formData.set('content', easyMDE.value());
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    if (typeof EasyMDE !== 'undefined') {
+        easyMDE = new EasyMDE({
+            element: document.getElementById('content'),
+            spellChecker: false,
+            autosave: {
+                enabled: true,
+                uniqueId: 'post_edit_' + '{{ post.id if post else "new" }}',
+                delay: 1000,
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showToast('success', '保存成功');
-                // 清除编辑器的自动保存内容
-                localStorage.removeItem(`smde_post_edit_{{ post.id if post else "new" }}`);
-                // 添加时间戳参数以防止缓存
-                const listPageUrl = '{{ url_for("admin.post.index") }}' + '?t=' + new Date().getTime();
-                // 使用 sessionStorage 存储一个标记，表示需要刷新列表页
-                sessionStorage.setItem('refreshPostList', 'true');
-                window.location.href = listPageUrl;
-            } else {
-                showToast('error', data.message || '保存失败，请稍后重试');
-                isSubmitting = false;
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '保存';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('error', '保存失败，请稍后重试');
-            isSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '保存';
         });
-    });
+    }
+
+    // 处理预览切换
+    if (previewBtn) {
+        previewBtn.addEventListener('click', function() {
+            console.log('Preview button clicked');
+            isPreviewVisible = !isPreviewVisible;
+            if (isPreviewVisible) {
+                const content = easyMDE ? easyMDE.value() : '';
+                
+                fetch('{{ url_for("admin.post.preview") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ content: content })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        previewContainer.innerHTML = data.html;
+                        previewContainer.classList.remove('d-none');
+                        previewBtn.innerHTML = '<i class="fas fa-edit"></i> 返回编辑';
+                        
+                        // 高亮代码块
+                        if (typeof hljs !== 'undefined') {
+                            document.querySelectorAll('pre code').forEach((block) => {
+                                hljs.highlightBlock(block);
+                            });
+                        }
+                    } else {
+                        showToast('error', data.message || '预览失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', '预览失败，请稍后重试');
+                });
+            } else {
+                previewContainer.classList.add('d-none');
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> 切换预览';
+            }
+        });
+    }
+
+    // 处理表单提交
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            if (isSubmitting) {
+                console.log('Already submitting');
+                return;
+            }
+            
+            isSubmitting = true;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
+            }
+
+            const formData = new FormData(form);
+            if (easyMDE) {
+                formData.set('content', easyMDE.value());
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', '保存成功');
+                    localStorage.removeItem('smde_post_edit_' + '{{ post.id if post else "new" }}');
+                    sessionStorage.setItem('refreshPostList', 'true');
+                    window.location.href = '{{ url_for("admin.post.index") }}' + '?t=' + new Date().getTime();
+                } else {
+                    showToast('error', data.message || '保存失败，请稍后重试');
+                    isSubmitting = false;
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '保存';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', '保存失败，请稍后重试');
+                isSubmitting = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '保存';
+                }
+            });
+        });
+    }
 
     function showToast(type, message) {
         const toastContainer = document.createElement('div');

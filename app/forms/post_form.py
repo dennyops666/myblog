@@ -22,6 +22,26 @@ class PostForm(FlaskForm):
         strip_string_fields = True
         render_kw = {'strip': True}
 
+    csrf_token = HiddenField()
+    title = StringField('标题', validators=[
+        DataRequired(message='文章标题不能为空'),
+        Length(min=1, max=200, message='文章标题长度必须在1-200个字符之间')
+    ])
+    content = TextAreaField('内容', validators=[
+        DataRequired(message='内容不能为空')
+    ])
+    summary = TextAreaField('摘要', validators=[
+        Length(max=500, message='摘要长度不能超过500个字符')
+    ])
+    category_id = SelectField('分类', validators=[
+        DataRequired(message='请选择分类')
+    ], coerce=int, validate_choice=False)
+    tags = SelectMultipleField('标签', coerce=int, validate_choice=False)
+    status = SelectField('状态', choices=[
+        (str(PostStatus.DRAFT.value), '草稿'),
+        (str(PostStatus.PUBLISHED.value), '发布')
+    ], validators=[DataRequired(message='请选择状态')])
+
     def __init__(self, *args, **kwargs):
         """初始化表单"""
         super(PostForm, self).__init__(*args, **kwargs)
@@ -54,25 +74,26 @@ class PostForm(FlaskForm):
             
         # 加载所有标签
         try:
+            # 获取现有标签
             tags = Tag.query.order_by(Tag.name).all()
             self.tags.choices = [(t.id, t.name) for t in tags]
             
-            # 只在非POST请求时设置默认标签
-            if not args or not args[0]:  # 如果没有表单数据（非POST请求）
-                if 'obj' in kwargs and kwargs['obj']:
-                    self.tags.data = [tag.id for tag in kwargs['obj'].tags]
+            # 如果是编辑模式，添加文章当前的标签
+            if 'obj' in kwargs and kwargs['obj']:
+                post = kwargs['obj']
+                # 确保所有当前标签都在选项中
+                current_tags = {(tag.id, tag.name) for tag in post.tags}
+                self.tags.choices = list(set(self.tags.choices) | current_tags)
+                
+                # 只在非POST请求时设置默认标签
+                if not args or not args[0]:
+                    self.tags.data = [tag.id for tag in post.tags]
                     
         except Exception as e:
             current_app.logger.error(f"加载标签失败: {str(e)}")
             current_app.logger.exception(e)
             self.tags.choices = []
 
-    csrf_token = HiddenField()
-    title = StringField('标题', validators=[
-        DataRequired(message='文章标题不能为空'),
-        Length(min=1, max=200, message='文章标题长度必须在1-200个字符之间')
-    ])
-    
     def validate_title(self, field):
         """验证标题唯一性"""
         try:
@@ -85,19 +106,4 @@ class PostForm(FlaskForm):
                 raise ValidationError('文章标题已存在，请使用其他标题')
         except Exception as e:
             current_app.logger.error(f"验证文章标题时发生错误: {str(e)}")
-            raise ValidationError('系统在验证文章标题时遇到问题，请刷新页面重试')
-            
-    content = TextAreaField('内容', validators=[
-        DataRequired(message='内容不能为空')
-    ])
-    summary = TextAreaField('摘要', validators=[
-        Length(max=500, message='摘要长度不能超过500个字符')
-    ])
-    category_id = SelectField('分类', validators=[
-        DataRequired(message='请选择分类')
-    ], coerce=int, validate_choice=False)
-    tags = SelectMultipleField('标签', coerce=int)
-    status = SelectField('状态', choices=[
-        (str(PostStatus.DRAFT.value), '草稿'),
-        (str(PostStatus.PUBLISHED.value), '发布')
-    ], validators=[DataRequired(message='请选择状态')]) 
+            raise ValidationError('系统在验证文章标题时遇到问题，请刷新页面重试') 

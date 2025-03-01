@@ -30,25 +30,39 @@ ENV/
 *.swp
 *.swo
 
-# Flask
-instance/
-.webassets-cache
-*.db
-!migrations/versions/*.py
-
 # Logs
 logs/
 *.log
 *.log.*
+
+# Runtime files
+*.pid
 app.pid
 
-# Application specific
-.env
-.flaskenv
-
 # Database
-*.sqlite
 *.sqlite3
+*.db
+
+# Environment variables
+.env
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+.webassets-cache
+!migrations/versions/*.py
+
+# Application specific
+.flaskenv
 
 # Test coverage
 htmlcov/
@@ -68,19 +82,6 @@ uploads/
 # 会话文件
 instance/sessions/
 
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# SSH keys
-*.pub
-yes
-yes.pub
-
-# 测试文件
-test_*.py
-
 # New additions
 *.pyc
 .env
@@ -88,12 +89,6 @@ test_*.py
 venv/
 ENV/
 instance/
-*.db
-*.sqlite
-*.sqlite3
-.DS_Store
-.idea/
-.vscode/
 *.log
 logs/
 *.pid
@@ -103,5 +98,4 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
-app.pid
 logs/*.log*

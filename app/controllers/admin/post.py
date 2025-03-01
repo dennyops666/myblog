@@ -117,7 +117,7 @@ def create():
                         'message': str(e)
                     }), 400
                 flash(str(e), 'error')
-                return render_template('admin/post/create.html', form=form)
+                return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
                 
             except Exception as e:
                 current_app.logger.error(f"创建文章失败: {str(e)}")
@@ -129,7 +129,7 @@ def create():
                         'error': str(e)
                     }), 500
                 flash('创建文章失败，请稍后重试', 'error')
-                return render_template('admin/post/create.html', form=form)
+                return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
         else:
             current_app.logger.warning(f"表单验证失败: {form.errors}")
             if request.is_xhr:
@@ -142,9 +142,9 @@ def create():
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f'{getattr(form, field).label.text}: {error}', 'error')
-            return render_template('admin/post/create.html', form=form)
+            return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
             
-    return render_template('admin/post/create.html', form=form)
+    return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
 
 @post_bp.route('/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -171,7 +171,7 @@ def edit(post_id):
         return redirect(url_for('admin.post.index'))
         
     form = PostForm(obj=post)
-    form.obj = post  # 用于标题唯一性验证
+    form.obj = post
     
     if request.method == 'POST':
         current_app.logger.info("开始验证表单数据...")
@@ -192,13 +192,27 @@ def edit(post_id):
                 db.session.expire_all()
                 db.session.commit()
                 
+                # 处理标签
+                tags = []
+                if form.tags.data:
+                    for tag_id in form.tags.data:
+                        # 尝试获取现有标签
+                        tag = Tag.query.get(tag_id)
+                        if not tag:
+                            # 如果标签不存在，创建新标签
+                            tag_name = next((choice[1] for choice in form.tags.choices if choice[0] == tag_id), str(tag_id))
+                            tag = Tag(name=tag_name, slug=tag_name.lower().replace(' ', '-'))
+                            db.session.add(tag)
+                            db.session.flush()  # 获取新标签的ID
+                        tags.append(tag)
+                
                 updated_post = post_service.update_post(
                     post_id=post_id,
                     title=form.title.data,
                     content=form.content.data,
                     summary=form.summary.data,
                     category_id=category_id,
-                    tags=[Tag.query.get(tag_id) for tag_id in form.tags.data],
+                    tags=tags,
                     status=status
                 )
                 
@@ -308,10 +322,12 @@ def delete(post_id):
 @login_required
 def view(post_id):
     """查看文章"""
-    post = post_service.get_post(post_id)
-    if not post:
-        flash('文章不存在', 'error')
-        return redirect(url_for('admin.post.index'))
+    post = Post.query.options(
+        db.joinedload(Post.category),
+        db.joinedload(Post.author),
+        db.joinedload(Post.tags)
+    ).get_or_404(post_id)
+    
     return render_template('admin/post/view.html', post=post)
 
 @post_bp.route('/<int:post_id>/status', methods=['POST'])
