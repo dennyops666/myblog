@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">文章管理</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ url_for('admin.post.create') }}" class="btn btn-sm btn-outline-primary">
+            <a href="{{ url_for('admin.post.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> 新建文章
             </a>
         </div>
@@ -124,7 +124,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 检查是否需要刷新页面
     if (sessionStorage.getItem('refreshPostList') === 'true') {
         sessionStorage.removeItem('refreshPostList');
-        location.reload();
+        // 添加时间戳参数以防止缓存
+        const timestamp = new Date().getTime();
+        window.location.href = window.location.pathname + '?t=' + timestamp;
+        return;
     }
 
     const deleteModal = new bootstrap.Modal(document.getElementById('deletePostModal'));
@@ -149,7 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
                 csrf_token: document.querySelector('meta[name="csrf-token"]').content
@@ -159,13 +163,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             deleteModal.hide();
             if (data.success) {
-                // 显示成功消息
                 showToast('success', data.message);
-                // 移除已删除的文章行
-                const row = document.querySelector(`button[data-post-id="${postIdToDelete}"]`).closest('tr');
-                row.remove();
+                // 添加时间戳参数以防止缓存
+                const timestamp = new Date().getTime();
+                window.location.href = window.location.pathname + '?t=' + timestamp;
             } else {
-                // 显示错误消息
                 showToast('error', data.message || '删除失败，请稍后重试');
             }
         })

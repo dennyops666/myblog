@@ -15,7 +15,7 @@ from app.extensions import db
 from app.forms.post_form import PostForm
 from datetime import datetime
 
-post_bp = Blueprint('post', __name__, url_prefix='/posts')
+post_bp = Blueprint('post', __name__)
 post_service = PostService()
 category_service = CategoryService()
 tag_service = TagService()
@@ -150,62 +150,43 @@ def create():
 @login_required
 def edit(post_id):
     """编辑文章"""
-    current_app.logger.info(f"开始处理文章编辑请求，文章ID: {post_id}")
-    current_app.logger.debug(f"请求方法: {request.method}")
-    
-    if request.method == 'POST':
-        current_app.logger.info("收到POST请求，记录原始表单数据...")
-        current_app.logger.debug(f"原始表单数据: {request.form.to_dict()}")
-    
-    # 获取文章并预加载关联数据
-    post = Post.query.options(
-        db.joinedload(Post.category),
-        db.joinedload(Post.tags)
-    ).get(post_id)
-    
-    if not post:
-        current_app.logger.warning(f"文章不存在，ID: {post_id}")
-        if request.is_xhr:
-            return jsonify({'success': False, 'message': '文章不存在'}), 404
-        flash('文章不存在', 'error')
-        return redirect(url_for('admin.post.index'))
+    try:
+        post = post_service.get_post(post_id)
+        if not post:
+            flash('文章不存在', 'error')
+            return redirect(url_for('admin.post.index'))
+            
+        form = PostForm(obj=post)
         
-    form = PostForm(obj=post)
-    form.obj = post
-    
-    if request.method == 'POST':
-        current_app.logger.info("开始验证表单数据...")
-        current_app.logger.debug(f"表单对象数据: category_id={form.category_id.data}, status={form.status.data}")
-        current_app.logger.debug(f"请求表单数据: category_id={request.form.get('category_id')}, status={request.form.get('status')}")
-        
-        if form.validate_on_submit():
-            try:
+        if request.method == 'POST':
+            current_app.logger.info("开始处理文章编辑请求，文章ID: %s", post_id)
+            
+            # 记录原始表单数据
+            form_data = request.form.to_dict()
+            current_app.logger.debug("原始表单数据: %s", form_data)
+            
+            # 加载分类选项
+            categories = Category.query.all()
+            form.category_id.choices = [(c.id, c.name) for c in categories]
+            
+            # 设置默认分类
+            if post.category_id:
+                form.category_id.data = post.category_id
+            
+            if form.validate():
                 current_app.logger.info("表单验证通过，开始更新文章...")
+                
+                # 处理分类
+                category_id = form.category_id.data if form.category_id.data else None
+                
+                # 处理状态
                 status = PostStatus(form.status.data)
-                category_id = int(request.form.get('category_id')) if request.form.get('category_id') else None
-                
-                # 记录更新前的文章信息
-                current_app.logger.debug(f"更新前的文章信息: 标题={post.title}, 分类ID={post.category_id}, 状态={post.status}")
-                current_app.logger.debug(f"准备更新的数据: category_id={category_id}, status={status}")
-                
-                # 强制刷新数据库会话
-                db.session.expire_all()
-                db.session.commit()
                 
                 # 处理标签
-                tags = []
-                if form.tags.data:
-                    for tag_id in form.tags.data:
-                        # 尝试获取现有标签
-                        tag = Tag.query.get(tag_id)
-                        if not tag:
-                            # 如果标签不存在，创建新标签
-                            tag_name = next((choice[1] for choice in form.tags.choices if choice[0] == tag_id), str(tag_id))
-                            tag = Tag(name=tag_name, slug=tag_name.lower().replace(' ', '-'))
-                            db.session.add(tag)
-                            db.session.flush()  # 获取新标签的ID
-                        tags.append(tag)
+                tags = form.process_tags()
+                current_app.logger.info(f"处理后的标签列表: {[tag.name for tag in tags]}")
                 
+                # 更新文章
                 updated_post = post_service.update_post(
                     post_id=post_id,
                     title=form.title.data,
@@ -217,23 +198,33 @@ def edit(post_id):
                 )
                 
                 if updated_post:
-                    current_app.logger.info(f"文章更新成功，ID: {post_id}")
-                    # 记录更新后的文章信息
-                    current_app.logger.debug(f"更新后的文章信息: 标题={updated_post.title}, 分类ID={updated_post.category_id}, 状态={updated_post.status}")
+                    current_app.logger.info("文章更新成功，ID: %s", post_id)
                     
-                    # 强制刷新更新后的文章对象
+                    # 强制刷新数据库会话
+                    db.session.expire_all()
                     db.session.refresh(updated_post)
                     if updated_post.category:
                         db.session.refresh(updated_post.category)
+                    for tag in updated_post.tags:
+                        db.session.refresh(tag)
+                    
+                    # 提交事务以确保所有更改都被保存
+                    db.session.commit()
                     
                     if request.is_xhr:
-                        return jsonify({
+                        response = jsonify({
                             'success': True,
                             'message': '文章更新成功',
-                            'redirect_url': url_for('admin.post.index', _t=datetime.now().timestamp())
+                            'redirect_url': url_for('admin.post.index')
                         })
+                        # 添加缓存控制头
+                        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                        response.headers['Pragma'] = 'no-cache'
+                        response.headers['Expires'] = '0'
+                        return response
+                        
                     flash('文章更新成功', 'success')
-                    return redirect(url_for('admin.post.index', _t=datetime.now().timestamp()))
+                    return redirect(url_for('admin.post.index'))
                 else:
                     current_app.logger.error("文章更新失败：update_post 返回 None")
                     if request.is_xhr:
@@ -243,49 +234,33 @@ def edit(post_id):
                         }), 400
                     flash('文章更新失败', 'error')
                     return render_template('admin/post/edit.html', form=form, post=post)
-                    
-            except (ValueError, TypeError) as e:
-                error_message = f'表单数据无效: {str(e)}'
-                current_app.logger.error(f"更新文章失败(ValueError/TypeError): {str(e)}")
+            else:
+                current_app.logger.error("表单验证失败: %s", form.errors)
                 if request.is_xhr:
                     return jsonify({
                         'success': False,
-                        'message': error_message
+                        'message': '表单验证失败',
+                        'errors': form.errors
                     }), 400
-                flash(error_message, 'error')
                 return render_template('admin/post/edit.html', form=form, post=post)
-                
-            except Exception as e:
-                error_message = '更新文章失败，请稍后重试'
-                current_app.logger.error(f"更新文章失败(未知错误): {str(e)}")
-                current_app.logger.exception(e)  # 记录完整的异常堆栈
-                if request.is_xhr:
-                    return jsonify({
-                        'success': False,
-                        'message': error_message,
-                        'error': str(e)
-                    }), 500
-                flash(error_message, 'error')
-                return render_template('admin/post/edit.html', form=form, post=post)
-        else:
-            current_app.logger.warning(f"表单验证失败: {form.errors}")
-            if request.is_xhr:
-                return jsonify({
-                    'success': False,
-                    'message': '表单验证失败',
-                    'errors': form.errors
-                }), 400
-            for field, errors in form.errors.items():
-                for error in errors:
-                    flash(f'{getattr(form, field).label.text}: {error}', 'error')
-            return render_template('admin/post/edit.html', form=form, post=post)
-    
-    # 获取分类和标签数据
-    categories = Category.query.all()
-    tags = Tag.query.all()
-    current_app.logger.debug(f"加载表单数据: {len(categories)} 个分类, {len(tags)} 个标签")
-    
-    return render_template('admin/post/edit.html', form=form, post=post, categories=categories, tags=tags)
+        
+        # 设置响应头以防止缓存
+        response = make_response(render_template('admin/post/edit.html', form=form, post=post))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+        
+    except Exception as e:
+        current_app.logger.error("编辑文章时发生错误: %s", str(e))
+        current_app.logger.exception(e)
+        if request.is_xhr:
+            return jsonify({
+                'success': False,
+                'message': '系统错误，请稍后重试'
+            }), 500
+        flash('系统错误，请稍后重试', 'error')
+        return redirect(url_for('admin.post.index'))
 
 @post_bp.route('/<int:post_id>/delete', methods=['POST'])
 @login_required
@@ -360,18 +335,24 @@ def change_status(post_id):
 @login_required
 def preview():
     """处理文章预览请求"""
-    content = request.json.get('content', '')
-    if not content:
-        return jsonify({'html': ''})
-    
     try:
+        content = request.json.get('content', '')
+        if not content:
+            return jsonify({
+                'success': True,
+                'html': ''
+            })
+        
         html_content = Post.render_markdown(content)
+        current_app.logger.debug(f"预览内容长度: {len(html_content)}")
+        
         return jsonify({
             'success': True,
             'html': html_content
         })
     except Exception as e:
         current_app.logger.error(f"预览文章内容时发生错误: {str(e)}")
+        current_app.logger.exception(e)
         return jsonify({
             'success': False,
             'message': '预览失败，请稍后重试'
