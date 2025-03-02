@@ -5,37 +5,49 @@
 创建日期：2024-03-21
 """
 
-from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, ValidationError
-from . import BaseForm
-from app.models.post import PostStatus, Post
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, HiddenField
+from wtforms.validators import DataRequired, Length, ValidationError
+from app.models.post import Post, PostStatus
 from app.models.category import Category
 from app.models.tag import Tag
-from app.extensions import db
 from flask import current_app
+from app.extensions import db
 
-class PostForm(BaseForm):
-    """文章表单"""
+class PostForm(FlaskForm):
+    """文章表单类"""
     title = StringField('标题', validators=[
-        DataRequired(message='请输入标题'),
-        Length(min=1, max=200, message='标题长度必须在1-200个字符之间')
+        DataRequired(message='标题不能为空'),
+        Length(min=2, max=100, message='标题长度必须在2-100个字符之间')
     ])
+    
     content = TextAreaField('内容', validators=[
-        DataRequired(message='请输入内容')
+        DataRequired(message='内容不能为空')
     ])
-    summary = TextAreaField('摘要', validators=[
-        Optional(),
-        Length(max=500, message='摘要长度不能超过500个字符')
-    ])
-    category_id = SelectField('分类', coerce=int, validators=[
-        DataRequired(message='请选择分类')
-    ])
-    tags = SelectMultipleField('标签', coerce=str)
-    status = SelectField('状态', validators=[
-        DataRequired(message='请选择状态')
-    ])
-    submit = SubmitField('保存')
-
+    
+    summary = TextAreaField('摘要')
+    
+    category_id = SelectField('分类', 
+        validators=[DataRequired(message='请选择分类')],
+        coerce=int
+    )
+    
+    tags = SelectMultipleField('标签',
+        coerce=str,  # 使用字符串类型，因为前端传递的是字符串
+        choices=[],   # 选项将在初始化时设置
+        render_kw={
+            'class': 'form-control select2',
+            'multiple': 'multiple',
+            'data-placeholder': '选择标签'
+        }
+    )
+    
+    status = SelectField('状态',
+        validators=[DataRequired(message='请选择状态')],
+        choices=[(status.value, status.value) for status in PostStatus],
+        default=PostStatus.DRAFT.value
+    )
+    
     def __init__(self, *args, **kwargs):
         """初始化表单"""
         self.edit_post = kwargs.pop('obj', None)  # 保存正在编辑的文章对象
@@ -111,39 +123,27 @@ class PostForm(BaseForm):
             current_app.logger.error(f"验证文章标题时发生错误: {str(e)}")
             raise ValidationError('系统在验证文章标题时遇到问题，请刷新页面重试')
 
-    def get_tags(self):
-        """获取标签列表"""
-        if not self.tags.data:
-            return []
-        
-        tag_ids = []
-        try:
-            # 将标签字符串转换为ID列表
-            tag_ids = [int(tag_id.strip()) for tag_id in self.tags.data.split(',') if tag_id.strip()]
-        except ValueError as e:
-            current_app.logger.error(f"解析标签ID时发生错误: {str(e)}")
-            return []
-            
-        return tag_ids
-
     def process_tags(self):
         """处理标签数据，返回标签对象列表"""
-        tag_ids = self.get_tags()
-        if not tag_ids:
-            return []
-        
-        tags = []
         try:
-            # 获取现有标签
-            existing_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
-            tags.extend(existing_tags)
+            if not self.tags.data:
+                current_app.logger.info("没有选择标签")
+                return []
             
-            # 记录处理结果
-            current_app.logger.info(f"成功处理 {len(tags)} 个标签")
-            current_app.logger.debug(f"标签列表: {[tag.name for tag in tags]}")
+            # 记录接收到的标签数据
+            current_app.logger.info(f"接收到的标签数据: {self.tags.data}")
+            
+            # 将标签ID转换为整数
+            tag_ids = [int(tag_id) for tag_id in self.tags.data]
+            current_app.logger.info(f"处理后的标签ID列表: {tag_ids}")
+            
+            # 获取标签对象
+            tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
+            current_app.logger.info(f"找到的标签对象: {[tag.name for tag in tags]}")
+            
+            return tags
             
         except Exception as e:
             current_app.logger.error(f"处理标签数据时发生错误: {str(e)}")
             current_app.logger.exception(e)
-            
-        return tags 
+            return [] 

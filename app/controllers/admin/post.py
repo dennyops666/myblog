@@ -31,43 +31,30 @@ def index():
         status = request.args.get('status', 'all')
         
         current_app.logger.debug(f"请求参数: page={page}, per_page={per_page}, status={status}")
-        current_app.logger.debug(f"可用的状态值: {[e.value for e in PostStatus]}")
         
-        # 强制刷新数据库会话，确保获取最新数据
+        # 强制刷新数据库会话
         db.session.expire_all()
+        db.session.commit()
         
-        # 使用 joinedload 预加载关联数据
+        # 使用 joinedload 预加载所有关联数据
         query = Post.query.options(
             db.joinedload(Post.category),
             db.joinedload(Post.author),
-            db.joinedload(Post.tags)  # 确保加载标签
+            db.joinedload(Post.tags)  # 使用 joinedload 加载标签
         )
         
         # 添加状态过滤
         if status != 'all':
             try:
-                # 遍历枚举值找到匹配的状态
                 for status_enum in PostStatus:
-                    current_app.logger.debug(f"检查状态: {status_enum.name} = {status_enum.value}")
                     if status_enum.value == status:
-                        current_app.logger.debug(f"找到匹配的状态: {status_enum}")
                         query = query.filter(Post.status == status_enum)
                         break
-                else:
-                    current_app.logger.warning(f"无效的状态值: {status}")
-                    flash('无效的状态值', 'error')
-                    return redirect(url_for('admin.index'))
             except Exception as e:
                 current_app.logger.error(f"处理状态过滤时出错: {str(e)}")
-                current_app.logger.exception(e)
                 flash('处理状态过滤时出错', 'error')
                 return redirect(url_for('admin.index'))
         
-        # 获取所有文章的状态进行调试
-        all_posts = Post.query.all()
-        for post in all_posts:
-            current_app.logger.debug(f"文章 {post.id} 的状态: {post.status}")
-            
         # 按创建时间倒序排序并执行分页
         posts = query.order_by(Post.created_at.desc()).paginate(
             page=page,
@@ -75,29 +62,22 @@ def index():
             error_out=False
         )
         
-        current_app.logger.debug(f"获取到 {len(posts.items)} 篇文章")
-        
-        # 确保所有关联数据都被加载
-        if posts.items:
-            for post in posts.items:
-                db.session.refresh(post)
-                if post.category:
-                    db.session.refresh(post.category)
-                if post.author:
-                    db.session.refresh(post.author)
-                for tag in post.tags:
-                    db.session.refresh(tag)
-        
-        # 提交会话以确保所有更改都被保存
-        db.session.commit()
-        
-        current_app.logger.info("文章列表加载完成")
+        # 强制加载每篇文章的标签并记录日志
+        for post in posts.items:
+            db.session.refresh(post)  # 刷新文章对象
+            if post.category:
+                db.session.refresh(post.category)
+            if post.author:
+                db.session.refresh(post.author)
+            for tag in post.tags:
+                db.session.refresh(tag)  # 刷新每个标签对象
+            current_app.logger.info(f"文章 {post.id} 的标签: {[tag.name for tag in post.tags]}")
         
         # 设置响应头，禁止缓存
         response = make_response(render_template('admin/post/list.html', posts=posts, current_status=status))
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        response.headers['Expires'] = '-1'
         return response
         
     except Exception as e:
@@ -236,10 +216,9 @@ def edit(post_id):
             
             if form.validate_on_submit():
                 try:
-                    # 获取标签对象
-                    selected_tags = []
-                    if form.tags.data:
-                        selected_tags = Tag.query.filter(Tag.id.in_([int(tag_id) for tag_id in form.tags.data])).all()
+                    # 处理标签数据
+                    selected_tags = form.process_tags()
+                    current_app.logger.info(f"处理后的标签: {[tag.name for tag in selected_tags]}")
                     
                     # 根据表单中的状态值获取对应的枚举值
                     for status_enum in PostStatus:
@@ -311,6 +290,11 @@ def edit(post_id):
                     for error in errors:
                         flash(f'{getattr(form, field).label.text}: {error}', 'error')
                 return render_template('admin/post/edit.html', form=form, post=post)
+                
+        # 设置初始标签数据
+        if post.tags:
+            form.tags.data = [str(tag.id) for tag in post.tags]
+            current_app.logger.info(f"设置初始标签: {form.tags.data}")
                 
         return render_template('admin/post/edit.html', form=form, post=post)
         

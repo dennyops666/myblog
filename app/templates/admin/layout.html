@@ -72,11 +72,74 @@
         .toast.showing {
             animation: slideIn 0.3s ease-in-out;
         }
+
+        /* 侧边栏过渡动画 */
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+
+        /* 折叠状态的侧边栏 */
+        .sidebar.collapsed {
+            width: 60px !important;
+        }
+
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .sidebar-heading span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2em;
+        }
+
+        /* 主内容区域过渡 */
+        main {
+            transition: margin-left 0.3s ease;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px !important;
+            }
+            
+            .sidebar .nav-link span,
+            .sidebar .sidebar-heading span {
+                display: none;
+            }
+            
+            .sidebar .nav-link i {
+                margin-right: 0;
+                font-size: 1.2em;
+            }
+            
+            main {
+                margin-left: 60px !important;
+            }
+        }
+
+        /* 悬浮展开效果 */
+        @media (max-width: 768px) {
+            .sidebar:hover {
+                width: 250px !important;
+            }
+            
+            .sidebar:hover .nav-link span,
+            .sidebar:hover .sidebar-heading span {
+                display: inline;
+            }
+            
+            .sidebar:hover .nav-link i {
+                margin-right: 8px;
+                font-size: 1em;
+            }
+        }
     </style>
     {% endblock %}
 </head>
 <body>
-    <!-- Toast 容器 - 移动到 body 开始位置 -->
+    <!-- Toast 容器 -->
     <div class="toast-container"></div>
 
     <div class="container-fluid">
@@ -140,6 +203,39 @@
             toast.remove();
         }, 300);
     }
+    
+    // 侧边栏折叠功能
+    $(document).ready(function() {
+        // 从localStorage获取侧边栏状态
+        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        const sidebar = $('.sidebar');
+        const main = $('main');
+        
+        // 根据保存的状态设置侧边栏
+        if (sidebarCollapsed) {
+            sidebar.addClass('collapsed');
+            main.css('margin-left', '60px');
+        }
+        
+        // 监听窗口大小变化
+        $(window).resize(function() {
+            if ($(window).width() <= 768) {
+                sidebar.addClass('collapsed');
+                main.css('margin-left', '60px');
+            } else if (!sidebarCollapsed) {
+                sidebar.removeClass('collapsed');
+                main.css('margin-left', '250px');
+            }
+        });
+        
+        // 切换侧边栏状态
+        $('#sidebarToggle').click(function() {
+            sidebar.toggleClass('collapsed');
+            const isCollapsed = sidebar.hasClass('collapsed');
+            main.css('margin-left', isCollapsed ? '60px' : '250px');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        });
+    });
     
     // 全局 AJAX 错误处理
     $(document).ajaxError(function(event, jqXHR, settings, error) {

@@ -1,35 +1,42 @@
 <!-- 侧边栏 -->
 <div class="sidebar bg-light border-end">
     <div class="position-sticky pt-3">
+        <!-- 折叠按钮 -->
+        <div class="px-3 mb-3 d-flex justify-content-end">
+            <button id="sidebarToggle" class="btn btn-link text-decoration-none p-0">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.index' }}" href="{{ url_for('admin.index') }}">
                     <i class="fas fa-tachometer-alt"></i>
-                    仪表盘
+                    <span>仪表盘</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.posts.index' }}" href="{{ url_for('admin.posts.index') }}">
                     <i class="fas fa-file-alt"></i>
-                    文章管理
+                    <span>文章管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.admin_category.index' }}" href="{{ url_for('admin.admin_category.index') }}">
                     <i class="fas fa-folder"></i>
-                    分类管理
+                    <span>分类管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.tag.index' }}" href="{{ url_for('admin.tag.index') }}">
                     <i class="fas fa-tags"></i>
-                    标签管理
+                    <span>标签管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.comment.index' }}" href="{{ url_for('admin.comment.index') }}">
                     <i class="fas fa-comments"></i>
-                    评论管理
+                    <span>评论管理</span>
                 </a>
             </li>
         </ul>
@@ -41,13 +48,13 @@
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.user.index' }}" href="{{ url_for('admin.user.index') }}">
                     <i class="fas fa-users"></i>
-                    用户管理
+                    <span>用户管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'admin.profile' }}" href="{{ url_for('admin.profile') }}">
                     <i class="fas fa-user-cog"></i>
-                    个人设置
+                    <span>个人设置</span>
                 </a>
             </li>
         </ul>
@@ -64,12 +71,16 @@
     padding: 48px 0 0;
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
     width: 250px;
+    transition: all 0.3s ease;
 }
 
 .sidebar .nav-link {
     font-weight: 500;
     color: #333;
     padding: .5rem 1rem;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
 .sidebar .nav-link.active {
@@ -83,6 +94,8 @@
 .sidebar .nav-link i {
     margin-right: 8px;
     color: #727272;
+    width: 20px;
+    text-align: center;
 }
 
 .sidebar .nav-link:hover i {
@@ -92,5 +105,49 @@
 .sidebar-heading {
     font-size: .75rem;
     text-transform: uppercase;
+}
+
+#sidebarToggle {
+    color: #727272;
+    transition: transform 0.3s ease;
+}
+
+#sidebarToggle:hover {
+    color: #2470dc;
+}
+
+.sidebar.collapsed #sidebarToggle {
+    transform: rotate(180deg);
+}
+
+/* 响应式布局样式 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px;
+    }
+    
+    .sidebar .nav-link span,
+    .sidebar .sidebar-heading span {
+        display: none;
+    }
+    
+    .sidebar .nav-link i {
+        margin-right: 0;
+        font-size: 1.2em;
+    }
+    
+    .sidebar:hover {
+        width: 250px;
+    }
+    
+    .sidebar:hover .nav-link span,
+    .sidebar:hover .sidebar-heading span {
+        display: inline;
+    }
+    
+    .sidebar:hover .nav-link i {
+        margin-right: 8px;
+        font-size: 1em;
+    }
 }
 </style> 

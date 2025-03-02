@@ -2,6 +2,28 @@
 
 {% block title %}文章管理{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+.tag-badge {
+    font-size: 0.8rem;
+    margin-right: 0.3rem;
+    margin-bottom: 0.3rem;
+    display: inline-block;
+    white-space: nowrap;
+}
+.tags-cell {
+    max-width: 200px;
+    overflow: hidden;
+}
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -21,6 +43,7 @@
                             <th>标题</th>
                             <th>作者</th>
                             <th>分类</th>
+                            <th>标签</th>
                             <th>状态</th>
                             <th>创建时间</th>
                             <th>操作</th>
@@ -37,6 +60,19 @@
                             </td>
                             <td>{{ post.author.username }}</td>
                             <td>{{ post.category.name if post.category else '未分类' }}</td>
+                            <td class="tags-cell">
+                                <div class="tags-container">
+                                    {% if post.tags and post.tags|length > 0 %}
+                                        {% for tag in post.tags %}
+                                            <span class="badge bg-info tag-badge" title="{{ tag.name }}">
+                                                {{ tag.name }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">无标签</span>
+                                    {% endif %}
+                                </div>
+                            </td>
                             <td>
                                 {% if post.status.value == 'PUBLISHED' %}
                                 <span class="badge bg-success">已发布</span>
