@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -30,41 +31,20 @@ ENV/
 *.swp
 *.swo
 
-# Logs
+# Application specific
+instance/
 logs/
 *.log
 *.log.*
-
-# Runtime files
 *.pid
-app.pid
-
-# Database
-*.sqlite3
-*.db
-
-# Environment variables
+uploads/
 .env
 
-# Temporary files
-*.tmp
-*.bak
-*.swp
-*~
+# Database
+*.db
+*.sqlite3
 
-# System files
-.DS_Store
-Thumbs.db
-
-# Flask
-instance/
-.webassets-cache
-!migrations/versions/*.py
-
-# Application specific
-.flaskenv
-
-# Test coverage
+# Unit test / coverage reports
 htmlcov/
 .tox/
 .coverage
@@ -74,28 +54,3 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-
-# 上传文件
-instance/uploads/
-uploads/
-
-# 会话文件
-instance/sessions/
-
-# New additions
-*.pyc
-.env
-.venv
-venv/
-ENV/
-instance/
-*.log
-logs/
-*.pid
-.pytest_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-logs/*.log*

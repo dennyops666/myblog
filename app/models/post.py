@@ -23,9 +23,9 @@ post_tags = db.Table('post_tags',
 
 class PostStatus(Enum):
     """文章状态枚举"""
-    DRAFT = 'draft'  # 草稿
-    PUBLISHED = 'published'  # 已发布
-    ARCHIVED = 'archived'  # 已归档
+    DRAFT = 'DRAFT'  # 草稿
+    PUBLISHED = 'PUBLISHED'  # 已发布
+    ARCHIVED = 'ARCHIVED'  # 已归档
 
 class Post(db.Model):
     """文章模型"""

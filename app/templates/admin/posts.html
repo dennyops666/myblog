@@ -8,20 +8,20 @@
         <h1 class="h2">文章管理</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group me-2">
-                <a href="{{ url_for('admin.posts.posts', status='all') }}" class="btn btn-outline-primary {% if current_status == 'all' %}active{% endif %}">
-                    所有文章
+                <a href="{{ url_for('admin.posts.index', status='all') }}" class="btn btn-outline-primary {% if current_status == 'all' %}active{% endif %}">
+                    全部
                 </a>
-                <a href="{{ url_for('admin.posts.posts', status='published') }}" class="btn btn-outline-primary {% if current_status == 'published' %}active{% endif %}">
+                <a href="{{ url_for('admin.posts.index', status='PUBLISHED') }}" class="btn btn-outline-primary {% if current_status == 'PUBLISHED' %}active{% endif %}">
                     已发布
                 </a>
-                <a href="{{ url_for('admin.posts.posts', status='draft') }}" class="btn btn-outline-primary {% if current_status == 'draft' %}active{% endif %}">
+                <a href="{{ url_for('admin.posts.index', status='DRAFT') }}" class="btn btn-outline-primary {% if current_status == 'DRAFT' %}active{% endif %}">
                     草稿
                 </a>
-                <a href="{{ url_for('admin.posts.posts', status='archived') }}" class="btn btn-outline-primary {% if current_status == 'archived' %}active{% endif %}">
+                <a href="{{ url_for('admin.posts.index', status='ARCHIVED') }}" class="btn btn-outline-primary {% if current_status == 'ARCHIVED' %}active{% endif %}">
                     已归档
                 </a>
             </div>
-            <a href="{{ url_for('admin.posts.create_post') }}" class="btn btn-primary">
+            <a href="{{ url_for('admin.posts.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> 新建文章
             </a>
         </div>
@@ -59,11 +59,11 @@
                             <td>{{ post.category.name if post.category else '无分类' }}</td>
                             <td>{{ post.author.username }}</td>
                             <td>
-                                {% if post.status.value == 'published' %}
+                                {% if post.status.value == 'PUBLISHED' %}
                                     <span class="badge bg-success">已发布</span>
-                                {% elif post.status.value == 'draft' %}
+                                {% elif post.status.value == 'DRAFT' %}
                                     <span class="badge bg-warning">草稿</span>
-                                {% elif post.status.value == 'archived' %}
+                                {% elif post.status.value == 'ARCHIVED' %}
                                     <span class="badge bg-secondary">已归档</span>
                                 {% endif %}
                             </td>
@@ -99,14 +99,14 @@
                 <ul class="pagination justify-content-center">
                     {% if posts.has_prev %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.posts.posts', page=posts.prev_num, status=current_status) }}">上一页</a>
+                        <a class="page-link" href="{{ url_for('admin.posts.index', page=posts.prev_num, status=current_status) }}">上一页</a>
                     </li>
                     {% endif %}
 
                     {% for page in posts.iter_pages() %}
                         {% if page %}
                             <li class="page-item {% if page == posts.page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('admin.posts.posts', page=page, status=current_status) }}">{{ page }}</a>
+                                <a class="page-link" href="{{ url_for('admin.posts.index', page=page, status=current_status) }}">{{ page }}</a>
                             </li>
                         {% else %}
                             <li class="page-item disabled">
@@ -117,7 +117,7 @@
 
                     {% if posts.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.posts.posts', page=posts.next_num, status=current_status) }}">下一页</a>
+                        <a class="page-link" href="{{ url_for('admin.posts.index', page=posts.next_num, status=current_status) }}">下一页</a>
                     </li>
                     {% endif %}
                 </ul>

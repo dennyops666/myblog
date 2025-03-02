@@ -15,7 +15,7 @@ from app.extensions import db
 from app.forms.post_form import PostForm
 from datetime import datetime
 
-post_bp = Blueprint('post', __name__)
+post_bp = Blueprint('posts', __name__)
 post_service = PostService()
 category_service = CategoryService()
 tag_service = TagService()
@@ -29,6 +29,9 @@ def index():
         per_page = request.args.get('per_page', 10, type=int)
         status = request.args.get('status', 'all')
         
+        current_app.logger.debug(f"Requested status: {status}")
+        current_app.logger.debug(f"Available PostStatus values: {[e.value for e in PostStatus]}")
+        
         # 强制刷新数据库会话，确保获取最新数据
         db.session.expire_all()
         
@@ -40,7 +43,27 @@ def index():
         
         # 添加状态过滤
         if status != 'all':
-            query = query.filter(Post.status == status)
+            try:
+                # 遍历枚举值找到匹配的状态
+                for status_enum in PostStatus:
+                    current_app.logger.debug(f"Checking status_enum: {status_enum.name} = {status_enum.value}")
+                    if status_enum.value == status:
+                        current_app.logger.debug(f"Found matching status: {status_enum}")
+                        query = query.filter(Post.status == status_enum)
+                        break
+                else:
+                    current_app.logger.warning(f"Invalid status value: {status}")
+                    flash('无效的状态值', 'error')
+                    return redirect(url_for('admin.index'))
+            except Exception as e:
+                current_app.logger.warning(f"Error processing status filter: {str(e)}")
+                flash('处理状态过滤时出错', 'error')
+                return redirect(url_for('admin.index'))
+        
+        # 获取所有文章的状态进行调试
+        all_posts = Post.query.all()
+        for post in all_posts:
+            current_app.logger.debug(f"Post {post.id} status: {post.status}")
             
         # 按创建时间倒序排序并执行分页
         posts = query.order_by(Post.created_at.desc()).paginate(
@@ -62,7 +85,7 @@ def index():
         db.session.commit()
         
         # 设置响应头，禁止缓存
-        response = make_response(render_template('admin/post/list.html', posts=posts))
+        response = make_response(render_template('admin/post/list.html', posts=posts, current_status=status))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
@@ -85,7 +108,14 @@ def create():
         
         if form.validate_on_submit():
             try:
-                status = PostStatus(form.status.data)
+                # 根据表单中的状态值获取对应的枚举值
+                for status_enum in PostStatus:
+                    if status_enum.value == form.status.data:
+                        status = status_enum
+                        break
+                else:
+                    raise ValueError('无效的状态值')
+
                 post = post_service.create_post(
                     title=form.title.data,
                     content=form.content.data,
@@ -101,11 +131,11 @@ def create():
                         return jsonify({
                             'success': True,
                             'message': '文章创建成功',
-                            'redirect_url': url_for('admin.post.index')
+                            'redirect_url': url_for('admin.posts.index')
                         })
                     
                     flash('文章创建成功', 'success')
-                    return redirect(url_for('admin.post.index'))
+                    return redirect(url_for('admin.posts.index'))
                 else:
                     raise ValueError('文章创建失败')
                     
@@ -150,117 +180,82 @@ def create():
 @login_required
 def edit(post_id):
     """编辑文章"""
-    try:
-        post = post_service.get_post(post_id)
-        if not post:
-            flash('文章不存在', 'error')
-            return redirect(url_for('admin.post.index'))
-            
-        form = PostForm(obj=post)
-        
-        if request.method == 'POST':
-            current_app.logger.info("开始处理文章编辑请求，文章ID: %s", post_id)
-            
-            # 记录原始表单数据
-            form_data = request.form.to_dict()
-            current_app.logger.debug("原始表单数据: %s", form_data)
-            
-            # 加载分类选项
-            categories = Category.query.all()
-            form.category_id.choices = [(c.id, c.name) for c in categories]
-            
-            # 设置默认分类
-            if post.category_id:
-                form.category_id.data = post.category_id
-            
-            if form.validate():
-                current_app.logger.info("表单验证通过，开始更新文章...")
+    post = Post.query.get_or_404(post_id)
+    form = PostForm(obj=post)
+    form.available_tags = [(str(tag.id), tag.name) for tag in Tag.query.order_by(Tag.name).all()]
+    
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            try:
+                # 更新文章基本信息（除了标签）
+                post.title = form.title.data
+                post.content = form.content.data
+                post.category_id = form.category_id.data
                 
-                # 处理分类
-                category_id = form.category_id.data if form.category_id.data else None
-                
-                # 处理状态
-                status = PostStatus(form.status.data)
+                # 根据表单中的状态值获取对应的枚举值
+                for status_enum in PostStatus:
+                    if status_enum.value == form.status.data:
+                        post.status = status_enum
+                        break
+                else:
+                    raise ValueError('无效的状态值')
+                    
+                post.summary = form.summary.data
                 
                 # 处理标签
-                tags = form.process_tags()
-                current_app.logger.info(f"处理后的标签列表: {[tag.name for tag in tags]}")
+                new_tags = []
+                if form.tags.data:
+                    tag_ids = form.tags.data.split(',')
+                    for tag_id in tag_ids:
+                        # 如果是数字ID，查找现有标签
+                        if tag_id.isdigit():
+                            tag = Tag.query.get(int(tag_id))
+                            if tag:
+                                new_tags.append(tag)
+                        else:
+                            # 如果是新标签名称，创建新标签
+                            tag = Tag.query.filter_by(name=tag_id).first()
+                            if not tag:
+                                tag = Tag(name=tag_id)
+                                db.session.add(tag)
+                            new_tags.append(tag)
                 
-                # 更新文章
-                updated_post = post_service.update_post(
-                    post_id=post_id,
-                    title=form.title.data,
-                    content=form.content.data,
-                    summary=form.summary.data,
-                    category_id=category_id,
-                    tags=tags,
-                    status=status
-                )
+                # 更新文章的标签关系
+                post.tags = new_tags
                 
-                if updated_post:
-                    current_app.logger.info("文章更新成功，ID: %s", post_id)
-                    
-                    # 强制刷新数据库会话
-                    db.session.expire_all()
-                    db.session.refresh(updated_post)
-                    if updated_post.category:
-                        db.session.refresh(updated_post.category)
-                    for tag in updated_post.tags:
-                        db.session.refresh(tag)
-                    
-                    # 提交事务以确保所有更改都被保存
-                    db.session.commit()
-                    
-                    if request.is_xhr:
-                        response = jsonify({
-                            'success': True,
-                            'message': '文章更新成功',
-                            'redirect_url': url_for('admin.post.index')
-                        })
-                        # 添加缓存控制头
-                        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-                        response.headers['Pragma'] = 'no-cache'
-                        response.headers['Expires'] = '0'
-                        return response
-                        
-                    flash('文章更新成功', 'success')
-                    return redirect(url_for('admin.post.index'))
-                else:
-                    current_app.logger.error("文章更新失败：update_post 返回 None")
-                    if request.is_xhr:
-                        return jsonify({
-                            'success': False,
-                            'message': '文章更新失败'
-                        }), 400
-                    flash('文章更新失败', 'error')
-                    return render_template('admin/post/edit.html', form=form, post=post)
-            else:
-                current_app.logger.error("表单验证失败: %s", form.errors)
+                # 保存所有更改
+                db.session.commit()
+                
+                if request.is_xhr:
+                    return jsonify({
+                        'success': True,
+                        'message': '文章更新成功',
+                        'redirect_url': url_for('admin.posts.index')
+                    })
+                flash('文章更新成功', 'success')
+                return redirect(url_for('admin.posts.index'))
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f'更新文章失败: {str(e)}')
                 if request.is_xhr:
                     return jsonify({
                         'success': False,
-                        'message': '表单验证失败',
-                        'errors': form.errors
-                    }), 400
-                return render_template('admin/post/edit.html', form=form, post=post)
-        
-        # 设置响应头以防止缓存
-        response = make_response(render_template('admin/post/edit.html', form=form, post=post))
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-        return response
-        
-    except Exception as e:
-        current_app.logger.error("编辑文章时发生错误: %s", str(e))
-        current_app.logger.exception(e)
-        if request.is_xhr:
-            return jsonify({
-                'success': False,
-                'message': '系统错误，请稍后重试'
-            }), 500
-        flash('系统错误，请稍后重试', 'error')
-        return redirect(url_for('admin.post.index'))
+                        'message': '更新文章失败'
+                    }), 500
+                flash('更新文章失败', 'error')
+                return redirect(url_for('admin.posts.edit', post_id=post.id))
+        else:
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '表单验证失败',
+                    'errors': form.errors
+                }), 400
+    
+    # 设置当前标签
+    form.tags.data = ','.join([str(tag.id) for tag in post.tags])
+    
+    return render_template('admin/post/edit.html', form=form, post=post)
 
 @post_bp.route('/<int:post_id>/delete', methods=['POST'])
 @login_required
