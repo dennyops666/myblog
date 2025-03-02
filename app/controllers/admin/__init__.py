@@ -30,7 +30,7 @@ from app.controllers.admin.upload import upload_bp
 from functools import wraps
 from urllib.parse import urlparse
 from app.decorators import admin_required
-from app.middleware.security import csrf_protect, xss_protect, sql_injection_protect
+from app.middleware.security import xss_protect, sql_injection_protect
 
 # 创建蓝图
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -49,10 +49,10 @@ admin_bp.register_blueprint(comment_bp, url_prefix='/comments')
 admin_bp.register_blueprint(user_bp, url_prefix='/users')
 admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
-# 为所有视图添加安全装饰器
-for endpoint, view_func in admin_bp.view_functions.items():
+# 为所有视图函数添加安全保护
+for endpoint in admin_bp.view_functions:
     admin_bp.view_functions[endpoint] = xss_protect()(
-        sql_injection_protect()(view_func)
+        sql_injection_protect()(admin_bp.view_functions[endpoint])
     )
 
 def check_auth():

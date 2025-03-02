@@ -23,13 +23,14 @@ import traceback
 # 创建 migrate 实例
 migrate = Migrate()
 
-def create_app(config_name='production'):
-    """创建Flask应用实例"""
+def create_app(config_name=None):
+    """创建应用实例"""
     app = Flask(__name__)
     
     # 加载配置
+    if config_name is None:
+        config_name = os.getenv('FLASK_CONFIG', 'development')
     app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
     
     # 禁用 CSRF 保护
     app.config['WTF_CSRF_ENABLED'] = False
@@ -176,11 +177,6 @@ def create_app(config_name='production'):
                 db.session.add(admin_role)
                 db.session.commit()
             app.logger.info('测试数据库初始化完成')
-    
-    @app.route('/csrf/refresh')
-    def csrf_refresh():
-        """刷新CSRF令牌"""
-        return jsonify({'csrf_token': generate_csrf()})
     
     app.logger.info('应用初始化完成')
     return app

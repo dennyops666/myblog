@@ -12,11 +12,12 @@ from datetime import timedelta
 class Config:
     """基础配置类"""
     # 基本配置
-    SECRET_KEY = os.environ.get('SECRET_KEY') or os.urandom(32)
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev key'
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     
     # 安全配置
-    WTF_CSRF_ENABLED = True
+    WTF_CSRF_ENABLED = False
+    WTF_CSRF_CHECK_DEFAULT = False
     WTF_CSRF_TIME_LIMIT = 3600  # CSRF 令牌有效期（秒）
     WTF_CSRF_SSL_STRICT = False  # 开发环境不强制 HTTPS
     WTF_CSRF_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}  # 需要 CSRF 保护的方法

@@ -5,17 +5,18 @@
 创建日期：2024-03-21
 """
 
-from app.middleware.security import csrf_protect, xss_protect, sql_injection_protect
-from .views import blog_bp
 from flask import Blueprint
+from app.middleware.security import xss_protect, sql_injection_protect
 from app.services import UserService
 
-# 为所有视图添加安全装饰器
-for endpoint, view_func in blog_bp.view_functions.items():
-    blog_bp.view_functions[endpoint] = csrf_protect()(
-        xss_protect()(
-            sql_injection_protect()(view_func)
-        )
+blog_bp = Blueprint('blog', __name__)
+
+# 为所有视图函数添加安全保护
+for endpoint in blog_bp.view_functions:
+    blog_bp.view_functions[endpoint] = xss_protect()(
+        sql_injection_protect()(blog_bp.view_functions[endpoint])
     )
+
+from . import views
 
 user_service = UserService()

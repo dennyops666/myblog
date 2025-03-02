@@ -6,12 +6,10 @@
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf
-from flask_login import LoginManager, current_user, login_user
 from flask_migrate import Migrate
-from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
 from flask_caching import Cache
-from flask_talisman import Talisman
+from flask_bcrypt import Bcrypt
 from flask_session import Session
 from flask import request, jsonify, redirect, url_for, current_app, session, g, flash, render_template, make_response
 from datetime import datetime, UTC
@@ -21,114 +19,61 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 
-# 初始化扩展
+# 创建扩展实例
 db = SQLAlchemy()
-csrf = CSRFProtect()
-login_manager = LoginManager()
 migrate = Migrate()
-bcrypt = Bcrypt()
+login_manager = LoginManager()
 cache = Cache()
-talisman = Talisman(force_https=False)
+bcrypt = Bcrypt()
 sess = Session()
 
-def init_login_manager(app):
-    """初始化Flask-Login"""
-    login_manager.init_app(app)
-    login_manager.session_protection = None  # 禁用会话保护，避免频繁失效
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = '请先登录'
-    login_manager.login_message_category = 'info'
-    login_manager.refresh_view = 'auth.login'
-    login_manager.needs_refresh_message = '会话已过期，请重新登录'
-    login_manager.needs_refresh_message_category = 'info'
-    
-    @login_manager.unauthorized_handler
-    def unauthorized():
-        """未授权访问处理"""
-        if request.is_json:
-            return jsonify({
-                'success': False,
-                'message': '请先登录',
-                'csrf_token': generate_csrf()
-            }), 401
-        return redirect(url_for('auth.login', next=request.url))
-    
-    @login_manager.user_loader
-    def load_user(user_id):
-        """加载用户"""
-        from app.models import User
-        try:
-            user = User.query.get(int(user_id))
-            if user:
-                session.modified = True  # 标记会话已修改，确保会话不会过期
-            return user
-        except Exception as e:
-            current_app.logger.error(f"加载用户失败: {str(e)}")
-            return None
-
-def init_csrf(app):
-    """初始化CSRF保护"""
-    csrf.init_app(app)
-    
-    @app.errorhandler(CSRFError)
-    def handle_csrf_error(e):
-        """处理CSRF错误"""
-        if request.is_json:
-            return jsonify({
-                'success': False,
-                'message': '会话已过期，请刷新页面重试',
-                'csrf_token': generate_csrf()
-            }), 400
-        flash('会话已过期，请刷新页面重试', 'danger')
-        return redirect(url_for('auth.login'))
-
-    @app.after_request
-    def add_csrf_token(response):
-        """为每个响应添加CSRF令牌"""
-        if response.mimetype == 'text/html':
-            response.set_cookie(
-                'csrf_token',
-                generate_csrf(),
-                max_age=3600,  # 1小时
-                secure=False,  # 开发环境不要求HTTPS
-                httponly=False,  # 允许JavaScript访问
-                samesite='Lax'  # 允许跨站请求
-            )
-        return response
-
-def init_db(app):
-    """初始化数据库"""
+def init_app(app):
+    """初始化所有扩展"""
+    # 首先初始化SQLAlchemy
     db.init_app(app)
     migrate.init_app(app, db)
-
-def init_app(app):
-    """初始化应用"""
-    init_db(app)
-    init_login_manager(app)
-    init_csrf(app)
+    
+    # 配置Session使用已存在的SQLAlchemy实例
+    app.config['SESSION_SQLALCHEMY'] = db
+    
+    # 初始化其他扩展
+    login_manager.init_app(app)
+    cache.init_app(app)
+    bcrypt.init_app(app)
+    sess.init_app(app)
+    
+    # 配置登录管理器
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = '请先登录'
+    login_manager.login_message_category = 'warning'
+    
+    # 添加空的csrf_token函数
+    @app.context_processor
+    def inject_csrf_token():
+        def csrf_token():
+            return ""
+        return dict(csrf_token=csrf_token)
+    
+    # 注册用户加载函数
+    from app.models import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
     
     @app.after_request
     def add_security_headers(response):
         """添加安全相关的响应头"""
-        # 设置内容安全策略
-        csp = (
-            "default-src 'self' https:; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; "
-            "style-src 'self' 'unsafe-inline' https:; "
-            "img-src 'self' data: https:; "
-            "font-src 'self' data: https:; "
-            "connect-src 'self' https:; "
-            "frame-src 'self' https:; "
-            "object-src 'none'"
-        )
-        response.headers['Content-Security-Policy'] = csp
+        # 移除现有的CSP头
+        response.headers.pop('Content-Security-Policy', None)
+        response.headers.pop('X-Content-Security-Policy', None)
+        
+        # 设置其他安全头
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        
         return response
-    
-    # 初始化其他扩展
-    bcrypt.init_app(app)
-    cache.init_app(app)
-    talisman.init_app(app)
-    sess.init_app(app)
     
     # 注册错误处理器
     @app.errorhandler(400)
@@ -137,8 +82,7 @@ def init_app(app):
         current_app.logger.warning(f'Bad Request: {str(e)}')
         return jsonify({
             'success': False,
-            'message': str(e),
-            'csrf_token': generate_csrf()
+            'message': str(e)
         }), 400
 
     @app.errorhandler(401)
@@ -147,8 +91,7 @@ def init_app(app):
         current_app.logger.warning(f'Unauthorized: {str(e)}')
         return jsonify({
             'success': False,
-            'message': '未授权访问',
-            'csrf_token': generate_csrf()
+            'message': '未授权访问'
         }), 401
 
     @app.errorhandler(403)
@@ -158,8 +101,7 @@ def init_app(app):
         if request.is_json or request.headers.get('Accept') == 'application/json':
             return jsonify({
                 'success': False,
-                'message': '禁止访问',
-                'csrf_token': generate_csrf()
+                'message': '禁止访问'
             }), 403
         # 判断是否来自管理后台
         is_admin = request.path.startswith('/admin')
@@ -173,8 +115,7 @@ def init_app(app):
         current_app.logger.warning(f'Not Found: {str(e)}')
         return jsonify({
             'success': False,
-            'message': '页面不存在',
-            'csrf_token': generate_csrf()
+            'message': '页面不存在'
         }), 404
 
     @app.errorhandler(500)
@@ -184,8 +125,7 @@ def init_app(app):
         db.session.rollback()
         return jsonify({
             'success': False,
-            'message': '服务器内部错误',
-            'csrf_token': generate_csrf()
+            'message': '服务器内部错误'
         }), 500
 
     # 添加数据库会话清理

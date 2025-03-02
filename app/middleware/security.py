@@ -11,32 +11,53 @@ from app.services.security import SecurityService
 
 security_service = SecurityService()
 
-def csrf_protect():
-    """CSRF保护装饰器"""
+def login_required():
+    """登录验证装饰器"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            # 如果CSRF被禁用，直接返回原始函数
-            if not current_app.config.get('WTF_CSRF_ENABLED', True):
-                return f(*args, **kwargs)
-            
-            # 从请求中获取CSRF令牌
-            csrf_token = request.headers.get('X-CSRF-Token')
-            if not csrf_token:
-                csrf_token = request.form.get('csrf_token')
-                if not csrf_token and request.is_json:
-                    csrf_token = request.get_json(silent=True).get('csrf_token')
-            
-            # 验证CSRF令牌
-            if not csrf_token or not security_service.validate_csrf_token(csrf_token):
-                if request.is_json:
+            if not security_service.is_authenticated():
+                if request.is_xhr:
                     return jsonify({
                         'success': False,
-                        'message': 'CSRF 验证失败，请刷新页面重试'
-                    }), 400
-                flash('CSRF 验证失败，请刷新页面重试', 'error')
-                return redirect(request.referrer or url_for('admin.index'))
-            
+                        'message': '请先登录'
+                    }), 401
+                flash('请先登录', 'error')
+                return redirect(url_for('auth.login'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def admin_required():
+    """管理员权限验证装饰器"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not security_service.is_admin():
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': '需要管理员权限'
+                    }), 403
+                flash('需要管理员权限', 'error')
+                return redirect(url_for('main.index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def permission_required(permission):
+    """权限验证装饰器"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not security_service.has_permission(permission):
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': '权限不足'
+                    }), 403
+                flash('权限不足', 'error')
+                return redirect(url_for('main.index'))
             return f(*args, **kwargs)
         return decorated_function
     return decorator

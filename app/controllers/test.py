@@ -106,4 +106,18 @@ def search():
     
     # 模拟搜索结果
     results = [{'id': 1, 'title': f'搜索结果: {clean_query}'}]
-    return jsonify({'results': results}), 200 
+    return jsonify({'results': results}), 200
+
+@test_bp.route('/xss', methods=['POST'])
+@xss_protect()
+def test_xss():
+    """测试XSS防护"""
+    data = request.get_json()
+    return jsonify({'data': data})
+
+@test_bp.route('/sql', methods=['POST'])
+@sql_injection_protect()
+def test_sql():
+    """测试SQL注入防护"""
+    data = request.get_json()
+    return jsonify({'data': data}) 

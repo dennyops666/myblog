@@ -57,7 +57,7 @@ start() {
     activate_venv
     set_env
     
-    gunicorn "app:create_app('development')" \
+    nohup gunicorn "app:create_app()" \
         --bind "$HOST:$PORT" \
         --workers 1 \
         --timeout 120 \
@@ -68,9 +68,9 @@ start() {
         --log-level debug \
         --capture-output \
         --enable-stdio-inheritance \
-        --user ops \
-        --group ops \
-        --daemon
+        --daemon > /dev/null 2>&1 &
+    
+    echo $! > "$PID_FILE"
     
     sleep 2
     check_status

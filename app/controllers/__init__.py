@@ -5,15 +5,14 @@
 创建日期：2025-02-16
 """
 
-from .admin import admin_bp
-from .auth import auth_bp
-from .blog import blog_bp
+from flask import Blueprint
+from app.controllers.auth import auth_bp
+from app.controllers.blog import blog_bp
 
 # 注册所有蓝图
 def register_blueprints(app):
-    """注册所有蓝图"""
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+    """Register Flask blueprints."""
+    app.register_blueprint(auth_bp)
     app.register_blueprint(blog_bp)
 
-__all__ = ['admin_bp', 'auth_bp', 'blog_bp']
+__all__ = ['auth_bp', 'blog_bp']

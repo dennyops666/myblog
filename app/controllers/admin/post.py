@@ -38,7 +38,8 @@ def index():
         # 使用 joinedload 预加载关联数据
         query = Post.query.options(
             db.joinedload(Post.category),
-            db.joinedload(Post.author)
+            db.joinedload(Post.author),
+            db.joinedload(Post.tags)  # 确保加载标签
         )
         
         # 添加状态过滤
@@ -80,6 +81,8 @@ def index():
                     db.session.refresh(post.category)
                 if post.author:
                     db.session.refresh(post.author)
+                for tag in post.tags:
+                    db.session.refresh(tag)
         
         # 提交会话以确保所有更改都被保存
         db.session.commit()
@@ -180,7 +183,13 @@ def create():
 @login_required
 def edit(post_id):
     """编辑文章"""
-    post = Post.query.get_or_404(post_id)
+    # 使用 joinedload 预加载标签
+    post = Post.query.options(
+        db.joinedload(Post.tags),
+        db.joinedload(Post.category),
+        db.joinedload(Post.author)
+    ).get_or_404(post_id)
+    
     form = PostForm(obj=post)
     form.available_tags = [(str(tag.id), tag.name) for tag in Tag.query.order_by(Tag.name).all()]
     
@@ -225,6 +234,11 @@ def edit(post_id):
                 
                 # 保存所有更改
                 db.session.commit()
+                
+                # 刷新会话中的对象
+                db.session.refresh(post)
+                for tag in post.tags:
+                    db.session.refresh(tag)
                 
                 if request.is_xhr:
                     return jsonify({
@@ -292,13 +306,28 @@ def delete(post_id):
 @login_required
 def view(post_id):
     """查看文章"""
-    post = Post.query.options(
-        db.joinedload(Post.category),
-        db.joinedload(Post.author),
-        db.joinedload(Post.tags)
-    ).get_or_404(post_id)
-    
-    return render_template('admin/post/view.html', post=post)
+    try:
+        post = Post.query.options(
+            db.joinedload(Post.category),
+            db.joinedload(Post.author),
+            db.joinedload(Post.tags)
+        ).get_or_404(post_id)
+        
+        # 刷新所有关联数据
+        db.session.refresh(post)
+        if post.category:
+            db.session.refresh(post.category)
+        if post.author:
+            db.session.refresh(post.author)
+        for tag in post.tags:
+            db.session.refresh(tag)
+        
+        return render_template('admin/post/view.html', post=post)
+    except Exception as e:
+        current_app.logger.error(f"查看文章失败: {str(e)}")
+        current_app.logger.exception(e)
+        flash('查看文章失败，请稍后重试', 'error')
+        return redirect(url_for('admin.posts.index'))
 
 @post_bp.route('/<int:post_id>/status', methods=['POST'])
 @login_required
