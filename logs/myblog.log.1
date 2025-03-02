@@ -1,136 +1,244 @@
-2025-03-01 20:19:53,938 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-02 17:46:13,710 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/data/myblog/app/templates/base.html", line 50, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:19:53,939 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '68', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Zg.K8lh4ydxIwczqjm_nkip2cxhU7g'}
+2025-03-02 17:46:13,711 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None
-2025-03-01 20:19:53,939 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:48,392 INFO: 访问博客首页
 None
-2025-03-01 20:19:53,943 INFO: 开始加载分类选项...
+2025-03-02 17:46:48,392 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:19:53,944 INFO: 成功获取到 6 个分类
+2025-03-02 17:46:48,406 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:19:53,944 DEBUG: 设置默认分类ID: 1
+2025-03-02 17:46:48,406 INFO: 获取侧边栏数据
 None
-2025-03-01 20:19:53,944 INFO: 开始加载标签选项...
+2025-03-02 17:46:48,412 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:19:53,945 INFO: 成功获取到 5 个标签
+2025-03-02 17:46:48,413 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:19:53,945 DEBUG: 设置默认标签: 1
+2025-03-02 17:46:48,414 DEBUG: 分类 '编程' 的文章数量: 1
 None
-2025-03-01 20:19:53,946 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-02 17:46:48,415 DEBUG: 分类 '科技' 的文章数量: 0
 None
-2025-03-01 20:19:53,946 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:48,416 DEBUG: 分类 '小说' 的文章数量: 1
 None
-2025-03-01 20:19:53,948 INFO: 表单验证通过，开始更新文章...
+2025-03-02 17:46:48,417 DEBUG: 分类 '新闻' 的文章数量: 0
 None
-2025-03-01 20:19:53,950 INFO: 成功处理 1 个标签
+2025-03-02 17:46:48,425 DEBUG: 标签 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:19:53,951 DEBUG: 标签列表: ['个人博客']
+2025-03-02 17:46:48,428 DEBUG: 标签 'AI' 的文章数量: 1
 None
-2025-03-01 20:19:53,951 INFO: 处理后的标签列表: ['个人博客']
+2025-03-02 17:46:48,431 DEBUG: 标签 'Python' 的文章数量: 2
 None
-2025-03-01 20:19:53,951 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.DRAFT
+2025-03-02 17:46:48,433 DEBUG: 标签 '励志' 的文章数量: 1
 None
-2025-03-01 20:19:53,957 INFO: 开始清除缓存
+2025-03-02 17:46:48,435 DEBUG: 标签 'test-labe01' 的文章数量: 1
 None
-2025-03-01 20:19:53,963 INFO: 文章 7 更新完成，当前分类ID=1
+2025-03-02 17:46:48,437 DEBUG: 标签 'test' 的文章数量: 0
 None
-2025-03-01 20:19:53,963 INFO: 文章更新成功，ID: 7
+2025-03-02 17:46:48,443 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
 None
-2025-03-01 20:19:53,974 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?_=1740831593943
+2025-03-02 17:46:48,443 INFO: Locating template 'blog/index.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/index.html')
 None
-2025-03-01 20:19:53,974 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Zg.K8lh4ydxIwczqjm_nkip2cxhU7g'}
+2025-03-02 17:46:48,457 INFO: Locating template 'blog/base.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/base.html')
 None
-2025-03-01 20:19:57,112 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-02 17:46:48,464 INFO: Locating template 'blog/includes/messages.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/includes/messages.html')
 None
-2025-03-01 20:19:57,112 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?_=1740831593943', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7aQ.yDEAEjI1sF21yyxk742qIduJVXA'}
+2025-03-02 17:46:48,540 INFO: Locating template 'blog/includes/sidebar.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/includes/sidebar.html')
 None
-2025-03-01 20:19:57,115 INFO: 开始加载分类选项...
+2025-03-02 17:46:48,765 INFO: 访问博客首页
 None
-2025-03-01 20:19:57,116 INFO: 成功获取到 6 个分类
+2025-03-02 17:46:48,766 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:19:57,116 DEBUG: 设置默认分类ID: 1
+2025-03-02 17:46:48,768 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:19:57,116 INFO: 开始加载标签选项...
+2025-03-02 17:46:48,769 INFO: 获取侧边栏数据
 None
-2025-03-01 20:19:57,117 INFO: 成功获取到 5 个标签
+2025-03-02 17:46:48,771 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:19:57,117 DEBUG: 设置默认标签: 1
+2025-03-02 17:46:48,772 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:20:00,633 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-02 17:46:48,774 DEBUG: 分类 '编程' 的文章数量: 1
 None
-2025-03-01 20:20:00,634 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '623', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryMaSSYAcvmVk1cRBS', 'X-Requested-With': 'XMLHttpRequest', 'Accept': '*/*', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7bQ.r0JLxkmBQcxHtpEwUq-nKjB12uE'}
+2025-03-02 17:46:48,775 DEBUG: 分类 '科技' 的文章数量: 0
 None
-2025-03-01 20:20:00,635 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:48,776 DEBUG: 分类 '小说' 的文章数量: 1
 None
-2025-03-01 20:20:00,637 INFO: 开始加载分类选项...
+2025-03-02 17:46:48,777 DEBUG: 分类 '新闻' 的文章数量: 0
 None
-2025-03-01 20:20:00,639 INFO: 成功获取到 6 个分类
+2025-03-02 17:46:48,780 DEBUG: 标签 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:20:00,639 DEBUG: 设置默认分类ID: 1
+2025-03-02 17:46:48,783 DEBUG: 标签 'AI' 的文章数量: 1
 None
-2025-03-01 20:20:00,639 INFO: 开始加载标签选项...
+2025-03-02 17:46:48,785 DEBUG: 标签 'Python' 的文章数量: 2
 None
-2025-03-01 20:20:00,640 INFO: 成功获取到 5 个标签
+2025-03-02 17:46:48,788 DEBUG: 标签 '励志' 的文章数量: 1
 None
-2025-03-01 20:20:00,641 DEBUG: 设置默认标签: 1
+2025-03-02 17:46:48,791 DEBUG: 标签 'test-labe01' 的文章数量: 1
 None
-2025-03-01 20:20:00,641 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-02 17:46:48,794 DEBUG: 标签 'test' 的文章数量: 0
 None
-2025-03-01 20:20:00,641 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:48,795 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
 None
-2025-03-01 20:20:00,643 INFO: 表单验证通过，开始更新文章...
+2025-03-02 17:46:50,199 INFO: 访问博客首页
 None
-2025-03-01 20:20:00,644 INFO: 成功处理 1 个标签
+2025-03-02 17:46:50,199 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:20:00,644 DEBUG: 标签列表: ['个人博客']
+2025-03-02 17:46:50,202 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:20:00,644 INFO: 处理后的标签列表: ['个人博客']
+2025-03-02 17:46:50,202 INFO: 获取侧边栏数据
 None
-2025-03-01 20:20:00,645 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.DRAFT
+2025-03-02 17:46:50,204 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:20:00,650 INFO: 开始清除缓存
+2025-03-02 17:46:50,205 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:20:00,658 INFO: 文章 7 更新完成，当前分类ID=1
+2025-03-02 17:46:50,207 DEBUG: 分类 '编程' 的文章数量: 1
 None
-2025-03-01 20:20:00,658 INFO: 文章更新成功，ID: 7
+2025-03-02 17:46:50,208 DEBUG: 分类 '科技' 的文章数量: 0
 None
-2025-03-01 20:20:00,670 INFO: 请求: POST http://192.168.72.128:5000/admin/posts/7/edit
+2025-03-02 17:46:50,209 DEBUG: 分类 '小说' 的文章数量: 1
 None
-2025-03-01 20:20:00,671 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Content-Length': '68', 'X-Requested-With': 'XMLHttpRequest', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': '*/*', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Origin': 'http://192.168.72.128:5000', 'Referer': 'http://192.168.72.128:5000/admin/posts/7/edit', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7bQ.r0JLxkmBQcxHtpEwUq-nKjB12uE'}
+2025-03-02 17:46:50,210 DEBUG: 分类 '新闻' 的文章数量: 0
 None
-2025-03-01 20:20:00,671 DEBUG: 表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:50,213 DEBUG: 标签 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:20:00,673 INFO: 开始加载分类选项...
+2025-03-02 17:46:50,216 DEBUG: 标签 'AI' 的文章数量: 1
 None
-2025-03-01 20:20:00,674 INFO: 成功获取到 6 个分类
+2025-03-02 17:46:50,219 DEBUG: 标签 'Python' 的文章数量: 2
 None
-2025-03-01 20:20:00,675 DEBUG: 设置默认分类ID: 1
+2025-03-02 17:46:50,220 DEBUG: 标签 '励志' 的文章数量: 1
 None
-2025-03-01 20:20:00,675 INFO: 开始加载标签选项...
+2025-03-02 17:46:50,222 DEBUG: 标签 'test-labe01' 的文章数量: 1
 None
-2025-03-01 20:20:00,676 INFO: 成功获取到 5 个标签
+2025-03-02 17:46:50,224 DEBUG: 标签 'test' 的文章数量: 0
 None
-2025-03-01 20:20:00,676 DEBUG: 设置默认标签: 1
+2025-03-02 17:46:50,226 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
 None
-2025-03-01 20:20:00,676 INFO: 开始处理文章编辑请求，文章ID: 7
+2025-03-02 17:46:50,460 WARNING: Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 None
-2025-03-01 20:20:00,676 DEBUG: 原始表单数据: {'title': 'test', 'content': 'test01', 'category_id': '5', 'tags': '1', 'status': 'draft', 'summary': ''}
+2025-03-02 17:46:51,163 INFO: 访问博客首页
 None
-2025-03-01 20:20:00,679 INFO: 表单验证通过，开始更新文章...
+2025-03-02 17:46:51,163 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:20:00,680 INFO: 成功处理 1 个标签
+2025-03-02 17:46:51,165 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:20:00,681 DEBUG: 标签列表: ['个人博客']
+2025-03-02 17:46:51,166 INFO: 获取侧边栏数据
 None
-2025-03-01 20:20:00,681 INFO: 处理后的标签列表: ['个人博客']
+2025-03-02 17:46:51,167 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:20:00,682 DEBUG: 更新前的文章信息: 标题=test, 分类ID=1, 状态=PostStatus.DRAFT
+2025-03-02 17:46:51,168 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:20:00,686 INFO: 开始清除缓存
+2025-03-02 17:46:51,169 DEBUG: 分类 '编程' 的文章数量: 1
 None
-2025-03-01 20:20:00,692 INFO: 文章 7 更新完成，当前分类ID=1
+2025-03-02 17:46:51,169 DEBUG: 分类 '科技' 的文章数量: 0
 None
-2025-03-01 20:20:00,692 INFO: 文章更新成功，ID: 7
+2025-03-02 17:46:51,170 DEBUG: 分类 '小说' 的文章数量: 1
 None
-2025-03-01 20:20:00,713 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/?_=1740831600672
+2025-03-02 17:46:51,171 DEBUG: 分类 '新闻' 的文章数量: 0
+None
+2025-03-02 17:46:51,174 DEBUG: 标签 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:46:51,175 DEBUG: 标签 'AI' 的文章数量: 1
+None
+2025-03-02 17:46:51,177 DEBUG: 标签 'Python' 的文章数量: 2
+None
+2025-03-02 17:46:51,179 DEBUG: 标签 '励志' 的文章数量: 1
+None
+2025-03-02 17:46:51,180 DEBUG: 标签 'test-labe01' 的文章数量: 1
+None
+2025-03-02 17:46:51,183 DEBUG: 标签 'test' 的文章数量: 0
+None
+2025-03-02 17:46:51,185 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
+None
+2025-03-02 17:46:51,361 WARNING: Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+None
+2025-03-02 17:46:52,689 INFO: 访问博客首页
+None
+2025-03-02 17:46:52,689 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
+None
+2025-03-02 17:46:52,691 INFO: 成功获取文章列表，共4篇文章
+None
+2025-03-02 17:46:52,692 INFO: 获取侧边栏数据
+None
+2025-03-02 17:46:52,693 DEBUG: 分类 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:46:52,694 DEBUG: 分类 'AI' 的文章数量: 0
+None
+2025-03-02 17:46:52,694 DEBUG: 分类 '编程' 的文章数量: 1
+None
+2025-03-02 17:46:52,695 DEBUG: 分类 '科技' 的文章数量: 0
+None
+2025-03-02 17:46:52,696 DEBUG: 分类 '小说' 的文章数量: 1
+None
+2025-03-02 17:46:52,697 DEBUG: 分类 '新闻' 的文章数量: 0
+None
+2025-03-02 17:46:52,700 DEBUG: 标签 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:46:52,701 DEBUG: 标签 'AI' 的文章数量: 1
+None
+2025-03-02 17:46:52,703 DEBUG: 标签 'Python' 的文章数量: 2
+None
+2025-03-02 17:46:52,705 DEBUG: 标签 '励志' 的文章数量: 1
+None
+2025-03-02 17:46:52,706 DEBUG: 标签 'test-labe01' 的文章数量: 1
+None
+2025-03-02 17:46:52,708 DEBUG: 标签 'test' 的文章数量: 0
 None

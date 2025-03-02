@@ -1,58 +1,221 @@
-2025-03-01 20:18:17,531 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?_=1740831491313', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7CQ.I0e2sXJR341GB_WJ3Ksrq4MCF8Q'}
+2025-03-02 17:37:44,660 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "blog/layout.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/blog/layout.html", line 22, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:18:17,676 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/6/view
+2025-03-02 17:37:44,663 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None
-2025-03-01 20:18:17,677 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?_=1740831491313', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7CQ.I0e2sXJR341GB_WJ3Ksrq4MCF8Q'}
+2025-03-02 17:37:44,797 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "blog/layout.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/blog/layout.html", line 22, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:18:17,808 INFO: 请求: GET http://192.168.72.128:5000/admin/posts/6/view
+2025-03-02 17:37:44,799 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None
-2025-03-01 20:18:17,808 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/admin/posts/?_=1740831491313', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7CQ.I0e2sXJR341GB_WJ3Ksrq4MCF8Q'}
+2025-03-02 17:37:56,906 INFO: 访问博客首页
 None
-2025-03-01 20:18:21,904 INFO: 请求: GET http://192.168.72.128:5000/blog/
+2025-03-02 17:37:56,907 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:18:21,905 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7CQ.I0e2sXJR341GB_WJ3Ksrq4MCF8Q'}
+2025-03-02 17:37:56,909 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:18:21,910 INFO: 正在获取标签列表...
+2025-03-02 17:37:56,909 INFO: 获取侧边栏数据
 None
-2025-03-01 20:18:21,910 INFO: TagService: 正在获取所有标签...
+2025-03-02 17:37:56,911 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:18:21,915 INFO: TagService: 获取到 5 个标签
+2025-03-02 17:37:56,912 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:18:21,916 INFO: 获取到 5 个标签
+2025-03-02 17:37:56,912 DEBUG: 分类 '编程' 的文章数量: 1
 None
-2025-03-01 20:18:21,916 INFO: 标签: 个人博客, 文章数: 2
+2025-03-02 17:37:56,913 DEBUG: 分类 '科技' 的文章数量: 0
 None
-2025-03-01 20:18:21,916 INFO: 标签: AI, 文章数: 0
+2025-03-02 17:37:56,914 DEBUG: 分类 '小说' 的文章数量: 1
 None
-2025-03-01 20:18:21,916 INFO: 标签: Python, 文章数: 1
+2025-03-02 17:37:56,914 DEBUG: 分类 '新闻' 的文章数量: 0
 None
-2025-03-01 20:18:21,916 INFO: 标签: 励志, 文章数: 0
+2025-03-02 17:37:56,916 DEBUG: 标签 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:18:21,916 INFO: 标签: test-labe01, 文章数: 0
+2025-03-02 17:37:56,918 DEBUG: 标签 'AI' 的文章数量: 1
 None
-2025-03-01 20:18:21,955 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:37:56,919 DEBUG: 标签 'Python' 的文章数量: 2
 None
-2025-03-01 20:18:21,956 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7DQ.1KUN93h1nO3P5Qp-UvaLD3Lylp8', 'If-None-Match': '"1740811000.9440253-4407-4119137644"'}
+2025-03-02 17:37:56,922 DEBUG: 标签 '励志' 的文章数量: 1
 None
-2025-03-01 20:18:23,093 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
+2025-03-02 17:37:56,925 DEBUG: 标签 'test-labe01' 的文章数量: 1
 None
-2025-03-01 20:18:23,093 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7DQ.1KUN93h1nO3P5Qp-UvaLD3Lylp8'}
+2025-03-02 17:37:56,927 DEBUG: 标签 'test' 的文章数量: 0
 None
-2025-03-01 20:18:23,131 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:37:56,929 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
 None
-2025-03-01 20:18:23,131 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Dw.WIS0Jn8Oy_1hhN_BsbMNHA-7xIM'}
+2025-03-02 17:37:57,178 WARNING: Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
 None
-2025-03-01 20:18:25,126 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
+2025-03-02 17:38:44,102 INFO: 访问博客首页
 None
-2025-03-01 20:18:25,127 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7Dw.WIS0Jn8Oy_1hhN_BsbMNHA-7xIM'}
+2025-03-02 17:38:44,102 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
 None
-2025-03-01 20:18:25,153 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:38:44,105 INFO: 成功获取文章列表，共4篇文章
 None
-2025-03-01 20:18:25,153 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:38:44,105 INFO: 获取侧边栏数据
 None
-2025-03-01 20:18:25,301 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
+2025-03-02 17:38:44,107 DEBUG: 分类 '个人博客' 的文章数量: 2
 None
-2025-03-01 20:18:25,301 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:38:44,108 DEBUG: 分类 'AI' 的文章数量: 0
 None
-2025-03-01 20:18:25,329 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:38:44,109 DEBUG: 分类 '编程' 的文章数量: 1
+None
+2025-03-02 17:38:44,110 DEBUG: 分类 '科技' 的文章数量: 0
+None
+2025-03-02 17:38:44,111 DEBUG: 分类 '小说' 的文章数量: 1
+None
+2025-03-02 17:38:44,112 DEBUG: 分类 '新闻' 的文章数量: 0
+None
+2025-03-02 17:38:44,114 DEBUG: 标签 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:38:44,116 DEBUG: 标签 'AI' 的文章数量: 1
+None
+2025-03-02 17:38:44,118 DEBUG: 标签 'Python' 的文章数量: 2
+None
+2025-03-02 17:38:44,119 DEBUG: 标签 '励志' 的文章数量: 1
+None
+2025-03-02 17:38:44,121 DEBUG: 标签 'test-labe01' 的文章数量: 1
+None
+2025-03-02 17:38:44,123 DEBUG: 标签 'test' 的文章数量: 0
+None
+2025-03-02 17:38:44,124 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
+None
+2025-03-02 17:40:13,545 INFO: MyBlog 启动
+None
+2025-03-02 17:40:13,545 INFO: 配置模式: development
+None
+2025-03-02 17:40:13,545 INFO: 调试模式: True
+None
+2025-03-02 17:40:13,546 INFO: 日志文件: /data/myblog/logs/myblog.log
+None
+2025-03-02 17:40:13,576 INFO: 扩展初始化完成
+None
+2025-03-02 17:40:13,590 INFO: 蓝图注册完成
+None
+2025-03-02 17:40:13,590 INFO: 数据库迁移初始化完成
+None
+2025-03-02 17:40:13,590 INFO: 应用初始化完成
+None
+2025-03-02 17:40:44,996 INFO: 访问博客首页
+None
+2025-03-02 17:40:44,997 DEBUG: 查询参数: page=1, search=, category_id=None, tag_id=None
+None
+2025-03-02 17:40:45,006 INFO: 成功获取文章列表，共4篇文章
+None
+2025-03-02 17:40:45,007 INFO: 获取侧边栏数据
+None
+2025-03-02 17:40:45,011 DEBUG: 分类 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:40:45,012 DEBUG: 分类 'AI' 的文章数量: 0
+None
+2025-03-02 17:40:45,012 DEBUG: 分类 '编程' 的文章数量: 1
+None
+2025-03-02 17:40:45,013 DEBUG: 分类 '科技' 的文章数量: 0
+None
+2025-03-02 17:40:45,013 DEBUG: 分类 '小说' 的文章数量: 1
+None
+2025-03-02 17:40:45,014 DEBUG: 分类 '新闻' 的文章数量: 0
+None
+2025-03-02 17:40:45,018 DEBUG: 标签 '个人博客' 的文章数量: 2
+None
+2025-03-02 17:40:45,019 DEBUG: 标签 'AI' 的文章数量: 1
+None
+2025-03-02 17:40:45,020 DEBUG: 标签 'Python' 的文章数量: 2
+None
+2025-03-02 17:40:45,021 DEBUG: 标签 '励志' 的文章数量: 1
+None
+2025-03-02 17:40:45,022 DEBUG: 标签 'test-labe01' 的文章数量: 1
+None
+2025-03-02 17:40:45,023 DEBUG: 标签 'test' 的文章数量: 0
+None
+2025-03-02 17:40:45,027 INFO: 成功获取侧边栏数据: 6个分类, 6个标签, 4篇最新文章
+None
+2025-03-02 17:40:45,028 INFO: Locating template 'blog/index.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/index.html')
+None
+2025-03-02 17:40:45,037 INFO: Locating template 'blog/base.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/base.html')
+None
+2025-03-02 17:40:45,041 INFO: Locating template 'blog/includes/messages.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/includes/messages.html')
 None

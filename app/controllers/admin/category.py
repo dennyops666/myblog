@@ -39,19 +39,28 @@ def create():
     """创建分类"""
     form = CategoryForm()
     if request.method == 'POST':
+        # 手动验证表单数据
+        form.name.data = request.form.get('name')
+        form.slug.data = request.form.get('slug')
+        form.description.data = request.form.get('description')
+        
         current_app.logger.debug(f'表单数据: {request.form}')
         current_app.logger.debug(f'表单验证结果: {form.validate()}')
         if form.errors:
             current_app.logger.debug(f'表单错误: {form.errors}')
             
         try:
-            if form.validate_on_submit():
+            if form.validate():
                 # 检查分类名是否已存在
                 existing_name = Category.query.filter_by(name=form.name.data).first()
                 if existing_name:
                     message = '分类名称已存在，请使用其他名称'
                     if is_ajax():
-                        return jsonify({'success': False, 'message': message, 'errors': {'name': [message]}})
+                        return jsonify({
+                            'success': False, 
+                            'message': message, 
+                            'errors': {'name': [message]}
+                        })
                     flash(message, 'warning')
                     return render_template('admin/category/create.html', form=form)
                 
@@ -65,7 +74,11 @@ def create():
                     if existing_slug:
                         message = '分类别名已存在，请使用其他别名'
                         if is_ajax():
-                            return jsonify({'success': False, 'message': message, 'errors': {'slug': [message]}})
+                            return jsonify({
+                                'success': False, 
+                                'message': message, 
+                                'errors': {'slug': [message]}
+                            })
                         flash(message, 'warning')
                         return render_template('admin/category/create.html', form=form)
                 
@@ -119,7 +132,10 @@ def create():
             db.session.rollback()
             message = '创建分类时发生错误，请稍后重试'
             if is_ajax():
-                return jsonify({'success': False, 'message': message})
+                return jsonify({
+                    'success': False, 
+                    'message': message
+                })
             flash(message, 'error')
             return render_template('admin/category/create.html', form=form)
             
@@ -232,36 +248,22 @@ def edit(id):
 def delete(id):
     """删除分类"""
     try:
-        category = Category.query.get_or_404(id)
-        if category.posts.count() > 0:
+        result = category_service.delete_category(id)
+        if result['status'] == 'success':
             if is_ajax():
-                return jsonify({
-                    'success': False,
-                    'message': '该分类下还有文章，无法删除'
-                })
-            flash('该分类下还有文章，无法删除', 'warning')
-            return redirect(url_for('.index'))
-            
-        db.session.delete(category)
-        db.session.commit()
-        
-        if is_ajax():
-            return jsonify({
-                'success': True,
-                'message': '分类删除成功'
-            })
-        flash('分类删除成功', 'success')
-        
+                return jsonify({'success': True, 'message': '分类删除成功'})
+            flash('分类删除成功', 'success')
+        else:
+            if is_ajax():
+                return jsonify({'success': False, 'message': result['message']})
+            flash(result['message'], 'error')
     except Exception as e:
-        db.session.rollback()
+        current_app.logger.error(f'删除分类失败：{str(e)}')
         if is_ajax():
-            return jsonify({
-                'success': False,
-                'message': '删除分类时发生错误，请稍后重试'
-            })
-        flash('删除分类时发生错误，请稍后重试', 'error')
-        
-    return redirect(url_for('.index'))
+            return jsonify({'success': False, 'message': '删除分类失败'})
+        flash('删除分类失败', 'error')
+    
+    return redirect(url_for('admin.admin_category.index'))
 
 @category_bp.route('/search')
 @login_required

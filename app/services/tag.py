@@ -150,7 +150,7 @@ class TagService:
                 return {'status': 'error', 'message': '标签不存在'}
             
             # 检查标签是否有关联的文章
-            if tag.posts.count() > 0:
+            if len(tag.posts) > 0:
                 return {'status': 'error', 'message': '该标签下还有关联的文章，无法删除'}
                 
             db.session.delete(tag)

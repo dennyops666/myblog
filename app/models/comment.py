@@ -7,7 +7,7 @@
 
 from datetime import datetime, UTC
 from app.extensions import db
-from app.utils.markdown import MarkdownService
+from app.utils.markdown import markdown_to_html
 
 class Comment(db.Model):
     """评论模型"""
@@ -39,9 +39,7 @@ class Comment(db.Model):
     def __init__(self, **kwargs):
         super(Comment, self).__init__(**kwargs)
         if self.content:
-            service = MarkdownService()
-            result = service.convert(self.content)
-            self.html_content = result['html']
+            self.html_content = markdown_to_html(self.content)
     
     @property
     def author_name(self):

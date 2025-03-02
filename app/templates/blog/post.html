@@ -1,396 +1,160 @@
-{% extends "blog/layout.html" %}
+{% extends "blog/base.html" %}
 
-{% block title %}{{ post.title }} - MyBlog{% endblock %}
+{% block title %}{{ post.title }}{% endblock %}
 
 {% block styles %}
-{{ super() }}
-<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<style>
-{{ post.highlight_css|safe }}
-
-.article-meta {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.article-content {
-    line-height: 1.8;
-}
-
-.article-content img {
-    max-width: 100%;
-    height: auto;
-    cursor: pointer;
-}
-
-.article-toc {
-    position: sticky;
-    top: 20px;
-}
-
-.article-toc .nav-link {
-    color: #666;
-    padding: 0.25rem 0;
-}
-
-.article-toc .nav-link:hover,
-.article-toc .nav-link.active {
-    color: #007bff;
-}
-
-.article-toc .nav-link.depth-2 { padding-left: 1rem; }
-.article-toc .nav-link.depth-3 { padding-left: 2rem; }
-.article-toc .nav-link.depth-4 { padding-left: 3rem; }
-
-.comment {
-    border-bottom: 1px solid #eee;
-    padding: 1rem 0;
-}
-
-.comment:last-child {
-    border-bottom: none;
-}
-
-.comment-meta {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.comment-content {
-    margin: 1rem 0;
-}
-
-.comment-content img {
-    max-width: 100%;
-    height: auto;
-}
-
-.comment-content pre {
-    background: #f8f9fa;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
-}
-
-.comment-content blockquote {
-    border-left: 4px solid #dee2e6;
-    padding-left: 1rem;
-    color: #6c757d;
-}
-
-.comment-replies {
-    margin-left: 2rem;
-    border-left: 2px solid #eee;
-    padding-left: 1rem;
-}
-
-.tag-list .badge {
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.comment-form {
-    margin-top: 2rem;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <div class="row">
-        <!-- 主内容区 -->
         <div class="col-lg-8">
-            <article class="card">
+            <article class="post card">
                 <div class="card-body">
-                    <!-- 文章标题 -->
-                    <h1 class="card-title">{{ post.title }}</h1>
-                    
-                    <!-- 文章元信息 -->
-                    <div class="post-meta">
-                        <span><i class="bi bi-person"></i> {{ post.author.username }}</span>
-                        <span class="ms-3"><i class="bi bi-calendar"></i> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
-                        {% if post.category %}
-                        <span class="ms-3"><i class="bi bi-folder"></i> {{ post.category.name }}</span>
-                        {% endif %}
-                        <span class="ms-3"><i class="bi bi-eye"></i> {{ post.view_count }}</span>
-                        <span class="ms-3"><i class="bi bi-chat"></i> {{ post.comment_count }}</span>
+                    <h1 class="card-title mb-3">{{ post.title }}</h1>
+                    <div class="post-meta text-muted mb-4">
+                        <small>
+                            <i class="bi bi-calendar3"></i> {{ post.created_at.strftime('%Y-%m-%d') }}
+                            {% if post.category %}
+                            <span class="mx-1">•</span>
+                            <i class="bi bi-folder"></i>
+                            <a href="{{ url_for('blog.category', category_id=post.category.id) }}" class="text-decoration-none">
+                                {{ post.category.name }}
+                            </a>
+                            {% endif %}
+                            {% if post.tags %}
+                            <span class="mx-1">•</span>
+                            <i class="bi bi-tags"></i>
+                            {% for tag in post.tags %}
+                            <a href="{{ url_for('blog.tag', tag_id=tag.id) }}" class="text-decoration-none">
+                                {{ tag.name }}
+                            </a>{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                            <span class="mx-1">•</span>
+                            <i class="bi bi-eye"></i> {{ post.views }}
+                        </small>
                     </div>
-                    
-                    <!-- 文章标签 -->
-                    {% if post.tags %}
-                    <div class="mt-2">
-                        {% for tag in post.tags %}
-                        <a href="{{ url_for('blog.tag', tag_id=tag.id) }}" class="badge bg-secondary text-decoration-none me-1">
-                            <i class="bi bi-tag"></i> {{ tag.name }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    
-                    <!-- 文章内容 -->
-                    <div class="article-content">
-                        {{ post.html_content|safe }}
+                    <div class="post-summary markdown-body">
+                        {{ post.content | markdown }}
                     </div>
                 </div>
             </article>
 
-            <!-- 上一篇/下一篇 -->
-            <div class="row mt-4">
-                <div class="col-6">
-                    {% if prev_post %}
-                    <a href="{{ url_for('blog.post_detail', post_id=prev_post.id) }}" 
-                       class="btn btn-outline-primary w-100">
-                        <i class="fas fa-arrow-left"></i> {{ prev_post.title }}
-                    </a>
-                    {% endif %}
-                </div>
-                <div class="col-6 text-end">
-                    {% if next_post %}
-                    <a href="{{ url_for('blog.post_detail', post_id=next_post.id) }}" 
-                       class="btn btn-outline-primary w-100">
-                        {{ next_post.title }} <i class="fas fa-arrow-right"></i>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- 相关文章 -->
-            {% if related_posts %}
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">相关文章</h5>
-                </div>
+            {% if prev_post or next_post %}
+            <div class="post-navigation card mt-4">
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        {% for related in related_posts %}
-                        <a href="{{ url_for('blog.post_detail', post_id=related.id) }}" 
-                           class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ related.title }}</h6>
-                                <small>{{ related.created_at.strftime('%Y-%m-%d') }}</small>
+                    <div class="row">
+                        {% if prev_post %}
+                        <div class="col-6">
+                            <div class="text-start">
+                                <small class="text-muted d-block">上一篇</small>
+                                <a href="{{ url_for('blog.post_detail', post_id=prev_post.id) }}" class="text-decoration-none">
+                                    {{ prev_post.title }}
+                                </a>
                             </div>
-                            <small class="text-muted">
-                                <i class="fas fa-eye"></i> {{ related.view_count }}
-                                <i class="fas fa-comments ms-2"></i> {{ related.comments|length }}
-                            </small>
-                        </a>
-                        {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if next_post %}
+                        <div class="col-6">
+                            <div class="text-end">
+                                <small class="text-muted d-block">下一篇</small>
+                                <a href="{{ url_for('blog.post_detail', post_id=next_post.id) }}" class="text-decoration-none">
+                                    {{ next_post.title }}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
             {% endif %}
 
-            <!-- 评论区 -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5 class="mb-0">评论（{{ comments|length }}）</h5>
-                </div>
+            {% if related_posts %}
+            <div class="related-posts card mt-4">
                 <div class="card-body">
-                    <!-- 评论列表 -->
-                    {% if comments %}
-                    <div class="comments">
-                        {% for comment in comments %}
-                        <div class="comment mb-4" id="comment-{{ comment.id }}">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                    <img src="https://www.gravatar.com/avatar/{{ comment.author_email|gravatar }}?s=50&d=mp" 
-                                         class="rounded-circle" alt="{{ comment.author_name }}">
-                                </div>
-                                <div class="flex-grow-1 ms-3">
-                                    <div class="comment-meta">
-                                        <strong>{{ comment.author_name }}</strong>
-                                        <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                                    </div>
-                                    <div class="comment-content">
-                                        {{ comment.html_content|safe }}
-                                    </div>
-                                    <div class="comment-actions">
-                                        <button class="btn btn-sm btn-link reply-btn" 
-                                                data-comment-id="{{ comment.id }}"
-                                                data-author-name="{{ comment.author_name }}"
-                                                data-nickname="{{ comment.author_name }}">
-                                            回复
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- 回复列表 -->
-                                    {% if comment.replies.count() > 0 %}
-                                    <div class="replies mt-3">
-                                        {% for reply in comment.replies %}
-                                        <div class="comment reply mb-3" id="comment-{{ reply.id }}">
-                                            <div class="d-flex">
-                                                <div class="flex-shrink-0">
-                                                    <img src="https://www.gravatar.com/avatar/{{ reply.author_email|gravatar }}?s=40&d=mp" 
-                                                         class="rounded-circle" alt="{{ reply.author_name }}">
-                                                </div>
-                                                <div class="flex-grow-1 ms-3">
-                                                    <div class="comment-meta">
-                                                        <strong>{{ reply.author_name }}</strong>
-                                                        <small class="text-muted">{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                                                    </div>
-                                                    <div class="comment-content">
-                                                        {{ reply.html_content|safe }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
+                    <h5 class="card-title mb-3">相关文章</h5>
+                    <div class="row g-3">
+                        {% for related in related_posts %}
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <a href="{{ url_for('blog.post_detail', post_id=related.id) }}" class="text-decoration-none">
+                                            {{ related.title }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> {{ related.created_at.strftime('%Y-%m-%d') }}
+                                    </small>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    {% else %}
-                    <div class="text-center text-muted py-5">
-                        暂无评论，来说两句吧~
-                    </div>
-                    {% endif %}
-
-                    <!-- 评论表单 -->
-                    <div class="comment-form mt-4">
-                        <h5>发表评论</h5>
-                        <form id="commentForm" method="post">
-                            <input type="hidden" id="post_id" value="{{ post.id }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            
-                            <div class="mb-3">
-                                <label for="content" class="form-label">评论内容</label>
-                                <textarea class="form-control" id="content" name="content" rows="3" required 
-                                          placeholder="写下你的评论..."></textarea>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="nickname" class="form-label">昵称</label>
-                                        <input type="text" class="form-control" id="nickname" name="nickname" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="email" class="form-label">邮箱</label>
-                                        <input type="email" class="form-control" id="email" name="email" required>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i> 提交评论
-                            </button>
-                        </form>
-                    </div>
                 </div>
             </div>
-        </div>
+            {% endif %}
 
-        <!-- 侧边栏 -->
-        <div class="col-lg-4">
-            <!-- 目录 -->
-            {% if post.toc %}
-            <div class="card article-toc">
-                <div class="card-header">
-                    <h5 class="mb-0">目录</h5>
-                </div>
+            {% if current_user.is_authenticated %}
+            <div class="comments card mt-4">
                 <div class="card-body">
-                    <nav class="nav flex-column">
-                        {% for item in post.toc %}
-                        <a class="nav-link depth-{{ item.depth }}" href="#{{ item.id }}">
-                            {{ item.text }}
-                        </a>
-                        {% endfor %}
-                    </nav>
+                    <h5 class="card-title mb-3">发表评论</h5>
+                    <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}">
+                        <div class="mb-3">
+                            <textarea class="form-control" name="content" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提交评论</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="comments card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">发表评论</h5>
+                    <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="nickname" placeholder="昵称" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" name="email" placeholder="邮箱" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" name="content" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提交评论</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if comments %}
+            <div class="comments-list card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">评论列表</h5>
+                    {% for comment in comments %}
+                    <div class="comment mb-3 pb-3 border-bottom">
+                        <div class="comment-meta text-muted mb-2">
+                            <small>
+                                <i class="bi bi-person"></i> {{ comment.nickname or comment.user.username }}
+                                <span class="mx-1">•</span>
+                                <i class="bi bi-calendar3"></i> {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </small>
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content }}
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
             {% endif %}
         </div>
+
+        <div class="col-lg-4">
+            {% include "blog/includes/sidebar.html" %}
+        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const commentForm = document.getElementById('commentForm');
-    const replyButtons = document.querySelectorAll('.reply-btn');
-    const commentInput = document.getElementById('content');
-    let parentId = null;
-
-    // 处理回复按钮点击
-    replyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            parentId = this.dataset.commentId;
-            const nickname = this.dataset.nickname;
-            commentInput.placeholder = `回复 ${nickname}...`;
-            commentInput.focus();
-            // 滚动到评论框
-            commentForm.scrollIntoView({ behavior: 'smooth' });
-        });
-    });
-
-    // 处理评论提交
-    commentForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = {
-            content: document.getElementById('content').value.trim(),
-            nickname: document.getElementById('nickname').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            parent_id: parentId ? parseInt(parentId) : null
-        };
-
-        // 验证表单数据
-        if (!formData.content) {
-            alert('请输入评论内容');
-            return;
-        }
-        if (!formData.nickname) {
-            alert('请输入昵称');
-            return;
-        }
-        if (!formData.email) {
-            alert('请输入邮箱');
-            return;
-        }
-
-        try {
-            const response = await fetch(`/blog/post/{{ post.id }}/comment`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                // 清空表单
-                commentForm.reset();
-                parentId = null;
-                commentInput.placeholder = '写下你的评论...';
-                
-                // 显示成功消息
-                alert(result.message || '评论提交成功！');
-                
-                // 刷新页面以显示新评论
-                location.reload();
-            } else {
-                alert(result.message || '评论提交失败，请重试');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('评论提交失败，请重试');
-        }
-    });
-});
-</script>
 {% endblock %}

@@ -7,7 +7,7 @@
 
 from flask import (
     render_template, request, redirect, url_for, flash, 
-    Blueprint, abort, current_app, jsonify
+    abort, current_app, jsonify
 )
 from flask_login import current_user, login_user, logout_user, login_required
 from app.services.post import PostService
@@ -23,6 +23,7 @@ from datetime import datetime, UTC
 from app.extensions import db
 import markdown2
 from app.models.role import Permission
+from . import blog_bp
 
 # 创建服务实例
 post_service = PostService()
@@ -30,8 +31,6 @@ comment_service = CommentService()
 category_service = CategoryService()
 tag_service = TagService()
 user_service = UserService()
-
-blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
 
 @blog_bp.route('/')
 def index():

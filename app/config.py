@@ -12,15 +12,11 @@ from datetime import timedelta
 class Config:
     """基础配置类"""
     # 基本配置
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev key'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    WTF_CSRF_ENABLED = False  # 禁用 CSRF 保护
     
     # 安全配置
-    WTF_CSRF_ENABLED = False
-    WTF_CSRF_CHECK_DEFAULT = False
-    WTF_CSRF_TIME_LIMIT = 3600  # CSRF 令牌有效期（秒）
-    WTF_CSRF_SSL_STRICT = False  # 开发环境不强制 HTTPS
-    WTF_CSRF_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}  # 需要 CSRF 保护的方法
     SESSION_COOKIE_SECURE = False  # 开发环境不强制 HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
@@ -91,7 +87,6 @@ class DevelopmentConfig(Config):
     """开发环境配置"""
     DEBUG = True
     TESTING = False
-    WTF_CSRF_SSL_STRICT = False  # 开发环境不强制 HTTPS
     SESSION_COOKIE_SECURE = False  # 开发环境不强制 HTTPS
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
         'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'blog-dev.db')
@@ -118,7 +113,6 @@ class TestingConfig(Config):
     """测试环境配置"""
     TESTING = True
     DEBUG = False
-    WTF_CSRF_ENABLED = False  # 在测试环境中禁用 CSRF 保护
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
@@ -143,7 +137,6 @@ class ProductionConfig(Config):
     """生产环境配置"""
     DEBUG = False
     TESTING = False
-    WTF_CSRF_SSL_STRICT = True
     SESSION_COOKIE_SECURE = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'blog.db')
@@ -154,7 +147,6 @@ class ProductionConfig(Config):
     
     # 生产环境安全配置
     SESSION_COOKIE_SAMESITE = 'Strict'  # 生产环境使用严格模式
-    WTF_CSRF_TIME_LIMIT = 1800  # 生产环境缩短 CSRF 令牌有效期
     
     @classmethod
     def init_app(cls, app):

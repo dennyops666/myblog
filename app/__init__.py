@@ -1,6 +1,6 @@
 """
 文件名：__init__.py
-描述：应用工厂
+描述：Flask应用初始化
 作者：denny
 创建日期：2024-03-21
 """
@@ -8,38 +8,52 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, send_from_directory, g, render_template, request, jsonify
-from flask_wtf.csrf import generate_csrf
+from flask import Flask, send_from_directory, g, render_template, request, jsonify, redirect, url_for
 from flask_migrate import Migrate
 from app.config import config
-from app.extensions import db, init_app
+from app.extensions import db, init_app, migrate
 from datetime import datetime, UTC, timedelta
-from app.controllers.blog import blog_bp
+from app.controllers.blog import blog
 from app.controllers.auth import auth_bp
 from app.controllers.admin import admin_bp
 from app.controllers.admin.upload import upload_bp
+from app.controllers.test import test_bp
 import traceback
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from app.utils.markdown import markdown_to_html
+from flask_moment import Moment
+from flask_wtf.csrf import CSRFProtect
 
 # 创建 migrate 实例
 migrate = Migrate()
 
-def create_app(config_name=None):
-    """创建应用实例"""
+# 配置登录管理器
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.login_message = '请先登录'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    from app.models.user import User
+    return User.query.get(int(user_id))
+
+# 配置自定义过滤器
+csrf = CSRFProtect()
+
+moment = Moment()
+
+def create_app(config_name='development'):
+    """创建Flask应用实例"""
     app = Flask(__name__)
     
     # 加载配置
-    if config_name is None:
-        config_name = os.getenv('FLASK_CONFIG', 'development')
     app.config.from_object(config[config_name])
-    
-    # 禁用 CSRF 保护
-    app.config['WTF_CSRF_ENABLED'] = False
-    app.config['WTF_CSRF_CHECK_DEFAULT'] = False
+    config[config_name].init_app(app)
     
     # 配置会话
     app.config.update(
-        WTF_CSRF_ENABLED=False,  # 禁用CSRF保护
-        WTF_CSRF_CHECK_DEFAULT=False,  # 禁用默认的CSRF检查
         SESSION_COOKIE_SECURE=False,  # 允许非HTTPS
         SESSION_COOKIE_HTTPONLY=True,  # 防止JavaScript访问
         SESSION_COOKIE_SAMESITE='Lax',  # 允许跨站点请求
@@ -47,46 +61,63 @@ def create_app(config_name=None):
         SESSION_REFRESH_EACH_REQUEST=True,  # 每次请求都刷新会话
     )
     
-    # 获取应用根目录
-    app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    
     # 确保日志目录存在
-    log_dir = os.path.join(app_root, 'logs')
+    log_dir = '/data/myblog/logs'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     
     # 配置日志处理器
     log_file = os.path.join(log_dir, 'myblog.log')
-    if os.path.exists(log_file):
-        os.chmod(log_file, 0o666)
-    file_handler = RotatingFileHandler(log_file, maxBytes=10240, backupCount=10)
+    error_log_file = os.path.join(log_dir, 'error.log')
+    
+    # 设置日志文件权限
+    for log_path in [log_file, error_log_file]:
+        if os.path.exists(log_path):
+            os.chmod(log_path, 0o666)
+            
+    # 主日志处理器
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=10,
+        encoding='utf-8'
+    )
     file_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s\n%(exc_info)s'
     ))
-    file_handler.setLevel(logging.DEBUG)
-    app.logger.addHandler(file_handler)
+    file_handler.setLevel(logging.INFO)
     
-    # 配置控制台日志处理器
+    # 错误日志处理器
+    error_handler = RotatingFileHandler(
+        error_log_file,
+        maxBytes=10 * 1024 * 1024,  # 10MB
+        backupCount=10,
+        encoding='utf-8'
+    )
+    error_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s\n%(exc_info)s'
+    ))
+    error_handler.setLevel(logging.ERROR)
+    
+    # 控制台日志处理器
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter(
         '%(asctime)s %(levelname)s: %(message)s\n%(exc_info)s'
     ))
-    console_handler.setLevel(logging.DEBUG)
-    app.logger.addHandler(console_handler)
+    console_handler.setLevel(logging.DEBUG if app.debug else logging.INFO)
     
-    # 设置日志级别
-    app.logger.setLevel(logging.DEBUG)
-    
-    # 移除默认的处理器
-    app.logger.handlers = []
+    # 设置日志级别和处理器
+    app.logger.setLevel(logging.DEBUG if app.debug else logging.INFO)
+    app.logger.handlers = []  # 清除默认处理器
     app.logger.addHandler(file_handler)
+    app.logger.addHandler(error_handler)
     app.logger.addHandler(console_handler)
     
     # 记录启动信息
     app.logger.info('MyBlog 启动')
-    app.logger.info(f'配置模式: {config_name}')
-    app.logger.info(f'调试模式: {app.debug}')
-    app.logger.info(f'日志文件: {log_file}')
+    app.logger.info('配置模式: %s', config_name)
+    app.logger.info('调试模式: %s', app.debug)
+    app.logger.info('日志目录: %s', log_dir)
     
     # 确保上传目录存在
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -97,86 +128,54 @@ def create_app(config_name=None):
         app.config['SESSION_TYPE'] = 'sqlalchemy'
         app.config['SESSION_SQLALCHEMY'] = db
     
+    # 注册markdown过滤器
+    app.jinja_env.filters['markdown'] = markdown_to_html
+    
     # 初始化所有扩展
-    init_app(app)
-    app.logger.info('扩展初始化完成')
-    
-    # 初始化 Flask-Migrate
-    migrate.init_app(app, db)
-    app.logger.info('数据库迁移初始化完成')
-    
-    # 注册蓝图
-    app.register_blueprint(blog_bp, url_prefix='/blog')
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(admin_bp, url_prefix='/admin')
-    app.register_blueprint(upload_bp, url_prefix='/admin/upload')
-    app.logger.info('蓝图注册完成')
-    
-    # 注册错误处理器
-    @app.errorhandler(500)
-    def internal_error(error):
-        """处理500错误"""
-        app.logger.error(f'服务器错误: {str(error)}\n{traceback.format_exc()}')
-        db.session.rollback()
-        return render_template('errors/500.html'), 500
-
-    @app.errorhandler(404)
-    def not_found_error(error):
-        """处理404错误"""
-        app.logger.warning(f'页面未找到: {request.url}')
-        return render_template('errors/404.html'), 404
-    
-    # 注册自定义过滤器
-    from app.utils.filters import init_filters
-    init_filters(app)
-    app.logger.info('过滤器初始化完成')
-    
-    # 添加now过滤器
-    @app.template_filter('now')
-    def now_filter(format_string):
-        """当前时间过滤器"""
-        return datetime.now(UTC).strftime(format_string)
-    
-    # 添加上传文件访问路由
-    @app.route('/uploads/<filename>')
-    def uploaded_file(filename):
-        """处理上传文件的访问"""
-        return send_from_directory(app.config['IMAGE_UPLOAD_FOLDER'], filename)
-    
-    # 添加请求日志记录
-    @app.before_request
-    def log_request():
-        """记录请求信息"""
-        app.logger.info(f'请求: {request.method} {request.url}')
-        app.logger.debug(f'请求头: {dict(request.headers)}')
-        if request.is_json:
-            app.logger.debug(f'JSON数据: {request.get_json()}')
-        elif request.form:
-            app.logger.debug(f'表单数据: {dict(request.form)}')
+    try:
+        init_app(app)
+        app.logger.info('扩展初始化完成')
+        
+        # 添加favicon路由
+        @app.route('/favicon.ico')
+        def favicon():
+            return send_from_directory(
+                os.path.join(app.root_path, 'static'),
+                'favicon.ico',
+                mimetype='image/vnd.microsoft.icon'
+            )
             
-    # 添加 AJAX 请求识别
-    @app.before_request
-    def handle_xhr():
-        """处理 AJAX 请求"""
-        request.is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    
-    # 添加上下文处理器
-    @app.context_processor
-    def inject_now():
-        """注入当前时间到模板"""
-        return {'now': datetime.now(UTC)}
-    
-    # 在测试环境下初始化数据库
-    if app.config.get('TESTING'):
-        with app.app_context():
-            db.create_all()
-            from app.models import Role
-            admin_role = Role.query.filter_by(name='admin').first()
-            if not admin_role:
-                admin_role = Role(name='admin', description='Administrator')
-                db.session.add(admin_role)
-                db.session.commit()
+        # 添加根路由重定向
+        @app.route('/')
+        def index():
+            return redirect(url_for('blog.index'))
+        
+        # 注册蓝图
+        app.register_blueprint(blog, url_prefix='/blog')
+        app.register_blueprint(admin_bp, url_prefix='/admin')
+        app.register_blueprint(auth_bp, url_prefix='/auth')
+        app.register_blueprint(test_bp, url_prefix='/test')
+        app.logger.info('蓝图注册完成')
+        
+        # 初始化 Flask-Migrate
+        migrate.init_app(app, db)
+        app.logger.info('数据库迁移初始化完成')
+        
+        # 初始化测试数据
+        if app.config['TESTING']:
+            from tests.test_data import init_test_data
+            init_test_data(app)
             app.logger.info('测试数据库初始化完成')
-    
-    app.logger.info('应用初始化完成')
-    return app
+        
+        # 初始化其他扩展
+        moment.init_app(app)
+        login_manager.init_app(app)
+        csrf.init_app(app)
+        
+        app.logger.info('应用初始化完成')
+        return app
+        
+    except Exception as e:
+        app.logger.error('应用初始化失败: %s', str(e))
+        app.logger.error('错误详情: %s', traceback.format_exc())
+        raise

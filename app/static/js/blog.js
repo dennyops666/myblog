@@ -90,37 +90,41 @@ $(document).ready(function() {
     });
     
     // 评论表单验证
-    $('#commentForm').submit(function(e) {
-        var $form = $(this);
-        var $nickname = $form.find('[name="nickname"]');
-        var $email = $form.find('[name="email"]');
-        var $content = $form.find('[name="content"]');
-        var valid = true;
+    $('#comment-form').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var url = form.attr('action');
         
-        if (!$nickname.val().trim()) {
-            valid = false;
-            $nickname.addClass('is-invalid');
-        } else {
-            $nickname.removeClass('is-invalid');
-        }
-        
-        if (!$email.val().trim() || !isValidEmail($email.val())) {
-            valid = false;
-            $email.addClass('is-invalid');
-        } else {
-            $email.removeClass('is-invalid');
-        }
-        
-        if (!$content.val().trim()) {
-            valid = false;
-            $content.addClass('is-invalid');
-        } else {
-            $content.removeClass('is-invalid');
-        }
-        
-        if (!valid) {
-            e.preventDefault();
-        }
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: JSON.stringify({
+                content: $('#content').val(),
+                nickname: $('#nickname').val(),
+                email: $('#email').val(),
+                parent_id: $('#parent_id').val()
+            }),
+            contentType: 'application/json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    // 显示成功消息
+                    showAlert('success', response.message);
+                    // 清空表单
+                    form[0].reset();
+                    // 刷新评论列表
+                    location.reload();
+                } else {
+                    showAlert('danger', response.message);
+                }
+            },
+            error: function(xhr) {
+                var message = '提交评论失败';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showAlert('danger', message);
+            }
+        });
     });
 });
 
@@ -174,4 +178,17 @@ style.textContent = `
         color: #007bff;
     }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
+
+// 显示提示消息
+function showAlert(type, message) {
+    var alert = $('<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+        message +
+        '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+        '</div>');
+    
+    $('#messages').append(alert);
+    alert.delay(3000).fadeOut(500, function() {
+        $(this).remove();
+    });
+} 

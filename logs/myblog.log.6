@@ -1,40 +1,144 @@
-2025-03-01 20:18:25,329 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:40:45,131 INFO: Locating template 'blog/includes/sidebar.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/blog/includes/sidebar.html')
 None
-2025-03-01 20:18:25,449 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
+2025-03-02 17:40:48,006 INFO: Locating template 'auth/login.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/auth/login.html')
 None
-2025-03-01 20:18:25,450 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:40:48,008 INFO: Locating template 'base.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/base.html')
 None
-2025-03-01 20:18:25,473 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:40:48,012 INFO: Locating template 'macros/csrf.html':
+    1: trying loader of application 'app'
+       class: jinja2.loaders.FileSystemLoader
+       encoding: 'utf-8'
+       followlinks: False
+       searchpath:
+         - /data/myblog/app/templates
+       -> found ('/data/myblog/app/templates/macros/csrf.html')
 None
-2025-03-01 20:18:25,473 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:40:48,025 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/data/myblog/app/templates/base.html", line 43, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:18:25,622 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
+2025-03-02 17:40:48,027 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None
-2025-03-01 20:18:25,622 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:40:51,988 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/data/myblog/app/templates/base.html", line 43, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:18:25,648 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:40:51,990 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None
-2025-03-01 20:18:25,648 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
+2025-03-02 17:40:52,115 ERROR: 登录过程中发生错误: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/data/myblog/app/controllers/auth/__init__.py", line 102, in login
+    return render_template('auth/login.html', form=form)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/data/myblog/venv/lib/python3.12/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/data/myblog/app/templates/auth/login.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/data/myblog/app/templates/base.html", line 43, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/app/templates/auth/login.html", line 34, in block 'content'
+    <a href="{{ url_for('auth.register') }}">没有账号？立即注册</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1074, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1063, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/myblog/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
 None
-2025-03-01 20:18:25,788 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
-None
-2025-03-01 20:18:25,788 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
-None
-2025-03-01 20:18:25,814 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
-None
-2025-03-01 20:18:25,814 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
-None
-2025-03-01 20:18:25,950 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
-None
-2025-03-01 20:18:25,951 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
-None
-2025-03-01 20:18:25,975 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
-None
-2025-03-01 20:18:25,975 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'If-Modified-Since': 'Sat, 01 Mar 2025 06:36:40 GMT', 'If-None-Match': '"1740811000.9440253-4407-4119137644"', 'Accept': 'text/css,*/*;q=0.1', 'Referer': 'http://192.168.72.128:5000/blog/post_detail/6', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
-None
-2025-03-01 20:18:26,118 INFO: 请求: GET http://192.168.72.128:5000/blog/post_detail/6
-None
-2025-03-01 20:18:26,118 DEBUG: 请求头: {'Host': '192.168.72.128:5000', 'Connection': 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7', 'Referer': 'http://192.168.72.128:5000/blog/', 'Accept-Encoding': 'gzip, deflate', 'Accept-Language': 'zh-CN,zh;q=0.9', 'Cookie': 'session=COdHcxHcF1Jcr4GH7iU067mOL9RcbpDODdK6lL6iZnE; remember_token=1|04f72f070406d0a264d3c04c98acd41d29667e3922eed66527ab5205bcf6e5f89da01e1a9eaff4d8427dcde69e49e8f7411de3258770c071953ed293ea14067e; csrf_token=ImNmNjk5YjhjNTBjNmYwMTFmZDNiMGQ1NzU2MzAwMWQyMDc2MGI1M2Ui.Z8L7EQ.cOvKqiDvPP20S4sqiDOxxYoRfhk'}
-None
-2025-03-01 20:18:26,148 INFO: 请求: GET http://192.168.72.128:5000/static/css/blog.css
+2025-03-02 17:40:52,117 ERROR: Exception during request: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
 None

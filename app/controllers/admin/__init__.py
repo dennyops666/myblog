@@ -21,12 +21,12 @@ from app.services.post import PostService
 from app.services.category import CategoryService
 from app.services.tag import TagService
 from app.services.comment import CommentService
-from app.controllers.admin.post import post_bp
+from .post import post_bp
 from app.controllers.admin.category import category_bp
 from app.controllers.admin.tag import tag_bp
 from app.controllers.admin.comment import comment_bp
 from app.controllers.admin.user import user_bp
-from app.controllers.admin.upload import upload_bp
+from .upload import upload_bp
 from functools import wraps
 from urllib.parse import urlparse
 from app.decorators import admin_required

@@ -47,13 +47,6 @@ def init_app(app):
     login_manager.login_message = '请先登录'
     login_manager.login_message_category = 'warning'
     
-    # 添加空的csrf_token函数
-    @app.context_processor
-    def inject_csrf_token():
-        def csrf_token():
-            return ""
-        return dict(csrf_token=csrf_token)
-    
     # 注册用户加载函数
     from app.models import User
     @login_manager.user_loader
@@ -133,4 +126,4 @@ def init_app(app):
     def shutdown_session(exception=None):
         if exception:
             current_app.logger.error(f'Exception during request: {str(exception)}')
-        db.session.remove() 
+        db.session.remove()

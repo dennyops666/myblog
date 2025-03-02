@@ -5,11 +5,12 @@ APP_NAME="myblog"
 APP_DIR="/data/myblog"
 VENV_DIR="$APP_DIR/venv"
 PID_FILE="$APP_DIR/app.pid"
-LOG_FILE="$APP_DIR/app.log"
-ERROR_LOG="$APP_DIR/error.log"
+LOG_DIR="$APP_DIR/logs"
+LOG_FILE="$LOG_DIR/myblog.log"
+ERROR_LOG="$LOG_DIR/error.log"
 HOST="0.0.0.0"
 PORT="5000"
-WORKERS=4
+WORKERS=1
 
 # 激活虚拟环境的函数
 activate_venv() {
@@ -41,6 +42,16 @@ check_status() {
     fi
 }
 
+# 检查端口是否被占用
+check_port() {
+    if lsof -i :$PORT > /dev/null 2>&1; then
+        echo "警告: 端口 $PORT 已被占用"
+        echo "正在清理占用端口的进程..."
+        lsof -i :$PORT | grep LISTEN | awk '{print $2}' | xargs -r kill -9
+        sleep 2
+    fi
+}
+
 # 启动服务
 start() {
     echo "正在启动 $APP_NAME..."
@@ -53,13 +64,24 @@ start() {
         fi
     fi
 
+    # 检查并创建日志目录
+    if [ ! -d "$LOG_DIR" ]; then
+        mkdir -p "$LOG_DIR"
+        chmod 755 "$LOG_DIR"
+    fi
+
+    # 检查并清理端口
+    check_port
+
     cd "$APP_DIR"
     activate_venv
     set_env
     
+    echo "启动命令: gunicorn app:create_app() --bind $HOST:$PORT --workers $WORKERS --timeout 120 --reload --pid $PID_FILE --log-file $LOG_FILE --error-logfile $ERROR_LOG --log-level debug --capture-output --enable-stdio-inheritance"
+    
     nohup gunicorn "app:create_app()" \
         --bind "$HOST:$PORT" \
-        --workers 1 \
+        --workers $WORKERS \
         --timeout 120 \
         --reload \
         --pid "$PID_FILE" \
@@ -68,9 +90,7 @@ start() {
         --log-level debug \
         --capture-output \
         --enable-stdio-inheritance \
-        --daemon > /dev/null 2>&1 &
-    
-    echo $! > "$PID_FILE"
+        > /dev/null 2>&1 &
     
     sleep 2
     check_status

@@ -1,0 +1,96 @@
+<!-- 侧边栏 -->
+<div class="sidebar bg-light border-end">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.index' }}" href="{{ url_for('admin.index') }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    仪表盘
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.posts.index' }}" href="{{ url_for('admin.posts.index') }}">
+                    <i class="fas fa-file-alt"></i>
+                    文章管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.admin_category.index' }}" href="{{ url_for('admin.admin_category.index') }}">
+                    <i class="fas fa-folder"></i>
+                    分类管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.tag.index' }}" href="{{ url_for('admin.tag.index') }}">
+                    <i class="fas fa-tags"></i>
+                    标签管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.comment.index' }}" href="{{ url_for('admin.comment.index') }}">
+                    <i class="fas fa-comments"></i>
+                    评论管理
+                </a>
+            </li>
+        </ul>
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <span>系统管理</span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.user.index' }}" href="{{ url_for('admin.user.index') }}">
+                    <i class="fas fa-users"></i>
+                    用户管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.profile' }}" href="{{ url_for('admin.profile') }}">
+                    <i class="fas fa-user-cog"></i>
+                    个人设置
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    width: 250px;
+}
+
+.sidebar .nav-link {
+    font-weight: 500;
+    color: #333;
+    padding: .5rem 1rem;
+}
+
+.sidebar .nav-link.active {
+    color: #2470dc;
+}
+
+.sidebar .nav-link:hover {
+    color: #2470dc;
+}
+
+.sidebar .nav-link i {
+    margin-right: 8px;
+    color: #727272;
+}
+
+.sidebar .nav-link:hover i {
+    color: #2470dc;
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+</style> 

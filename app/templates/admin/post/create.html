@@ -1,6 +1,6 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}创建文章{% endblock %}
+{% block title %}新建文章{% endblock %}
 
 {% block styles %}
 {{ super() }}
@@ -19,90 +19,94 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">创建文章</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">新建文章</h1>
+        <a href="{{ url_for('admin.posts.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> 返回列表
+        </a>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.posts.create') }}" id="postForm">
+            <form method="post" action="{{ url_for('admin.posts.create') }}" id="postForm">
                 {{ form.csrf_token }}
                 
                 <div class="mb-3">
-                    <label for="title" class="form-label">标题</label>
-                    {{ form.title(class="form-control") }}
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
                     {% if form.title.errors %}
+                    <div class="invalid-feedback">
                         {% for error in form.title.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {{ error }}
                         {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="category_id" class="form-label">分类</label>
-                    <select name="category_id" id="category_id" class="form-select">
-                        <option value="">请选择分类</option>
-                        {% for category in form.category_id.choices %}
-                        <option value="{{ category[0] }}">{{ category[1] }}</option>
-                        {% endfor %}
-                    </select>
+                    {{ form.category_id.label(class="form-label") }}
+                    {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
                     {% if form.category_id.errors %}
+                    <div class="invalid-feedback">
                         {% for error in form.category_id.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {{ error }}
                         {% endfor %}
-                    {% endif %}
-                    <div class="form-text">选择或搜索文章分类</div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="summary" class="form-label">摘要</label>
-                    {{ form.summary(class="form-control", rows=3) }}
-                    {% if form.summary.errors %}
-                        {% for error in form.summary.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
-                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="content" class="form-label">内容</label>
-                    {{ form.content(class="form-control", rows=10) }}
-                    {% if form.content.errors %}
-                        {% for error in form.content.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="tags" class="form-label">标签</label>
-                    <select name="tags" id="tags" class="form-select select2" multiple="multiple" data-allow-new="true">
-                        {% for tag in tags %}
-                        <option value="{{ tag.id }}">{{ tag.name }}</option>
-                        {% endfor %}
-                    </select>
+                    {{ form.tags.label(class="form-label") }}
+                    {{ form.tags(class="form-select" + (" is-invalid" if form.tags.errors else ""), multiple=True) }}
                     {% if form.tags.errors %}
+                    <div class="invalid-feedback">
                         {% for error in form.tags.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {{ error }}
                         {% endfor %}
+                    </div>
                     {% endif %}
-                    <div class="form-text">选择已有标签或输入新标签（按回车或空格添加）</div>
+                    <div class="form-text">按住 Ctrl 键可以选择多个标签</div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="status" class="form-label">状态</label>
-                    {{ form.status(class="form-select") }}
-                    {% if form.status.errors %}
-                        {% for error in form.status.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
+                    {{ form.content.label(class="form-label") }}
+                    {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows=15) }}
+                    {% if form.content.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.content.errors %}
+                        {{ error }}
                         {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    {{ form.summary.label(class="form-label") }}
+                    {{ form.summary(class="form-control" + (" is-invalid" if form.summary.errors else ""), rows=3) }}
+                    {% if form.summary.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.summary.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">如果不填写，将自动从内容中提取</div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                    {% if form.status.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.status.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
 
                 <div class="text-end">
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="fas fa-save"></i> 保存
-                    </button>
+                    <button type="submit" class="btn btn-primary">保存</button>
                 </div>
             </form>
         </div>
@@ -111,236 +115,36 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/lang/summernote-zh-CN.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/zh-CN.js"></script>
 <script>
-$(document).ready(function() {
-    // 初始化 Select2
-    $('#category_id').select2({
-        theme: 'bootstrap-5',
-        placeholder: '请选择分类',
-        width: '100%',
-        allowClear: false
-    });
-
-    // 初始化标签选择
-    $('#tags').select2({
-        theme: 'bootstrap-5',
-        placeholder: '选择或输入标签',
-        tags: true,
-        tokenSeparators: [',', ' '],
-        width: '100%',
-        language: 'zh-CN',
-        createTag: function(params) {
-            const term = $.trim(params.term);
-            if (term === '') {
-                return null;
-            }
-            
-            // 检查是否已存在相同的标签
-            const existingTag = $(this.$element).find('option').filter(function() {
-                return $(this).text().toLowerCase() === term.toLowerCase();
-            });
-            
-            if (existingTag.length > 0) {
-                return null;  // 如果标签已存在，不创建新标签
-            }
-            
-            return {
-                id: term,  // 使用标签名作为临时ID
-                text: term,
-                newTag: true
-            };
-        }
-    });
-
-    // 初始化富文本编辑器
-    $('#content').summernote({
-        height: 300,
-        lang: 'zh-CN',
-        toolbar: [
-            ['style', ['style']],
-            ['font', ['bold', 'underline', 'clear']],
-            ['color', ['color']],
-            ['para', ['ul', 'ol', 'paragraph']],
-            ['table', ['table']],
-            ['insert', ['link', 'picture']],
-            ['view', ['fullscreen', 'codeview', 'help']]
-        ],
-        callbacks: {
-            onImageUpload: function(files) {
-                // 处理图片上传
-                for(let i=0; i < files.length; i++) {
-                    uploadImage(files[i]);
-                }
-            }
-        }
-    });
-
-    // 处理表单提交
-    $('#postForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // 禁用提交按钮
-        const submitBtn = $('#submitBtn');
-        const originalText = submitBtn.html();
-        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
-        
-        // 获取富文本编辑器的内容
-        const content = $('#content').summernote('code');
-        
-        // 准备表单数据
-        const formData = new FormData(this);
-        formData.set('content', content);
-        
-        // 发送AJAX请求
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRFToken': $('#csrf_token').val()
-            },
-            success: function(response) {
-                console.log('Response:', response);  // 添加调试日志
-                if (response.success) {
-                    // 直接跳转，不显示 Toast
-                    window.location.href = response.redirect_url;
-                } else {
-                    // 恢复提交按钮
-                    submitBtn.prop('disabled', false).html(originalText);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log('Error:', xhr.responseJSON);  // 添加调试日志
-                
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // 处理表单验证错误
-                    const errors = xhr.responseJSON.errors;
-                    Object.keys(errors).forEach(function(field) {
-                        const errorMsg = errors[field].join(', ');
-                        // 获取字段的中文标签
-                        let fieldLabel = '';
-                        switch(field) {
-                            case 'title':
-                                fieldLabel = '标题';
-                                break;
-                            case 'content':
-                                fieldLabel = '内容';
-                                break;
-                            case 'category_id':
-                                fieldLabel = '分类';
-                                break;
-                            case 'status':
-                                fieldLabel = '状态';
-                                break;
-                            default:
-                                fieldLabel = field;
-                        }
-                        
-                        // 只添加表单字段下的错误提示
-                        const fieldElement = $(`#${field}`);
-                        if (fieldElement.length) {
-                            fieldElement.addClass('is-invalid');
-                            // 移除已存在的错误提示
-                            fieldElement.siblings('.invalid-feedback').remove();
-                            // 添加错误提示
-                            const feedback = $('<div>').addClass('invalid-feedback d-block').text(`${fieldLabel}: ${errorMsg}`);
-                            fieldElement.after(feedback);
-                            
-                            // 3秒后移除高亮
-                            setTimeout(function() {
-                                fieldElement.removeClass('is-invalid');
-                            }, 3000);
-                        }
-                    });
-                }
-                
-                // 恢复提交按钮
-                submitBtn.prop('disabled', false).html(originalText);
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化标签选择器
+    const tagsSelect = document.getElementById('tags');
+    if (typeof(Choices) !== 'undefined') {
+        new Choices(tagsSelect, {
+            removeItemButton: true,
+            maxItemCount: 5,
+            searchResultLimit: 5,
+            renderChoiceLimit: 5
         });
-    });
+    }
 
-    // 图片上传函数
-    function uploadImage(file) {
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        $.ajax({
-            url: '/admin/upload/image',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    $('#content').summernote('insertImage', response.url);
-                } else {
-                    showToast('error', response.message || '图片上传失败');
-                }
-            },
-            error: function() {
-                showToast('error', '图片上传失败，请稍后重试');
-            }
+    // 初始化 Markdown 编辑器
+    if (typeof(EasyMDE) !== 'undefined') {
+        const easyMDE = new EasyMDE({
+            element: document.getElementById('content'),
+            spellChecker: false,
+            status: ['lines', 'words'],
+            uploadImage: true,
+            imageUploadEndpoint: '/admin/upload',
+            toolbar: [
+                'bold', 'italic', 'heading', '|',
+                'quote', 'unordered-list', 'ordered-list', '|',
+                'link', 'image', 'table', '|',
+                'preview', 'side-by-side', 'fullscreen', '|',
+                'guide'
+            ]
         });
     }
 });
-
-// Toast 提示函数
-function showToast(type, message) {
-    const toast = $('<div>').addClass('toast').attr({
-        'role': 'alert',
-        'aria-live': 'assertive',
-        'aria-atomic': 'true'
-    });
-    
-    const toastBody = $('<div>').addClass('toast-body d-flex align-items-center');
-    
-    // 根据类型添加图标
-    let icon = '';
-    switch(type) {
-        case 'success':
-            icon = '<i class="fas fa-check-circle text-success me-2"></i>';
-            toast.addClass('bg-light border-success');
-            break;
-        case 'error':
-            icon = '<i class="fas fa-exclamation-circle text-danger me-2"></i>';
-            toast.addClass('bg-light border-danger');
-            break;
-        case 'warning':
-            icon = '<i class="fas fa-exclamation-triangle text-warning me-2"></i>';
-            toast.addClass('bg-light border-warning');
-            break;
-        default:
-            icon = '<i class="fas fa-info-circle text-info me-2"></i>';
-            toast.addClass('bg-light border-info');
-    }
-    
-    toastBody.html(icon + message);
-    toast.append(toastBody);
-    
-    $('.toast-container').append(toast);
-    
-    const bsToast = new bootstrap.Toast(toast, {
-        autohide: true,
-        delay: 3000
-    });
-    
-    bsToast.show();
-    
-    // 监听隐藏事件，移除DOM元素
-    toast.on('hidden.bs.toast', function() {
-        $(this).remove();
-    });
-}
 </script>
 {% endblock %} 

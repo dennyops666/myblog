@@ -276,60 +276,68 @@ class PostService:
             error_out=False
         )
     
-    def create_post(self, title, content, author=None, author_id=None, category_id=None, tags=None, status=PostStatus.DRAFT):
+    def create_post(self, title, content, author=None, author_id=None, category_id=None, tags=None, status=PostStatus.DRAFT, summary=None):
         """创建文章
         
         Args:
-            title: 文章标题
-            content: 文章内容
-            author: 作者对象（可选）
-            author_id: 作者ID（可选）
-            category_id: 分类ID（可选）
-            tags: 标签列表（可选）
-            status: 文章状态（可选）
+            title: 标题
+            content: 内容
+            author: 作者对象
+            author_id: 作者ID
+            category_id: 分类ID
+            tags: 标签列表
+            status: 状态
+            summary: 摘要
             
         Returns:
             Post: 创建的文章对象
             
         Raises:
-            ValueError: 如果必要参数缺失
+            ValueError: 如果参数无效
         """
-        if not title or not content:
-            raise ValueError('标题和内容不能为空')
-        
-        if not author and not author_id:
-            raise ValueError('必须指定作者')
-        
-        post = Post(
-            title=title,
-            content=content,
-            author_id=author_id if author_id else author.id,
-            category_id=category_id,
-            status=status
-        )
-        
-        # 生成 HTML 内容和目录
-        post.update_html_content()
-        
-        # 添加标签
-        if tags:
-            for tag in tags:
-                if isinstance(tag, str):
-                    tag_obj = Tag.query.filter_by(name=tag).first()
-                    if not tag_obj:
-                        tag_obj = Tag(name=tag)
-                        db.session.add(tag_obj)
-                    post.tags.append(tag_obj)
-                else:
-                    post.tags.append(tag)
-        
-        db.session.add(post)
-        db.session.commit()
-        
-        # 清理缓存
-        self._clear_post_cache(post.id)
-        
-        return post
+        try:
+            # 验证作者
+            if not author and not author_id:
+                raise ValueError('必须指定作者')
+            
+            if not author and author_id:
+                author = User.query.get(author_id)
+                if not author:
+                    raise ValueError('作者不存在')
+            
+            # 创建文章
+            post = Post(
+                title=title,
+                content=content,
+                summary=summary,
+                author=author,
+                status=status
+            )
+            
+            # 设置分类
+            if category_id:
+                category = Category.query.get(category_id)
+                if category:
+                    post.category = category
+            
+            # 设置标签
+            if tags:
+                post.tags = tags
+            
+            # 保存到数据库
+            db.session.add(post)
+            db.session.commit()
+            
+            # 清除缓存
+            self._clear_post_cache(post.id)
+            
+            return post
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"创建文章失败: {str(e)}")
+            current_app.logger.exception(e)
+            raise ValueError('创建文章失败')
 
     def update_post(self, post_id, title=None, content=None, summary=None, category_id=None, tags=None, status=None):
         """更新文章

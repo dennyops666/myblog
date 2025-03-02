@@ -4,109 +4,100 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">文章管理</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ url_for('admin.posts.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> 新建文章
-            </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">文章管理</h1>
+        <a href="{{ url_for('admin.posts.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> 新建文章
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>标题</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts %}
+                        <tr>
+                            <td>{{ post.id }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.posts.view', post_id=post.id) }}" target="_blank">
+                                    {{ post.title }}
+                                </a>
+                            </td>
+                            <td>{{ post.author.username }}</td>
+                            <td>{{ post.category.name if post.category else '未分类' }}</td>
+                            <td>
+                                {% if post.status.value == 'PUBLISHED' %}
+                                <span class="badge bg-success">已发布</span>
+                                {% elif post.status.value == 'DRAFT' %}
+                                <span class="badge bg-warning">草稿</span>
+                                {% elif post.status.value == 'ARCHIVED' %}
+                                <span class="badge bg-secondary">已归档</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ post.status.value }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePost({{ post.id }})">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pagination %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% for page in pagination.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.posts.index', page=page) }}">
+                                    {{ page }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>标题</th>
-                    <th>分类</th>
-                    <th>作者</th>
-                    <th>状态</th>
-                    <th>创建时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for post in posts.items %}
-                <tr>
-                    <td>{{ post.id }}</td>
-                    <td>
-                        {{ post.title }}
-                        {% if post.tags %}
-                        <div class="mt-1">
-                            {% for tag in post.tags %}
-                            <span class="badge bg-secondary">{{ tag.name }}</span>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </td>
-                    <td>{{ post.category.name if post.category else '未分类' }}</td>
-                    <td>{{ post.author.username }}</td>
-                    <td>
-                        {% if post.status.value == 'published' %}
-                            <span class="badge bg-success">已发布</span>
-                        {% elif post.status.value == 'draft' %}
-                            <span class="badge bg-warning">草稿</span>
-                        {% elif post.status.value == 'archived' %}
-                            <span class="badge bg-secondary">已归档</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        <div class="btn-group">
-                            <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i> 编辑
-                            </a>
-                            <a href="{{ url_for('admin.posts.view', post_id=post.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
-                                <i class="fas fa-eye"></i> 查看
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger delete-post" data-post-id="{{ post.id }}" data-post-title="{{ post.title }}">
-                                <i class="fas fa-trash"></i> 删除
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    {% if posts.pages > 1 %}
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if posts.has_prev %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.posts.index', page=posts.prev_num) }}">上一页</a>
-            </li>
-            {% endif %}
-            
-            {% for page in range(1, posts.pages + 1) %}
-            <li class="page-item {{ 'active' if page == posts.page else '' }}">
-                <a class="page-link" href="{{ url_for('admin.posts.index', page=page) }}">{{ page }}</a>
-            </li>
-            {% endfor %}
-            
-            {% if posts.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.posts.index', page=posts.next_num) }}">下一页</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
 </div>
 
-<!-- 删除确认模态框 -->
-<div class="modal fade" id="deletePostModal" tabindex="-1" aria-labelledby="deletePostModalLabel" aria-hidden="true">
+<!-- 删除确认对话框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deletePostModalLabel">确认删除</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>确定要删除文章 "<span id="postTitle"></span>" 吗？</p>
-                <p class="text-danger">此操作不可恢复！</p>
+                <p>确定要删除这篇文章吗？此操作不可恢复。</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
@@ -115,100 +106,80 @@
         </div>
     </div>
 </div>
+
+<!-- 消息提示对话框 -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">提示</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="messageContent"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="messageConfirm">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 检查是否需要刷新页面
-    if (sessionStorage.getItem('refreshPostList') === 'true') {
-        sessionStorage.removeItem('refreshPostList');
-        // 添加时间戳参数以防止缓存
-        const timestamp = new Date().getTime();
-        window.location.href = window.location.pathname + '?t=' + timestamp;
-        return;
-    }
+const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+const messageContent = document.getElementById('messageContent');
+const messageConfirm = document.getElementById('messageConfirm');
+let postIdToDelete = null;
 
-    const deleteModal = new bootstrap.Modal(document.getElementById('deletePostModal'));
-    let postIdToDelete = null;
+function showMessage(message, success = false) {
+    messageContent.textContent = message;
+    messageConfirm.onclick = () => {
+        if (success) {
+            window.location.reload();
+        }
+    };
+    messageModal.show();
+}
 
-    // 点击删除按钮时显示确认模态框
-    document.querySelectorAll('.delete-post').forEach(button => {
-        button.addEventListener('click', function() {
-            const postId = this.dataset.postId;
-            const postTitle = this.dataset.postTitle;
-            postIdToDelete = postId;
-            document.getElementById('postTitle').textContent = postTitle;
-            deleteModal.show();
-        });
+function deletePost(postId) {
+    postIdToDelete = postId;
+    deleteModal.show();
+}
+
+document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (!postIdToDelete) return;
+    
+    fetch(`/admin/posts/${postIdToDelete}/delete`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        deleteModal.hide();
+        if (data.success) {
+            showMessage('文章删除成功', true);
+        } else {
+            showMessage(data.message || '删除失败');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        deleteModal.hide();
+        showMessage('删除失败，请重试');
     });
-
-    // 确认删除
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (!postIdToDelete) return;
-
-        fetch(`/admin/posts/${postIdToDelete}/delete`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                csrf_token: document.querySelector('meta[name="csrf-token"]').content
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            deleteModal.hide();
-            if (data.success) {
-                showToast('success', data.message);
-                // 添加时间戳参数以防止缓存
-                const timestamp = new Date().getTime();
-                window.location.href = window.location.pathname + '?t=' + timestamp;
-            } else {
-                showToast('error', data.message || '删除失败，请稍后重试');
-            }
-        })
-        .catch(error => {
-            deleteModal.hide();
-            showToast('error', '删除失败，请稍后重试');
-            console.error('Error:', error);
-        });
-    });
-
-    // 显示提示消息
-    function showToast(type, message) {
-        const toastContainer = document.createElement('div');
-        toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
-        toastContainer.style.zIndex = '5';
-        
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        `;
-        
-        toastContainer.appendChild(toast);
-        document.body.appendChild(toastContainer);
-        
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        
-        toast.addEventListener('hidden.bs.toast', () => {
-            toastContainer.remove();
-        });
-    }
 });
 </script>
 {% endblock %} 

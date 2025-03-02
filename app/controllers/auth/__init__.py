@@ -9,29 +9,23 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from app.services import UserService, OperationLogService
 from app.models import User, Permission
-from app.forms.auth import LoginForm
+from app.forms.auth import LoginForm, RegisterForm
 from urllib.parse import urlparse
 import traceback
+from app.extensions import db
 
 auth_bp = Blueprint('auth', __name__)
 user_service = UserService()
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """管理后台登录视图"""
+    """用户登录视图"""
     try:
         # 获取next参数
         next_url = request.args.get('next')
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
-        # 如果已经登录，重定向到管理后台
+        # 如果已经登录，重定向到管理后台首页
         if current_user.is_authenticated:
-            if is_ajax:
-                return jsonify({
-                    'success': True,
-                    'message': '已经登录',
-                    'redirect_url': next_url or url_for('admin.index')
-                })
             return redirect(next_url or url_for('admin.index'))
 
         form = LoginForm()
@@ -42,41 +36,13 @@ def login():
             remember_me = request.form.get('remember_me', False)
 
             if not username or not password:
-                if is_ajax:
-                    return jsonify({
-                        'success': False,
-                        'message': '用户名和密码不能为空'
-                    })
                 flash('用户名和密码不能为空', 'danger')
                 return render_template('auth/login.html', form=form)
 
             user = user_service.get_user_by_username(username)
             if not user or not user.verify_password(password):
-                if is_ajax:
-                    return jsonify({
-                        'success': False,
-                        'message': '用户名或密码错误'
-                    })
                 flash('用户名或密码错误', 'danger')
                 return render_template('auth/login.html', form=form)
-
-            # 检查管理员权限
-            is_admin = False
-            admin_permission = Permission.ADMIN.value | Permission.SUPER_ADMIN.value
-            for role in user.roles:
-                if role.permissions & admin_permission:
-                    is_admin = True
-                    break
-
-            if not is_admin:
-                if is_ajax:
-                    return jsonify({
-                        'success': False,
-                        'message': '您不是管理员，请从博客首页登录',
-                        'redirect_url': url_for('blog.login')
-                    })
-                flash('您不是管理员，请从博客首页登录', 'danger')
-                return redirect(url_for('blog.login'))
 
             # 登录成功处理
             login_user(user, remember=remember_me)
@@ -89,26 +55,14 @@ def login():
                 if not parsed_next.netloc:
                     redirect_url = next_url
             
-            if is_ajax:
-                return jsonify({
-                    'success': True,
-                    'message': '登录成功',
-                    'redirect_url': redirect_url
-                })
-            
             flash('登录成功', 'success')
             return redirect(redirect_url)
 
         return render_template('auth/login.html', form=form)
     except Exception as e:
         current_app.logger.error(f'登录过程中发生错误: {str(e)}\n{traceback.format_exc()}')
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                'success': False,
-                'message': '服务器内部错误'
-            }), 500
-        flash('服务器内部错误', 'error')
-        return render_template('errors/500.html'), 500
+        flash('服务器内部错误，请稍后重试', 'error')
+        return render_template('auth/login.html', form=form)
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():
@@ -163,3 +117,24 @@ def logout():
             }), 500
         flash('服务器内部错误', 'error')
         return render_template('errors/500.html'), 500
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """用户注册"""
+    if current_user.is_authenticated:
+        return redirect(url_for('blog.index'))
+        
+    form = RegisterForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            nickname=form.nickname.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('注册成功！请登录。', 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/register.html', form=form)

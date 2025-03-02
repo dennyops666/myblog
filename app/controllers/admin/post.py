@@ -25,12 +25,13 @@ tag_service = TagService()
 def index():
     """文章列表页面"""
     try:
+        current_app.logger.info("开始加载文章列表...")
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         status = request.args.get('status', 'all')
         
-        current_app.logger.debug(f"Requested status: {status}")
-        current_app.logger.debug(f"Available PostStatus values: {[e.value for e in PostStatus]}")
+        current_app.logger.debug(f"请求参数: page={page}, per_page={per_page}, status={status}")
+        current_app.logger.debug(f"可用的状态值: {[e.value for e in PostStatus]}")
         
         # 强制刷新数据库会话，确保获取最新数据
         db.session.expire_all()
@@ -47,24 +48,25 @@ def index():
             try:
                 # 遍历枚举值找到匹配的状态
                 for status_enum in PostStatus:
-                    current_app.logger.debug(f"Checking status_enum: {status_enum.name} = {status_enum.value}")
+                    current_app.logger.debug(f"检查状态: {status_enum.name} = {status_enum.value}")
                     if status_enum.value == status:
-                        current_app.logger.debug(f"Found matching status: {status_enum}")
+                        current_app.logger.debug(f"找到匹配的状态: {status_enum}")
                         query = query.filter(Post.status == status_enum)
                         break
                 else:
-                    current_app.logger.warning(f"Invalid status value: {status}")
+                    current_app.logger.warning(f"无效的状态值: {status}")
                     flash('无效的状态值', 'error')
                     return redirect(url_for('admin.index'))
             except Exception as e:
-                current_app.logger.warning(f"Error processing status filter: {str(e)}")
+                current_app.logger.error(f"处理状态过滤时出错: {str(e)}")
+                current_app.logger.exception(e)
                 flash('处理状态过滤时出错', 'error')
                 return redirect(url_for('admin.index'))
         
         # 获取所有文章的状态进行调试
         all_posts = Post.query.all()
         for post in all_posts:
-            current_app.logger.debug(f"Post {post.id} status: {post.status}")
+            current_app.logger.debug(f"文章 {post.id} 的状态: {post.status}")
             
         # 按创建时间倒序排序并执行分页
         posts = query.order_by(Post.created_at.desc()).paginate(
@@ -72,6 +74,8 @@ def index():
             per_page=per_page,
             error_out=False
         )
+        
+        current_app.logger.debug(f"获取到 {len(posts.items)} 篇文章")
         
         # 确保所有关联数据都被加载
         if posts.items:
@@ -86,6 +90,8 @@ def index():
         
         # 提交会话以确保所有更改都被保存
         db.session.commit()
+        
+        current_app.logger.info("文章列表加载完成")
         
         # 设置响应头，禁止缓存
         response = make_response(render_template('admin/post/list.html', posts=posts, current_status=status))
@@ -104,7 +110,18 @@ def index():
 @login_required
 def create():
     """创建文章"""
+    current_app.logger.info("开始加载分类选项...")
+    categories = Category.query.all()
+    current_app.logger.info(f"成功获取到 {len(categories)} 个分类")
+    
+    current_app.logger.info("开始加载标签选项...")
+    tags = Tag.query.all()
+    current_app.logger.info(f"成功获取到 {len(tags)} 个标签")
+    
     form = PostForm()
+    form.category_id.choices = [(c.id, c.name) for c in categories]
+    form.tags.choices = [(str(t.id), t.name) for t in tags]
+    
     if request.method == 'POST':
         current_app.logger.info("开始处理文章创建请求...")
         current_app.logger.debug(f"表单数据: {request.form}")
@@ -119,17 +136,24 @@ def create():
                 else:
                     raise ValueError('无效的状态值')
 
+                # 获取标签对象
+                selected_tags = []
+                if form.tags.data:
+                    selected_tags = Tag.query.filter(Tag.id.in_([int(tag_id) for tag_id in form.tags.data])).all()
+
                 post = post_service.create_post(
                     title=form.title.data,
                     content=form.content.data,
+                    summary=form.summary.data,
                     author_id=current_user.id,
                     category_id=form.category_id.data,
-                    tags=[Tag.query.get(tag_id) for tag_id in form.tags.data] if form.tags.data else None,
+                    tags=selected_tags,
                     status=status
                 )
                 
                 if post:  # 确保文章创建成功
-                    if request.is_xhr:
+                    is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    if is_xhr:
                         current_app.logger.info("文章创建成功，返回JSON响应")
                         return jsonify({
                             'success': True,
@@ -144,28 +168,31 @@ def create():
                     
             except ValueError as e:
                 current_app.logger.error(f"创建文章失败(ValueError): {str(e)}")
-                if request.is_xhr:
+                is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                if is_xhr:
                     return jsonify({
                         'success': False,
                         'message': str(e)
                     }), 400
                 flash(str(e), 'error')
-                return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
+                return render_template('admin/post/create.html', form=form)
                 
             except Exception as e:
                 current_app.logger.error(f"创建文章失败: {str(e)}")
                 current_app.logger.exception(e)  # 记录完整的异常堆栈
-                if request.is_xhr:
+                is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                if is_xhr:
                     return jsonify({
                         'success': False,
                         'message': '创建文章失败，请稍后重试',
                         'error': str(e)
                     }), 500
                 flash('创建文章失败，请稍后重试', 'error')
-                return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
+                return render_template('admin/post/create.html', form=form)
         else:
             current_app.logger.warning(f"表单验证失败: {form.errors}")
-            if request.is_xhr:
+            is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            if is_xhr:
                 return jsonify({
                     'success': False,
                     'message': '表单验证失败',
@@ -175,115 +202,135 @@ def create():
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f'{getattr(form, field).label.text}: {error}', 'error')
-            return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
+            return render_template('admin/post/create.html', form=form)
             
-    return render_template('admin/post/create.html', form=form, tags=Tag.query.all())
+    return render_template('admin/post/create.html', form=form)
 
 @post_bp.route('/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(post_id):
     """编辑文章"""
-    # 使用 joinedload 预加载标签
-    post = Post.query.options(
-        db.joinedload(Post.tags),
-        db.joinedload(Post.category),
-        db.joinedload(Post.author)
-    ).get_or_404(post_id)
-    
-    form = PostForm(obj=post)
-    form.available_tags = [(str(tag.id), tag.name) for tag in Tag.query.order_by(Tag.name).all()]
-    
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            try:
-                # 更新文章基本信息（除了标签）
-                post.title = form.title.data
-                post.content = form.content.data
-                post.category_id = form.category_id.data
-                
-                # 根据表单中的状态值获取对应的枚举值
-                for status_enum in PostStatus:
-                    if status_enum.value == form.status.data:
-                        post.status = status_enum
-                        break
-                else:
-                    raise ValueError('无效的状态值')
+    try:
+        current_app.logger.info("开始加载分类选项...")
+        categories = Category.query.all()
+        current_app.logger.info(f"成功获取到 {len(categories)} 个分类")
+        
+        current_app.logger.info("开始加载标签选项...")
+        tags = Tag.query.all()
+        current_app.logger.info(f"成功获取到 {len(tags)} 个标签")
+        
+        # 使用 joinedload 预加载所有关联数据
+        post = Post.query.options(
+            db.joinedload(Post.category),
+            db.joinedload(Post.tags),
+            db.joinedload(Post.author)
+        ).get_or_404(post_id)
+        
+        form = PostForm(obj=post)
+        form.category_id.choices = [(c.id, c.name) for c in categories]
+        form.tags.choices = [(str(t.id), t.name) for t in tags]
+        
+        if request.method == 'POST':
+            current_app.logger.info("开始处理文章更新请求...")
+            current_app.logger.debug(f"表单数据: {request.form}")
+            
+            if form.validate_on_submit():
+                try:
+                    # 获取标签对象
+                    selected_tags = []
+                    if form.tags.data:
+                        selected_tags = Tag.query.filter(Tag.id.in_([int(tag_id) for tag_id in form.tags.data])).all()
                     
-                post.summary = form.summary.data
-                
-                # 处理标签
-                new_tags = []
-                if form.tags.data:
-                    tag_ids = form.tags.data.split(',')
-                    for tag_id in tag_ids:
-                        # 如果是数字ID，查找现有标签
-                        if tag_id.isdigit():
-                            tag = Tag.query.get(int(tag_id))
-                            if tag:
-                                new_tags.append(tag)
-                        else:
-                            # 如果是新标签名称，创建新标签
-                            tag = Tag.query.filter_by(name=tag_id).first()
-                            if not tag:
-                                tag = Tag(name=tag_id)
-                                db.session.add(tag)
-                            new_tags.append(tag)
-                
-                # 更新文章的标签关系
-                post.tags = new_tags
-                
-                # 保存所有更改
-                db.session.commit()
-                
-                # 刷新会话中的对象
-                db.session.refresh(post)
-                for tag in post.tags:
-                    db.session.refresh(tag)
-                
-                if request.is_xhr:
-                    return jsonify({
-                        'success': True,
-                        'message': '文章更新成功',
-                        'redirect_url': url_for('admin.posts.index')
-                    })
-                flash('文章更新成功', 'success')
-                return redirect(url_for('admin.posts.index'))
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.error(f'更新文章失败: {str(e)}')
-                if request.is_xhr:
+                    # 根据表单中的状态值获取对应的枚举值
+                    for status_enum in PostStatus:
+                        if status_enum.value == form.status.data:
+                            status = status_enum
+                            break
+                    else:
+                        raise ValueError('无效的状态值')
+                    
+                    # 更新文章
+                    post = post_service.update_post(
+                        post_id=post_id,
+                        title=form.title.data,
+                        content=form.content.data,
+                        summary=form.summary.data,
+                        category_id=form.category_id.data,
+                        tags=selected_tags,
+                        status=status
+                    )
+                    
+                    if post:  # 确保文章更新成功
+                        is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                        if is_xhr:
+                            current_app.logger.info("文章更新成功，返回JSON响应")
+                            return jsonify({
+                                'success': True,
+                                'message': '文章更新成功',
+                                'redirect_url': url_for('admin.posts.index')
+                            })
+                        
+                        flash('文章更新成功', 'success')
+                        return redirect(url_for('admin.posts.index'))
+                    else:
+                        raise ValueError('文章更新失败')
+                        
+                except ValueError as e:
+                    current_app.logger.error(f"更新文章失败(ValueError): {str(e)}")
+                    is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    if is_xhr:
+                        return jsonify({
+                            'success': False,
+                            'message': str(e)
+                        }), 400
+                    flash(str(e), 'error')
+                    return render_template('admin/post/edit.html', form=form, post=post)
+                    
+                except Exception as e:
+                    current_app.logger.error(f"更新文章失败: {str(e)}")
+                    current_app.logger.exception(e)
+                    is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    if is_xhr:
+                        return jsonify({
+                            'success': False,
+                            'message': '更新文章失败，请稍后重试'
+                        }), 500
+                    flash('更新文章失败，请稍后重试', 'error')
+                    return render_template('admin/post/edit.html', form=form, post=post)
+            else:
+                current_app.logger.warning(f"表单验证失败: {form.errors}")
+                is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                if is_xhr:
                     return jsonify({
                         'success': False,
-                        'message': '更新文章失败'
-                    }), 500
-                flash('更新文章失败', 'error')
-                return redirect(url_for('admin.posts.edit', post_id=post.id))
-        else:
-            if request.is_xhr:
-                return jsonify({
-                    'success': False,
-                    'message': '表单验证失败',
-                    'errors': form.errors
-                }), 400
-    
-    # 设置当前标签
-    form.tags.data = ','.join([str(tag.id) for tag in post.tags])
-    
-    return render_template('admin/post/edit.html', form=form, post=post)
+                        'message': '表单验证失败',
+                        'errors': form.errors
+                    }), 400
+                    
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f'{getattr(form, field).label.text}: {error}', 'error')
+                return render_template('admin/post/edit.html', form=form, post=post)
+                
+        return render_template('admin/post/edit.html', form=form, post=post)
+        
+    except Exception as e:
+        current_app.logger.error(f"编辑文章失败: {str(e)}")
+        current_app.logger.exception(e)
+        is_xhr = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_xhr:
+            return jsonify({
+                'success': False,
+                'message': '编辑文章失败，请稍后重试'
+            }), 500
+        flash('编辑文章失败，请稍后重试', 'error')
+        return redirect(url_for('admin.posts.index'))
 
 @post_bp.route('/<int:post_id>/delete', methods=['POST'])
 @login_required
 def delete(post_id):
     """删除文章"""
     try:
-        # 从 JSON 请求中获取 CSRF token
-        csrf_token = request.get_json().get('csrf_token')
-        if not csrf_token:
-            return jsonify({
-                'success': False,
-                'message': 'CSRF token 不能为空'
-            }), 400
-
         result = post_service.delete_post(post_id)
         if result['status'] == 'success':
             return jsonify({
@@ -380,4 +427,40 @@ def preview():
         return jsonify({
             'success': False,
             'message': '预览失败，请稍后重试'
+        }), 500
+
+@post_bp.route('/search_tags')
+@login_required
+def search_tags():
+    """搜索标签"""
+    try:
+        query = request.args.get('q', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = 30
+        
+        # 查询标签
+        tags_query = Tag.query
+        if query:
+            tags_query = tags_query.filter(Tag.name.ilike(f'%{query}%'))
+        
+        # 获取总数
+        total_count = tags_query.count()
+        
+        # 分页
+        tags = tags_query.order_by(Tag.name).offset((page - 1) * per_page).limit(per_page).all()
+        
+        # 格式化结果
+        items = [{'id': str(tag.id), 'text': tag.name} for tag in tags]
+        
+        return jsonify({
+            'items': items,
+            'total_count': total_count
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"搜索标签失败: {str(e)}")
+        current_app.logger.exception(e)
+        return jsonify({
+            'items': [],
+            'total_count': 0
         }), 500

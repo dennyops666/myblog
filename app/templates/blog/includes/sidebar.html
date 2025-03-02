@@ -1,0 +1,71 @@
+<!-- 侧边栏 -->
+<div class="sidebar">
+    <!-- 分类列表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-folder me-2"></i>分类
+        </div>
+        <div class="card-body">
+            {% if categories %}
+            <ul class="list-unstyled mb-0">
+                {% for category in categories %}
+                <li class="mb-2">
+                    <a href="{{ url_for('blog.index', category_id=category.id) }}" 
+                       class="text-decoration-none {% if category.id == current_category_id %}fw-bold{% endif %}">
+                        {{ category.name }} 
+                        <span class="badge bg-secondary">{{ category_post_counts.get(category.id, 0) }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">暂无分类</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 标签云 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-tags me-2"></i>标签
+        </div>
+        <div class="card-body">
+            {% if tags %}
+            <div class="tag-cloud">
+                {% for tag in tags %}
+                {% set post_count = tag_post_counts.get(tag.id, 0) %}
+                <a href="{{ url_for('blog.index', tag_id=tag.id) }}" 
+                   class="btn btn-outline-secondary btn-sm me-2 mb-2 {% if tag.id == current_tag_id %}active{% endif %}">
+                    {{ tag.name }}
+                    <span class="badge bg-secondary">{{ post_count }}</span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">暂无标签</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 最新文章 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-clock-history me-2"></i>最新文章
+        </div>
+        <div class="card-body">
+            {% if recent_posts %}
+            <ul class="list-unstyled mb-0">
+                {% for post in recent_posts %}
+                <li class="mb-2">
+                    <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="text-decoration-none">
+                        {{ post.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">暂无文章</p>
+            {% endif %}
+        </div>
+    </div>
+</div> 

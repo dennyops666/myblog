@@ -7,58 +7,47 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, Regexp, ValidationError
+from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
+from app.models.user import User
 
 class LoginForm(FlaskForm):
     """登录表单"""
-    class Meta:
-        csrf = False  # 禁用 CSRF 保护
-        
-    username = StringField('用户名', validators=[
-        DataRequired(message='请输入用户名'),
-        Length(min=3, max=20, message='用户名长度必须在3-20个字符之间')
-    ])
-    password = PasswordField('密码', validators=[
-        DataRequired(message='请输入密码'),
-        Length(min=6, message='密码长度不能小于6个字符')
-    ])
+    username = StringField('用户名', validators=[DataRequired(), Length(1, 64)])
+    password = PasswordField('密码', validators=[DataRequired()])
     remember_me = BooleanField('记住我')
     submit = SubmitField('登录')
 
-    @classmethod
-    def from_json(cls, json_data):
-        """从 JSON 数据创建表单实例"""
-        if not json_data:
-            return None
-        form = cls()
-        form.username.data = json_data.get('username')
-        form.password.data = json_data.get('password')
-        form.remember_me.data = json_data.get('remember_me', False)
-        return form
-
 class RegisterForm(FlaskForm):
     """注册表单"""
-    class Meta:
-        csrf = False  # 禁用 CSRF 保护
-        
     username = StringField('用户名', validators=[
-        DataRequired(message='请输入用户名'),
-        Length(min=3, max=20, message='用户名长度必须在3-20个字符之间'),
-        Regexp(r'^[A-Za-z0-9_]+$', message='用户名只能包含字母、数字和下划线')
+        DataRequired(),
+        Length(1, 64, message='用户名长度必须在1到64个字符之间')
     ])
     email = StringField('邮箱', validators=[
-        DataRequired(message='请输入邮箱'),
+        DataRequired(),
         Email(message='请输入有效的邮箱地址'),
-        Length(max=50, message='邮箱长度不能超过50个字符')
+        Length(1, 120, message='邮箱长度必须在1到120个字符之间')
+    ])
+    nickname = StringField('昵称', validators=[
+        DataRequired(),
+        Length(1, 64, message='昵称长度必须在1到64个字符之间')
     ])
     password = PasswordField('密码', validators=[
-        DataRequired(message='请输入密码'),
-        Length(min=6, message='密码长度不能小于6个字符'),
-        Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$', 
-               message='密码必须包含至少一个字母和一个数字')
+        DataRequired(),
+        Length(6, 128, message='密码长度必须在6到128个字符之间')
     ])
-    confirm_password = PasswordField('确认密码', validators=[
-        DataRequired(message='请确认密码'),
+    password2 = PasswordField('确认密码', validators=[
+        DataRequired(),
         EqualTo('password', message='两次输入的密码不一致')
     ])
-    submit = SubmitField('注册') 
+    submit = SubmitField('注册')
+
+    def validate_username(self, field):
+        """验证用户名是否已存在"""
+        if User.query.filter_by(username=field.data).first():
+            raise ValidationError('该用户名已被使用')
+
+    def validate_email(self, field):
+        """验证邮箱是否已存在"""
+        if User.query.filter_by(email=field.data).first():
+            raise ValidationError('该邮箱已被注册') 

@@ -1,81 +1,76 @@
-{% extends "base.html" %}
+{% extends "admin/layout.html" %}
 
-{% block title %}个人资料 - MyBlog{% endblock %}
+{% block title %}个人资料{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow">
-                <div class="card-body text-center">
-                    <img src="{{ current_user.avatar or url_for('static', filename='images/default-avatar.png') }}" 
-                         alt="头像" class="rounded-circle img-thumbnail mb-3" style="width: 150px; height: 150px;">
-                    <h4>{{ current_user.username }}</h4>
-                    <p class="text-muted">{{ current_user.email }}</p>
-                    <p class="text-muted">
-                        注册于：{{ current_user.created_at.strftime('%Y-%m-%d') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        
+<div class="container py-4">
+    <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">个人资料</h4>
+                </div>
                 <div class="card-body">
-                    <h3 class="card-title mb-4">编辑个人资料</h3>
-                    
-                    <form method="post">
-                        {{ form.csrf_token }}
+                    <form method="post" action="{{ url_for('auth.profile') }}">
+                        {% from "macros/csrf.html" import csrf_field %}
+                        {{ csrf_field() }}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   value="{{ current_user.username }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称</label>
+                            <input type="text" class="form-control" id="nickname" name="nickname" 
+                                   value="{{ current_user.nickname }}">
+                        </div>
                         
                         <div class="mb-3">
                             <label for="bio" class="form-label">个人简介</label>
-                            <textarea name="bio" id="bio" rows="3" class="form-control">{{ current_user.bio }}</textarea>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ current_user.bio }}</textarea>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="website" class="form-label">个人网站</label>
-                            <input type="url" name="website" id="website" class="form-control" 
-                                   value="{{ current_user.website }}">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="location" class="form-label">所在地</label>
-                            <input type="text" name="location" id="location" class="form-control" 
-                                   value="{{ current_user.location }}">
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">保存更改</button>
-                        </div>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
                     </form>
                 </div>
             </div>
-            
-            <div class="card shadow mt-4">
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4 class="mb-0">修改密码</h4>
+                </div>
                 <div class="card-body">
-                    <h3 class="card-title mb-4">修改密码</h3>
-                    
                     <form method="post" action="{{ url_for('auth.change_password') }}">
-                        {{ password_form.csrf_token }}
+                        {% from "macros/csrf.html" import csrf_field %}
+                        {{ csrf_field() }}
                         
                         <div class="mb-3">
-                            <label for="old_password" class="form-label">当前密码</label>
-                            <input type="password" name="old_password" id="old_password" class="form-control" required>
+                            <label for="current_password" class="form-label">当前密码</label>
+                            <input type="password" class="form-control" id="current_password" 
+                                   name="current_password" required>
                         </div>
                         
                         <div class="mb-3">
                             <label for="new_password" class="form-label">新密码</label>
-                            <input type="password" name="new_password" id="new_password" class="form-control" required>
+                            <input type="password" class="form-control" id="new_password" 
+                                   name="new_password" required>
                         </div>
                         
                         <div class="mb-3">
                             <label for="confirm_password" class="form-label">确认新密码</label>
-                            <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" required>
                         </div>
                         
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger">修改密码</button>
-                        </div>
+                        <button type="submit" class="btn btn-primary">修改密码</button>
                     </form>
                 </div>
             </div>

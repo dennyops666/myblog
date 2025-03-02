@@ -5,28 +5,24 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint, request, jsonify, session
-from flask_wtf.csrf import generate_csrf
+from flask import Blueprint, request, jsonify, session, render_template
 from app.services import SecurityService
 from app.extensions import db
 from app.models import User
-from flask_wtf.csrf import csrf_protect
 from app.utils import sql_injection_protect, xss_protect
 from werkzeug.security import check_password_hash
+from flask_login import login_required
 
 test_bp = Blueprint('test', __name__)
 security_service = SecurityService()
 
 @test_bp.route('/login', methods=['GET', 'POST'])
-@csrf_protect()
 @sql_injection_protect()
 def login():
     """测试登录路由"""
     if request.method == 'GET':
-        csrf_token = generate_csrf()
-        return f'''
+        return '''
             <form method="post">
-                <input type="hidden" name="csrf_token" value="{csrf_token}">
                 <input type="text" name="username">
                 <input type="password" name="password">
                 <button type="submit">登录</button>
@@ -57,7 +53,6 @@ def login():
     return jsonify({'message': '登录成功'})
 
 @test_bp.route('/api/posts', methods=['POST'])
-@csrf_protect()
 @xss_protect()
 def create_post():
     """测试API创建文章"""
@@ -76,7 +71,6 @@ def create_post():
     return jsonify({'message': '文章创建成功', 'data': safe_data}), 201
 
 @test_bp.route('/upload', methods=['POST'])
-@csrf_protect()
 def upload_file():
     """测试文件上传"""
     if 'file' not in request.files:
@@ -120,4 +114,14 @@ def test_xss():
 def test_sql():
     """测试SQL注入防护"""
     data = request.get_json()
-    return jsonify({'data': data}) 
+    return jsonify({'data': data})
+
+@test_bp.route('/test')
+@login_required
+def test():
+    return render_template('test.html')
+
+@test_bp.route('/api/test', methods=['POST'])
+def api_test():
+    data = request.get_json()
+    return jsonify({'success': True, 'data': data}) 
