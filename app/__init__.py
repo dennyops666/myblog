@@ -23,7 +23,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from app.utils.markdown import markdown_to_html
 from flask_moment import Moment
-from flask_wtf.csrf import CSRFProtect
 
 # 创建 migrate 实例
 migrate = Migrate()
@@ -40,8 +39,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # 配置自定义过滤器
-csrf = CSRFProtect()
-
 moment = Moment()
 
 def create_app(config_name='development'):
@@ -152,10 +149,17 @@ def create_app(config_name='development'):
         
         # 注册蓝图
         app.register_blueprint(blog, url_prefix='/blog')
-        app.register_blueprint(admin_bp, url_prefix='/admin')
         app.register_blueprint(auth_bp, url_prefix='/auth')
         app.register_blueprint(test_bp, url_prefix='/test')
+        
+        # 注册管理后台蓝图
+        app.register_blueprint(admin_bp, url_prefix='/admin')
+        
         app.logger.info('蓝图注册完成')
+        
+        # 注册用户管理蓝图
+        from app.controllers.admin.user import bp as user_bp
+        app.register_blueprint(user_bp)
         
         # 初始化 Flask-Migrate
         migrate.init_app(app, db)
@@ -170,7 +174,6 @@ def create_app(config_name='development'):
         # 初始化其他扩展
         moment.init_app(app)
         login_manager.init_app(app)
-        csrf.init_app(app)
         
         app.logger.info('应用初始化完成')
         return app
@@ -179,3 +182,9 @@ def create_app(config_name='development'):
         app.logger.error('应用初始化失败: %s', str(e))
         app.logger.error('错误详情: %s', traceback.format_exc())
         raise
+
+def register_blueprints(app):
+    # ... existing code ...
+    from app.controllers.admin.user_delete import bp as user_delete_bp
+    app.register_blueprint(user_delete_bp)
+    # ... existing code ...

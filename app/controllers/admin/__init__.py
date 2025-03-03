@@ -21,19 +21,22 @@ from app.services.post import PostService
 from app.services.category import CategoryService
 from app.services.tag import TagService
 from app.services.comment import CommentService
-from .post import post_bp
+from app.controllers.admin.user import bp as user_bp
+from app.controllers.admin.post import post_bp
 from app.controllers.admin.category import category_bp
 from app.controllers.admin.tag import tag_bp
 from app.controllers.admin.comment import comment_bp
-from app.controllers.admin.user import user_bp
 from .upload import upload_bp
 from functools import wraps
 from urllib.parse import urlparse
 from app.decorators import admin_required
 from app.middleware.security import xss_protect, sql_injection_protect
+from app.models.permission import Permission
 
 # 创建蓝图
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint('admin', __name__)
+
+# 初始化服务
 user_service = UserService()
 post_service = PostService()
 category_service = CategoryService()
@@ -42,11 +45,11 @@ comment_service = CommentService()
 operation_log_service = OperationLogService()
 
 # 注册子蓝图
+admin_bp.register_blueprint(user_bp, url_prefix='/users')
 admin_bp.register_blueprint(post_bp, url_prefix='/posts')
 admin_bp.register_blueprint(category_bp, url_prefix='/categories')
 admin_bp.register_blueprint(tag_bp, url_prefix='/tags')
 admin_bp.register_blueprint(comment_bp, url_prefix='/comments')
-admin_bp.register_blueprint(user_bp, url_prefix='/users')
 admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
 # 为所有视图函数添加安全保护
@@ -73,6 +76,7 @@ def require_login():
 
 @admin_bp.route('/')
 @login_required
+@admin_required
 def index():
     """管理后台首页"""
     return render_template('admin/index.html')
@@ -83,56 +87,82 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('admin.index'))
         
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = UserService.get_user_by_username(form.username.data)
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        remember = request.form.get('remember', False)
         
-        if user and user.verify_password(form.password.data):
-            # 验证是否具有管理员权限
-            has_admin_permission = False
-            for role in user.roles:
-                if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
-                    has_admin_permission = True
-                    break
-                    
-            if not has_admin_permission:
-                flash('您没有管理员权限', 'danger')
-                return redirect(url_for('admin.login'))
-                
-            # 管理员登录成功
-            login_user(user, remember=form.remember_me.data)
+        # 验证用户名和密码
+        result = user_service.validate_admin_login(username, password)
+        if result['status']:
+            user = result['user']
+            login_user(user, remember=remember)
             
-            # 记录登录操作
+            # 记录操作日志
             operation_log_service.log_operation(
                 user=user,
-                action='admin_login',
-                details=f'管理员 {user.username} 登录后台'
+                action='登录',
+                details='管理员登录'
             )
             
-            flash('登录成功', 'success')
-            return redirect(url_for('admin.index'))
+            return jsonify({
+                'success': True,
+                'message': '登录成功',
+                'redirect_url': url_for('admin.index')
+            })
         else:
-            flash('用户名或密码错误', 'danger')
+            return jsonify({
+                'success': False,
+                'message': '用户名或密码错误'
+            })
             
-    return render_template('admin/login.html', form=form)
+    return render_template('admin/login.html')
 
-@admin_bp.route('/logout', methods=['POST'])
+@admin_bp.route('/logout')
 @login_required
 def logout():
-    """管理后台登出"""
+    """退出登录"""
+    # 记录操作日志
+    operation_log_service.log_operation(
+        user=current_user,
+        action='退出登录',
+        details='管理员退出登录'
+    )
+    
     logout_user()
-    flash('已安全退出', 'success')
-    return redirect(url_for('auth.login'))
+    return jsonify({
+        'success': True,
+        'message': '已安全退出',
+        'redirect_url': url_for('admin.login')
+    })
 
 @admin_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    """个人资料页面"""
+    """个人资料"""
+    # 创建表单对象
     form = ProfileForm(obj=current_user)
-    if form.validate_on_submit():
-        current_user.username = form.username.data
-        current_user.email = form.email.data
-        db.session.commit()
-        flash('个人资料更新成功', 'success')
-        return redirect(url_for('admin.profile'))
-    return render_template('admin/profile.html', form=form)
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        try:
+            user_service.update_user(
+                user_id=current_user.id,
+                username=username,
+                email=email,
+                password=password
+            )
+            return jsonify({
+                'success': True,
+                'message': '个人资料更新成功'
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            })
+            
+    return render_template('admin/profile.html', user=current_user, form=form)
