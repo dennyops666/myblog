@@ -1,28 +1,36 @@
 // 用户删除功能
 function deleteUser(userId) {
-    console.log('删除用户函数被调用，用户ID:', userId);
-    
-    // 查找删除表单
-    var form = document.getElementById('delete-form-' + userId);
+    const form = document.getElementById(`delete-form-${userId}`);
     if (!form) {
-        console.log('找不到删除表单，表单ID:', 'delete-form-' + userId);
-        showErrorAlert('删除操作失败：找不到删除表单');
+        showToast('error', '删除操作失败：找不到删除表单');
         return;
     }
 
-    // 显示确认对话框
-    showDeleteConfirmDialog(userId, function() {
-        console.log('用户确认删除，准备提交表单...');
-        try {
-            // 确保表单方法为POST
-            form.method = 'post';
-            // 提交表单
-            form.submit();
-            console.log('表单已提交');
-        } catch (error) {
-            console.error('删除操作出错:', error);
-            showErrorAlert('删除操作失败：' + error.message);
-        }
+    // 使用自定义确认对话框
+    showDeleteConfirmDialog(userId, () => {
+        // 发送删除请求
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', data.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast('error', data.message || '删除失败');
+            }
+        })
+        .catch(error => {
+            console.error('删除请求失败:', error);
+            showToast('error', '删除失败，请稍后重试');
+        });
     });
 }
 
@@ -31,18 +39,21 @@ function showDeleteConfirmDialog(userId, callback) {
     // 创建模态对话框
     var modalHtml = `
         <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        确定要删除这个用户吗？此操作不可恢复！
+                        <p class="mb-2">确定要删除这个用户吗？</p>
+                        <p class="text-danger mb-0"><small>此操作不可恢复！</small></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                            <i class="bi bi-trash"></i> 确认删除
+                        </button>
                     </div>
                 </div>
             </div>
@@ -60,7 +71,10 @@ function showDeleteConfirmDialog(userId, callback) {
 
     // 获取模态框实例
     var modalElement = document.getElementById('deleteConfirmModal');
-    var modal = new bootstrap.Modal(modalElement);
+    var modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',  // 点击背景不关闭
+        keyboard: false      // 按ESC键不关闭
+    });
 
     // 绑定确认按钮事件
     modalElement.querySelector('#confirmDeleteBtn').onclick = function() {
@@ -70,33 +84,53 @@ function showDeleteConfirmDialog(userId, callback) {
 
     // 显示模态框
     modal.show();
+
+    // 模态框隐藏后自动删除
+    modalElement.addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
 }
 
 // 显示错误提示
-function showErrorAlert(message) {
-    var alertHtml = `
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
-    document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
-}
+function showToast(type, message) {
+    const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '1050';
+        document.body.appendChild(container);
+    }
 
-// 在页面加载完成后检查所有删除表单
-document.addEventListener('DOMContentLoaded', function() {
-    var forms = document.querySelectorAll('form[id^="delete-form-"]');
-    console.log('找到删除表单数量:', forms.length);
-    
-    forms.forEach(function(form) {
-        console.log('表单信息:', {
-            id: form.id,
-            action: form.action,
-            method: form.method,
-            csrfToken: form.querySelector('input[name="csrf_token"]')?.value || '不存在'
-        });
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+
+    const toastBody = document.createElement('div');
+    toastBody.className = 'd-flex';
+    toastBody.innerHTML = `
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    `;
+
+    toast.appendChild(toastBody);
+    document.getElementById('toast-container').appendChild(toast);
+
+    const bsToast = new bootstrap.Toast(toast, {
+        autohide: true,
+        delay: 3000
     });
-});
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+        if (document.getElementById('toast-container').children.length === 0) {
+            document.getElementById('toast-container').remove();
+        }
+    });
+}
 
 // 处理用户登录
 async function handleLogin(event) {
@@ -178,43 +212,55 @@ async function handleRegister(event) {
     }
 }
 
-// 显示提示消息
-function showToast(type, message) {
-    const toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        const container = document.createElement('div');
-        container.id = 'toast-container';
-        container.className = 'position-fixed top-0 end-0 p-3';
-        container.style.zIndex = '1050';
-        document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-
-    const toastBody = document.createElement('div');
-    toastBody.className = 'd-flex';
-    toastBody.innerHTML = `
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    `;
-
-    toast.appendChild(toastBody);
-    document.getElementById('toast-container').appendChild(toast);
-
-    const bsToast = new bootstrap.Toast(toast, {
-        autohide: true,
-        delay: 3000
+// 处理表单提交
+$(document).ready(function() {
+    $('#userForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var form = this;
+        var submitBtn = $(form).find('button[type="submit"]');
+        var originalText = submitBtn.html();
+        
+        // 禁用提交按钮
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...');
+        
+        // 使用FormData处理表单数据
+        var formData = new FormData(form);
+        
+        $.ajax({
+            url: $(form).attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,  // 不处理数据
+            contentType: false,  // 不设置内容类型
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // 显示成功消息
+                    showToast('success', response.message);
+                    // 延迟跳转
+                    setTimeout(function() {
+                        window.location.href = response.redirect_url;
+                    }, 1500);
+                } else {
+                    // 显示错误消息
+                    showToast('error', response.message);
+                    // 重置提交按钮
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html(originalText);
+                }
+            },
+            error: function(xhr, status, error) {
+                // 显示错误消息
+                showToast('error', '系统错误，请稍后重试');
+                // 重置提交按钮
+                submitBtn.prop('disabled', false);
+                submitBtn.html(originalText);
+                console.error('提交失败:', error);
+            }
+        });
     });
-    bsToast.show();
-
-    toast.addEventListener('hidden.bs.toast', () => {
-        toast.remove();
-        if (document.getElementById('toast-container').children.length === 0) {
-            document.getElementById('toast-container').remove();
-        }
-    });
-} 
+}); 

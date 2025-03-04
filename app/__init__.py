@@ -49,15 +49,6 @@ def create_app(config_name='development'):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     
-    # 配置会话
-    app.config.update(
-        SESSION_COOKIE_SECURE=False,  # 允许非HTTPS
-        SESSION_COOKIE_HTTPONLY=True,  # 防止JavaScript访问
-        SESSION_COOKIE_SAMESITE='Lax',  # 允许跨站点请求
-        PERMANENT_SESSION_LIFETIME=timedelta(days=365),  # 延长会话有效期
-        SESSION_REFRESH_EACH_REQUEST=True,  # 每次请求都刷新会话
-    )
-    
     # 确保日志目录存在
     log_dir = '/data/myblog/logs'
     if not os.path.exists(log_dir):
@@ -120,11 +111,6 @@ def create_app(config_name='development'):
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
     
-    # 配置会话
-    if app.config.get('TESTING'):
-        app.config['SESSION_TYPE'] = 'sqlalchemy'
-        app.config['SESSION_SQLALCHEMY'] = db
-    
     # 注册markdown过滤器
     app.jinja_env.filters['markdown'] = markdown_to_html
     
@@ -132,6 +118,27 @@ def create_app(config_name='development'):
     try:
         init_app(app)
         app.logger.info('扩展初始化完成')
+        
+        # 初始化 Flask-Migrate
+        migrate.init_app(app, db)
+        app.logger.info('数据库迁移初始化完成')
+        
+        # 初始化其他扩展
+        moment.init_app(app)
+        login_manager.init_app(app)
+        
+        # 配置会话
+        app.config.update(
+            SESSION_COOKIE_SECURE=False,  # 允许非HTTPS
+            SESSION_COOKIE_HTTPONLY=True,  # 防止JavaScript访问
+            SESSION_COOKIE_SAMESITE='Lax',  # 允许跨站点请求
+            PERMANENT_SESSION_LIFETIME=timedelta(days=365),  # 延长会话有效期
+            SESSION_REFRESH_EACH_REQUEST=True,  # 每次请求都刷新会话
+        )
+        
+        if app.config.get('TESTING'):
+            app.config['SESSION_TYPE'] = 'sqlalchemy'
+            app.config['SESSION_SQLALCHEMY'] = db
         
         # 添加favicon路由
         @app.route('/favicon.ico')
@@ -161,19 +168,11 @@ def create_app(config_name='development'):
         from app.controllers.admin.user import bp as user_bp
         app.register_blueprint(user_bp)
         
-        # 初始化 Flask-Migrate
-        migrate.init_app(app, db)
-        app.logger.info('数据库迁移初始化完成')
-        
         # 初始化测试数据
-        if app.config['TESTING']:
+        if app.config.get('TESTING'):
             from tests.test_data import init_test_data
             init_test_data(app)
             app.logger.info('测试数据库初始化完成')
-        
-        # 初始化其他扩展
-        moment.init_app(app)
-        login_manager.init_app(app)
         
         app.logger.info('应用初始化完成')
         return app

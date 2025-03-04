@@ -9,6 +9,7 @@ from app.extensions import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, UTC
+from app.models.permission import Permission
 
 # 用户角色关联表
 user_roles = db.Table('user_roles',
@@ -35,12 +36,22 @@ class User(UserMixin, db.Model):
     # 关系
     roles = db.relationship('Role', secondary=user_roles,
                           backref=db.backref('users', lazy='dynamic'),
-                          lazy='dynamic')
+                          lazy='joined')
     posts = db.relationship('Post', backref='author', lazy=True,
                           cascade='all, delete-orphan')
     comments = db.relationship('Comment', back_populates='author', lazy='dynamic',
                              cascade='all, delete-orphan',
                              foreign_keys='Comment.author_id')
+    
+    @property
+    def is_super_admin(self):
+        """判断用户是否是超级管理员"""
+        if not self.roles:  # 检查roles是否为空
+            return False
+        for role in self.roles:
+            if role.name == 'super_admin':  # 只检查super_admin角色
+                return True
+        return False
     
     def set_password(self, password):
         """设置密码"""
@@ -57,6 +68,17 @@ class User(UserMixin, db.Model):
     def has_role(self, role_name):
         """检查用户是否有指定角色"""
         return any(role.name == role_name for role in self.roles)
+        
+    def has_permission(self, permission):
+        """检查用户是否有指定权限"""
+        if not self.roles:
+            return False
+        if isinstance(permission, Permission):
+            permission = permission.value
+        for role in self.roles:
+            if role.has_permission(permission):
+                return True
+        return False
         
     def add_role(self, role):
         """添加角色"""

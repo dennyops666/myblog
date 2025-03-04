@@ -1,1 +1,96 @@
 /* Test CSS */
+
+/* 布局相关 */
+body {
+    font-size: .875rem;
+    background-color: #f8f9fa;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    background-color: #f8f9fa;
+    width: 240px;
+}
+
+/* 主内容区域样式 */
+.main-content {
+    position: relative;
+    z-index: 200;
+    margin-left: 240px;
+    padding-top: 48px;
+    min-height: 100vh;
+    background-color: #fff;
+}
+
+/* Toast 提示样式 */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 250px;
+    margin-bottom: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 表单验证提示 */
+.invalid-feedback {
+    display: block;
+    z-index: 300;
+    position: relative;
+}
+
+/* 模态框和弹出层 */
+.modal-backdrop {
+    z-index: 8000;
+}
+
+.modal {
+    z-index: 9000;
+}
+
+.popover, .dropdown-menu {
+    z-index: 300;
+}
+
+/* 确保表单元素显示在上层 */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    position: relative;
+    z-index: 250;
+}
+
+/* 确保所有弹出层都显示在侧边栏之上 */
+.modal, .alert, .toast {
+    z-index: 9999;
+}
+
+/* 调整侧边栏的 z-index */
+.sidebar {
+    z-index: 1000;
+}

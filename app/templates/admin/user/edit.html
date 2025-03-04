@@ -8,46 +8,53 @@
         <h1 class="h2">编辑用户</h1>
     </div>
 
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
     <div class="card">
         <div class="card-body">
-            <form method="POST" id="editUserForm">
-                {{ form.csrf_token }}
+            <form method="POST" id="editUserForm" novalidate>
+                <input type="hidden" id="is_super_admin" value="{{ 'true' if user.is_super_admin else 'false' }}">
+                
                 <div class="mb-3">
                     <label for="username" class="form-label">用户名</label>
-                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           value="{{ user.username }}" readonly>
+                    {% if user.is_super_admin %}
+                    <small class="text-muted">超级管理员的用户名不能被修改</small>
+                    {% else %}
+                    <small class="text-muted">用户名创建后不能被修改</small>
+                    {% endif %}
                 </div>
                 <div class="mb-3">
                     <label for="email" class="form-label">邮箱</label>
-                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           value="{{ user.email }}" required>
                 </div>
                 <div class="mb-3">
                     <label for="nickname" class="form-label">昵称</label>
-                    <input type="text" class="form-control" id="nickname" name="nickname" value="{{ user.nickname }}">
+                    <input type="text" class="form-control" id="nickname" name="nickname" 
+                           value="{{ user.nickname }}">
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">密码</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="留空表示不修改密码">
-                </div>
-                
-                {% if not is_super_admin or user.id != 1 %}
-                <div class="mb-3">
-                    <label class="form-label">角色</label>
-                    <div class="border rounded p-3">
-                        {% for role in roles %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="roles" value="{{ role.id }}" 
-                                   id="role{{ role.id }}" {% if role in user.roles %}checked{% endif %}>
-                            <label class="form-check-label" for="role{{ role.id }}">
-                                {{ role.name }}
-                                {% if role.description %}
-                                <small class="text-muted">- {{ role.description }}</small>
-                                {% endif %}
-                            </label>
-                        </div>
-                        {% endfor %}
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="留空表示不修改密码">
+                    <div class="invalid-feedback" id="password-error">
+                        密码长度至少6位，必须包含字母和数字
                     </div>
                 </div>
-                {% else %}
+                <div class="mb-3">
+                    <label for="password2" class="form-label">确认密码</label>
+                    <input type="password" class="form-control" id="password2" name="password2" 
+                           placeholder="留空表示不修改密码">
+                    <div class="invalid-feedback" id="password2-error">
+                        两次输入的密码不一致
+                    </div>
+                </div>
+                
+                {% if user.is_super_admin %}
                 <div class="mb-3">
                     <label class="form-label">角色</label>
                     <div class="alert alert-info">
@@ -57,13 +64,41 @@
                     <span class="badge bg-primary me-1">{{ role.name }}</span>
                     {% endfor %}
                 </div>
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label">角色</label>
+                    <div class="role-list">
+                        {% for role in roles %}
+                        <div class="form-check">
+                            <input type="checkbox" name="roles" value="{{ role.id }}" 
+                                   id="role_{{ role.id }}" class="form-check-input"
+                                   {% if role in user.roles %}checked{% endif %}>
+                            <label class="form-check-label" for="role_{{ role.id }}">
+                                {{ role.name }}
+                                <div class="text-secondary small">{{ role.description }}</div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="invalid-feedback" id="roles-error">
+                        请至少选择一个角色
+                    </div>
+                </div>
                 {% endif %}
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                        {% if user.is_super_admin %}
+                        <input class="form-check-input" type="checkbox" id="is_active" checked disabled>
+                        <input type="hidden" name="is_active" value="on">
+                        <label class="form-check-label" for="is_active">账户状态</label>
+                        <small class="text-muted d-block">超级管理员账号始终处于激活状态</small>
+                        {% else %}
+                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
                                {% if user.is_active %}checked{% endif %}>
-                        <label class="form-check-label" for="is_active">账户已激活</label>
+                        <label class="form-check-label" for="is_active">账户状态</label>
+                        <small class="text-muted d-block">选中表示账号处于激活状态，取消选中表示禁用账号</small>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -76,50 +111,165 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
 <script>
 $(document).ready(function() {
+    const isSuperAdmin = $('#is_super_admin').val() === 'true';
+    
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+    
+    function validateRoles() {
+        if (isSuperAdmin) return true;
+        return $('input[name="roles"]:checked').length > 0;
+    }
+    
+    function validatePassword() {
+        const password = $('#password').val();
+        const password2 = $('#password2').val();
+        
+        // 如果密码为空，表示不修改密码
+        if (!password && !password2) {
+            $('#password').removeClass('is-invalid');
+            $('#password2').removeClass('is-invalid');
+            return true;
+        }
+
+        // 先验证两次密码是否一致
+        if (password !== password2) {
+            $('#password').removeClass('is-invalid');
+            $('#password2').addClass('is-invalid');
+            return false;
+        } else {
+            $('#password2').removeClass('is-invalid');
+        }
+        
+        // 再验证密码格式
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const isLengthValid = password.length >= 6;
+        
+        if (!isLengthValid || !hasLetter || !hasNumber) {
+            $('#password').addClass('is-invalid');
+            $('#password2').removeClass('is-invalid');
+            return false;
+        } else {
+            $('#password').removeClass('is-invalid');
+        }
+        
+        return true;
+    }
+    
+    // 密码输入时进行验证
+    $('#password, #password2').on('input', validatePassword);
+    
     $('#editUserForm').on('submit', function(e) {
         e.preventDefault();
         
-        var formData = new FormData(this);
-        var jsonData = {};
-        formData.forEach((value, key) => {
-            if (key === 'roles') {
-                if (!jsonData[key]) {
-                    jsonData[key] = [];
-                }
-                jsonData[key].push(value);
-            } else {
-                jsonData[key] = value;
-            }
-        });
+        // 验证邮箱
+        const email = $('#email').val().trim();
+        if (!email || !validateEmail(email)) {
+            showToast('error', '请输入有效的邮箱地址');
+            return;
+        }
+
+        // 验证昵称
+        const nickname = $('#nickname').val().trim();
+        if (!nickname) {
+            showToast('error', '请输入昵称');
+            return;
+        }
         
+        if (!isSuperAdmin) {
+            if (!validateRoles()) {
+                showToast('error', '请至少选择一个角色');
+                return;
+            }
+        }
+        
+        // 验证密码
+        const validationResult = validatePassword();
+        if (!validationResult) {
+            const password = $('#password').val();
+            const password2 = $('#password2').val();
+            if (password !== password2) {
+                showToast('error', '两次输入的密码不一致');
+            } else {
+                showToast('error', '密码长度至少6位，必须包含字母和数字');
+            }
+            return;
+        }
+
+        // 提交表单
         $.ajax({
             url: window.location.href,
             type: 'POST',
-            data: JSON.stringify(jsonData),
-            contentType: 'application/json',
-            headers: {
-                'X-CSRFToken': $('input[name=csrf_token]').val()
-            },
+            data: new FormData(this),
+            processData: false,
+            contentType: false,
             success: function(response) {
                 if (response.success) {
-                    // 更新CSRF令牌
-                    $('input[name=csrf_token]').val(response.csrf_token);
-                    // 显示成功消息
-                    alert('保存成功');
-                    // 重定向
-                    window.location.href = response.redirect_url;
+                    showToast('success', response.message);
+                    setTimeout(() => {
+                        window.location.href = response.redirect_url;
+                    }, 1000);
                 } else {
-                    alert(response.message || '保存失败');
+                    showToast('error', response.message);
                 }
             },
-            error: function() {
-                alert('发生错误，请稍后重试');
+            error: function(xhr, status, error) {
+                showToast('error', '保存失败，请稍后重试');
             }
         });
     });
 });
 </script>
+
+<style>
+.role-list {
+    margin-bottom: 1rem;
+}
+
+.role-list .form-check {
+    margin-bottom: 0.75rem;
+}
+
+.role-list .form-check:last-child {
+    margin-bottom: 0;
+}
+
+.role-list .form-check-input {
+    margin-top: 0.25rem;
+}
+
+.role-list .form-check-label {
+    padding-left: 0.5rem;
+}
+
+.role-list .text-secondary {
+    margin-top: 0.125rem;
+    color: #6c757d !important;
+}
+
+.role-list.is-invalid .form-check-input {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: none;
+}
+
+.role-list.is-invalid + .invalid-feedback {
+    display: block;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-control.is-invalid + .invalid-feedback {
+    display: block;
+}
+</style>
 {% endblock %} 

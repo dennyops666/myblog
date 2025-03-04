@@ -18,6 +18,11 @@ import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+from config import Config
+from flask_mail import Mail
+from flask_moment import Moment
+from flask_ckeditor import CKEditor
+from flask_wtf.csrf import CSRFProtect
 
 # 创建扩展实例
 db = SQLAlchemy()
@@ -26,21 +31,31 @@ login_manager = LoginManager()
 cache = Cache()
 bcrypt = Bcrypt()
 sess = Session()
+mail = Mail()
+moment = Moment()
+ckeditor = CKEditor()
+csrf = CSRFProtect()
 
 def init_app(app):
     """初始化所有扩展"""
+    db_path = os.path.join('/data/myblog/instance', 'blog-dev.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    app.logger.info(f'数据库URI: {app.config["SQLALCHEMY_DATABASE_URI"]}')
+    app.logger.info(f'数据库文件路径: {db_path}')
+    app.logger.info(f'数据库文件是否存在: {os.path.exists(db_path)}')
+    
     # 首先初始化SQLAlchemy
     db.init_app(app)
     migrate.init_app(app, db)
-    
-    # 配置Session使用已存在的SQLAlchemy实例
-    app.config['SESSION_SQLALCHEMY'] = db
     
     # 初始化其他扩展
     login_manager.init_app(app)
     cache.init_app(app)
     bcrypt.init_app(app)
-    sess.init_app(app)
+    mail.init_app(app)
+    moment.init_app(app)
+    ckeditor.init_app(app)
+    csrf.init_app(app)
     
     # 配置登录管理器
     login_manager.login_view = 'auth.login'
@@ -52,6 +67,16 @@ def init_app(app):
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    # 配置Session
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'instance', 'sessions')
+    
+    # 确保session目录存在
+    os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    
+    # 最后初始化Session
+    sess.init_app(app)
     
     @app.after_request
     def add_security_headers(response):
@@ -127,3 +152,5 @@ def init_app(app):
         if exception:
             current_app.logger.error(f'Exception during request: {str(exception)}')
         db.session.remove()
+
+    app.logger.info('扩展初始化完成')

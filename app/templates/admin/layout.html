@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% from "macros/csrf.html" import csrf_meta %}
-    {{ csrf_meta() }}
     <title>{% block title %}管理后台{% endblock %} - MyBlog</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -13,281 +11,183 @@
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet">
     {% block styles %}
     <style>
-        /* Toast 容器样式 */
-        .toast-container {
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
             position: fixed;
-            top: 20px;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 240px;
+            z-index: 1;
+            padding: 48px 0 0;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        /* 主内容区域样式 */
+        .main-wrapper {
+            position: relative;
+            margin-left: 240px;
+            min-height: 100vh;
+            z-index: 2;
+            background-color: #fff;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        /* Toast 容器样式 */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;  /* 改为底部显示 */
             right: 20px;
             z-index: 9999;
             pointer-events: none;
+            max-width: 300px;
         }
-        
+
         .toast {
             pointer-events: auto;
-            min-width: 250px;
             margin-bottom: 10px;
             background-color: #fff;
+            border: none;
             border-radius: 4px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             opacity: 1 !important;
         }
-        
-        .toast.bg-light {
-            background-color: #fff !important;
-        }
-        
-        .toast.border-success {
-            border-left: 4px solid #28a745 !important;
-        }
-        
-        .toast.border-danger {
-            border-left: 4px solid #dc3545 !important;
-        }
-        
-        .toast.border-warning {
-            border-left: 4px solid #ffc107 !important;
-        }
-        
-        .toast.border-info {
-            border-left: 4px solid #17a2b8 !important;
-        }
-        
-        .toast-body {
-            padding: 0.75rem 1rem;
-            color: #333;
-            font-size: 0.9rem;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .toast.showing {
-            animation: slideIn 0.3s ease-in-out;
+
+        .toast.error {
+            background-color: #dc3545;
+            color: #fff;
         }
 
-        /* 侧边栏过渡动画 */
-        .sidebar {
-            transition: all 0.3s ease;
+        .toast.success {
+            background-color: #28a745;
+            color: #fff;
         }
 
-        /* 折叠状态的侧边栏 */
-        .sidebar.collapsed {
-            width: 60px !important;
+        /* 隐藏其他提示 */
+        .alert {
+            display: none !important;
         }
 
-        .sidebar.collapsed .nav-link span,
-        .sidebar.collapsed .sidebar-heading span {
-            display: none;
-        }
-
-        .sidebar.collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.2em;
-        }
-
-        /* 主内容区域过渡 */
-        main {
-            transition: margin-left 0.3s ease;
+        .invalid-feedback {
+            display: none !important;
         }
 
         /* 响应式布局 */
         @media (max-width: 768px) {
             .sidebar {
-                width: 60px !important;
+                width: 60px;
             }
-            
-            .sidebar .nav-link span,
-            .sidebar .sidebar-heading span {
-                display: none;
-            }
-            
-            .sidebar .nav-link i {
-                margin-right: 0;
-                font-size: 1.2em;
-            }
-            
-            main {
-                margin-left: 60px !important;
+            .main-wrapper {
+                margin-left: 60px;
             }
         }
 
-        /* 悬浮展开效果 */
-        @media (max-width: 768px) {
-            .sidebar:hover {
-                width: 250px !important;
-            }
-            
-            .sidebar:hover .nav-link span,
-            .sidebar:hover .sidebar-heading span {
-                display: inline;
-            }
-            
-            .sidebar:hover .nav-link i {
-                margin-right: 8px;
-                font-size: 1em;
-            }
+        /* 确保模态框显示在最上层 */
+        .modal-backdrop {
+            z-index: 8000;
+        }
+        .modal {
+            z-index: 8500;
+        }
+
+        /* 确保下拉菜单显示正确 */
+        .dropdown-menu {
+            z-index: 1050;
         }
     </style>
     {% endblock %}
 </head>
 <body>
     <!-- Toast 容器 -->
-    <div class="toast-container"></div>
+    <div id="toast-container"></div>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- 侧边栏 -->
-            {% include "admin/includes/sidebar.html" %}
+    <!-- 侧边栏 -->
+    <nav id="sidebar" class="sidebar">
+        {% include "admin/includes/sidebar.html" %}
+    </nav>
 
-            <!-- 主要内容区域 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                {% include "admin/includes/nav.html" %}
-                
-                <!-- Flash 消息 -->
-                {% include "admin/includes/messages.html" %}
-                
-                <!-- 主要内容 -->
-                {% block content %}{% endblock %}
-            </main>
+    <!-- 主内容包装器 -->
+    <div class="main-wrapper">
+        <!-- 顶部导航 -->
+        {% include "admin/includes/nav.html" %}
+        
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 主要内容 -->
+            {% block content %}{% endblock %}
         </div>
     </div>
 
     <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     {% block scripts %}
     <script>
-    // Toast 显示函数
-    function showToast(type, message) {
-        const toastContainer = document.querySelector('.toast-container');
-        
-        // 创建 toast 元素
-        const toast = document.createElement('div');
-        toast.className = `toast ${type} showing`;
-        
-        // 设置 toast 内容
-        toast.innerHTML = `
-            <div class="toast-header">
-                <strong class="me-auto">${type === 'success' ? '成功' : 
-                                        type === 'danger' ? '错误' : 
-                                        type === 'warning' ? '警告' : '提示'}</strong>
-                <button type="button" class="btn-close" onclick="closeToast(this.parentElement.parentElement)"></button>
-            </div>
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
-        
-        // 添加到容器
-        toastContainer.appendChild(toast);
-        
-        // 3秒后自动关闭
-        setTimeout(() => {
-            closeToast(toast);
-        }, 3000);
-    }
-    
-    // Toast 关闭函数
-    function closeToast(toast) {
-        toast.classList.remove('showing');
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }
-    
-    // 侧边栏折叠功能
-    $(document).ready(function() {
-        // 从localStorage获取侧边栏状态
-        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        const sidebar = $('.sidebar');
-        const main = $('main');
-        
-        // 根据保存的状态设置侧边栏
-        if (sidebarCollapsed) {
-            sidebar.addClass('collapsed');
-            main.css('margin-left', '60px');
-        }
-        
-        // 监听窗口大小变化
-        $(window).resize(function() {
-            if ($(window).width() <= 768) {
-                sidebar.addClass('collapsed');
-                main.css('margin-left', '60px');
-            } else if (!sidebarCollapsed) {
-                sidebar.removeClass('collapsed');
-                main.css('margin-left', '250px');
+        // 全局 AJAX 错误处理
+        $(document).ajaxError(function(event, jqXHR, settings, error) {
+            let message = '操作失败';
+            if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                message = jqXHR.responseJSON.message;
             }
+            showToast('error', message);
         });
-        
-        // 切换侧边栏状态
-        $('#sidebarToggle').click(function() {
-            sidebar.toggleClass('collapsed');
-            const isCollapsed = sidebar.hasClass('collapsed');
-            main.css('margin-left', isCollapsed ? '60px' : '250px');
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-        });
-    });
-    
-    // 全局 AJAX 错误处理
-    $(document).ajaxError(function(event, jqXHR, settings, error) {
-        let message = '操作失败';
-        if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-            message = jqXHR.responseJSON.message;
-        }
-        showToast('danger', message);
-    });
-    
-    // 表单提交处理
-    $(document).on('submit', 'form', function(e) {
-        const form = $(this);
-        if (form.data('ajax') === false) return true;
-        
-        e.preventDefault();
-        $.ajax({
-            url: form.attr('action'),
-            type: form.attr('method') || 'POST',
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    showToast('success', response.message || '操作成功');
-                    if (response.redirect) {
-                        setTimeout(() => {
-                            window.location.href = response.redirect;
-                        }, 1000);
+
+        // 表单提交处理
+        $(document).on('submit', 'form:not(#userForm)', function(e) {
+            const form = $(this);
+            if (form.data('ajax') === false) return true;
+            
+            e.preventDefault();
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method') || 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        showToast('success', response.message || '操作成功');
+                        if (response.redirect_url) {
+                            setTimeout(() => {
+                                window.location.href = response.redirect_url;
+                            }, 1000);
+                        }
+                    } else {
+                        showToast('error', response.message || '操作失败');
                     }
-                } else {
-                    showToast('danger', response.message || '操作失败');
                 }
-            }
+            });
         });
-    });
-    
-    // 处理退出登录
-    function handleLogout() {
-        $.ajax({
-            url: '{{ url_for("auth.logout") }}',
-            type: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    showToast('success', response.message || '退出成功');
-                    setTimeout(() => {
-                        window.location.href = response.redirect || '{{ url_for("auth.login") }}';
-                    }, 1000);
-                } else {
-                    showToast('danger', response.message || '退出失败');
+
+        // 处理退出登录
+        function handleLogout() {
+            $.ajax({
+                url: '{{ url_for("auth.logout") }}',
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('success', response.message || '退出成功');
+                        setTimeout(() => {
+                            window.location.href = response.redirect || '{{ url_for("auth.login") }}';
+                        }, 1000);
+                    } else {
+                        showToast('error', response.message || '退出失败');
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
     </script>
     {% endblock %}
 </body>

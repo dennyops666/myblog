@@ -1,0 +1,37 @@
+/* 表单错误提示样式 */
+.form-group .invalid-feedback {
+    display: block;  /* 始终显示错误提示 */
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* 输入框错误状态样式 */
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+/* 密码提示信息样式 */
+.password-hint {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* 密码错误提示样式 */
+.password-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* 错误消息容器样式 */
+.error-container {
+    position: relative;
+    z-index: 1050;
+    background-color: #fff;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+} 

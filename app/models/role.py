@@ -28,6 +28,10 @@ class Role(db.Model):
     
     def has_permission(self, permission):
         """检查是否有指定权限"""
+        if not self.permissions:
+            return False
+        if isinstance(permission, Permission):
+            permission = permission.value
         return self.permissions & permission == permission
     
     def add_permission(self, permission):
@@ -48,11 +52,12 @@ class Role(db.Model):
     def insert_roles():
         """插入默认角色"""
         roles = {
-            'viewer': Permission.VIEWER,
-            'user': Permission.USER,
-            'editor': Permission.EDITOR,
-            'moderator': Permission.MODERATOR,
-            'admin': Permission.ADMINISTRATOR
+            'viewer': Permission.VIEWER.value,
+            'user': Permission.USER.value,
+            'editor': Permission.EDITOR.value,
+            'moderator': Permission.MODERATOR.value,
+            'admin': Permission.ADMINISTRATOR.value,
+            'super_admin': Permission.SUPER_ADMINISTRATOR.value
         }
         
         for name, permissions in roles.items():

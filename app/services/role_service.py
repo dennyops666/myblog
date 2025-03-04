@@ -133,9 +133,14 @@ class RoleService:
         return Role.query.all()
     
     def get_available_roles(self):
-        """获取可用角色（不包括超级管理员）"""
-        return Role.query.filter(~Role.permissions.op('&')(Permission.SUPER_ADMIN.value)).all()
-    
+        """获取可用的角色列表"""
+        try:
+            roles = Role.query.order_by(Role.id).all()
+            return roles
+        except Exception as e:
+            current_app.logger.error(f'获取角色列表失败: {str(e)}')
+            return []
+            
     def get_roles_by_ids(self, role_ids):
         """根据ID列表获取角色
         
@@ -148,12 +153,17 @@ class RoleService:
         return Role.query.filter(Role.id.in_(role_ids)).all()
     
     def get_role_by_name(self, name):
-        """根据名称获取角色
-        
-        Args:
-            name: 角色名称
+        """根据名称获取角色"""
+        try:
+            return Role.query.filter_by(name=name).first()
+        except Exception as e:
+            current_app.logger.error(f'获取角色失败: {str(e)}')
+            return None
             
-        Returns:
-            Role: 角色对象
-        """
-        return Role.query.filter_by(name=name).first() 
+    def get_role_by_id(self, role_id):
+        """根据ID获取角色"""
+        try:
+            return Role.query.get(role_id)
+        except Exception as e:
+            current_app.logger.error(f'获取角色失败: {str(e)}')
+            return None 

@@ -46,22 +46,7 @@ def admin_required(f):
             return abort(401, description='请先登录后再访问')
         
         # 检查用户是否具有管理员权限
-        if not current_user.roles:
-            if is_api_request:
-                return jsonify({
-                    'success': False,
-                    'message': '您没有管理员权限，无法访问此页面',
-                    'csrf_token': generate_csrf()
-                }), 403
-            return abort(403, description='您没有管理员权限，无法访问此页面')
-            
-        has_admin = False
-        for role in current_user.roles:
-            if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
-                has_admin = True
-                break
-                
-        if not has_admin:
+        if not current_user.has_permission(Permission.ADMIN) and not current_user.has_permission(Permission.SUPER_ADMIN):
             if is_api_request:
                 return jsonify({
                     'success': False,

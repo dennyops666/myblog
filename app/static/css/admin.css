@@ -42,26 +42,27 @@ body {
 .sidebar {
     position: fixed;
     top: 0;
-    bottom: 0;
     left: 0;
-    z-index: 100;
+    bottom: 0;
+    width: 240px;
+    z-index: 1;
     padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-    width: 250px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    transition: all 0.3s ease;
 }
 
 .sidebar .nav-link {
     font-weight: 500;
     color: #333;
-    padding: .5rem 1rem;
-}
-
-.sidebar .nav-link.active {
-    color: #2470dc;
 }
 
 .sidebar .nav-link:hover {
-    color: #2470dc;
+    color: #0d6efd;
+}
+
+.sidebar .nav-link.active {
+    color: #0d6efd;
 }
 
 .sidebar .nav-link i {
@@ -74,38 +75,67 @@ body {
     text-transform: uppercase;
 }
 
-/* 主要内容区域 */
-main {
-    padding-top: 1.5rem;
+/* 主内容区域样式 */
+.main-wrapper {
+    position: relative;
+    margin-left: 240px;
+    min-height: 100vh;
+    z-index: 2;
+    background-color: #fff;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content {
+    padding: 20px;
 }
 
 /* 表格样式 */
+.table {
+    margin-bottom: 0;
+}
+
 .table th {
     border-top: none;
     background-color: #f8f9fa;
 }
 
 /* 按钮样式 */
-.btn-sm {
-    padding: .25rem .5rem;
-    font-size: .875rem;
+.btn {
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
 }
 
 /* 表单样式 */
 .form-control:focus {
-    border-color: #2470dc;
-    box-shadow: 0 0 0 0.2rem rgba(36, 112, 220, 0.25);
+    box-shadow: none;
+    border-color: #80bdff;
+}
+
+.invalid-feedback {
+    font-size: 0.875em;
+    color: #dc3545;
+    margin-top: 0.25rem;
 }
 
 /* 卡片样式 */
 .card {
     border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    margin-bottom: 1rem;
 }
 
 .card-header {
     background-color: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-bottom: 1px solid rgba(0,0,0,.125);
 }
 
 /* 导航栏样式 */
@@ -180,15 +210,81 @@ main {
     max-width: inherit;
 }
 
-/* 响应式调整 */
+/* 响应式布局 */
 @media (max-width: 768px) {
     .sidebar {
-        width: 100%;
-        position: relative;
-        padding-top: 0;
+        width: 60px;
     }
+    .main-wrapper {
+        margin-left: 60px;
+    }
+}
 
-    main {
-        margin-left: 0;
-    }
+/* Toast 提示样式 */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 300px;
+    background-color: #fff;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.toast-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+}
+
+.toast-body {
+    padding: 0.75rem 1rem;
+}
+
+/* 模态框样式 */
+.modal-content {
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0,0,0,.05);
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0,0,0,.05);
+}
+
+/* 下拉菜单样式 */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1050;
+}
+
+/* 确保所有弹出层显示在正确的层级 */
+.toast, .modal, .popover, .dropdown-menu {
+    position: relative;
+    z-index: auto;
+}
+
+.toast-container {
+    z-index: 9999;
+}
+
+.modal-backdrop {
+    z-index: 8000;
+}
+
+.modal {
+    z-index: 8500;
+}
+
+.dropdown-menu {
+    z-index: 1050;
 } 

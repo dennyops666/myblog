@@ -6,61 +6,131 @@
 """
 
 from functools import wraps
-from flask import request, abort, session, current_app, jsonify, flash, redirect, url_for
-from app.services.security import SecurityService
+from flask import request, redirect, url_for, jsonify, current_app
+from flask_login import current_user
+import time
+from app.models.permission import Permission
 
-security_service = SecurityService()
-
-def login_required():
+def login_required(f):
     """登录验证装饰器"""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not security_service.is_authenticated():
-                if request.is_xhr:
-                    return jsonify({
-                        'success': False,
-                        'message': '请先登录'
-                    }), 401
-                flash('请先登录', 'error')
-                return redirect(url_for('auth.login'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '请先登录'
+                })
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
-def admin_required():
+def admin_required(f):
     """管理员权限验证装饰器"""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if not security_service.is_admin():
-                if request.is_xhr:
-                    return jsonify({
-                        'success': False,
-                        'message': '需要管理员权限'
-                    }), 403
-                flash('需要管理员权限', 'error')
-                return redirect(url_for('main.index'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '请先登录'
+                })
+            return redirect(url_for('auth.login'))
+        
+        if not current_user.has_permission(Permission.ADMIN):
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '需要管理员权限'
+                })
+            return redirect(url_for('blog.index'))
+            
+        return f(*args, **kwargs)
+    return decorated_function
 
 def permission_required(permission):
     """权限验证装饰器"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not security_service.has_permission(permission):
+            if not current_user.is_authenticated:
+                if request.is_xhr:
+                    return jsonify({
+                        'success': False,
+                        'message': '请先登录'
+                    })
+                return redirect(url_for('auth.login'))
+                
+            if not current_user.has_permission(permission):
                 if request.is_xhr:
                     return jsonify({
                         'success': False,
                         'message': '权限不足'
-                    }), 403
-                flash('权限不足', 'error')
-                return redirect(url_for('main.index'))
+                    })
+                return redirect(url_for('blog.index'))
+                
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+class RateLimiter:
+    """请求频率限制器"""
+    def __init__(self, max_requests=60, time_window=60):
+        self.max_requests = max_requests  # 最大请求次数
+        self.time_window = time_window    # 时间窗口（秒）
+        self.requests = {}                # 请求记录
+        
+    def is_allowed(self, key):
+        """检查请求是否允许"""
+        current_time = time.time()
+        
+        # 清理过期的请求记录
+        self._cleanup(current_time)
+        
+        # 获取当前key的请求记录
+        if key not in self.requests:
+            self.requests[key] = []
+            
+        request_times = self.requests[key]
+        
+        # 检查是否超过限制
+        if len(request_times) >= self.max_requests:
+            return False
+            
+        # 记录新的请求
+        request_times.append(current_time)
+        return True
+        
+    def _cleanup(self, current_time):
+        """清理过期的请求记录"""
+        cutoff_time = current_time - self.time_window
+        
+        for key in list(self.requests.keys()):
+            self.requests[key] = [t for t in self.requests[key] if t > cutoff_time]
+            if not self.requests[key]:
+                del self.requests[key]
+
+# 创建全局限速器实例
+rate_limiter = RateLimiter()
+
+def rate_limit(f):
+    """请求频率限制装饰器"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # 获取客户端标识（IP地址）
+        client_ip = request.remote_addr
+        
+        # 检查是否允许请求
+        if not rate_limiter.is_allowed(client_ip):
+            if request.is_xhr:
+                return jsonify({
+                    'success': False,
+                    'message': '请求过于频繁，请稍后再试'
+                })
+            return redirect(url_for('blog.index'))
+            
+        return f(*args, **kwargs)
+    return decorated_function
 
 def xss_protect():
     """XSS保护装饰器"""
@@ -161,39 +231,6 @@ def secure_headers():
                 response.headers[header] = value
             
             return response
-        return decorated_function
-    return decorator
-
-def rate_limit(limit=10, per=60):
-    """速率限制装饰器
-    
-    Args:
-        limit: 允许的最大请求次数
-        per: 时间窗口（秒）
-    """
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # 获取客户端IP
-            ip = request.remote_addr
-            
-            # 检查是否超过限制
-            key = f'rate_limit:{ip}:{request.endpoint}'
-            current = current_app.cache.get(key) or 0
-            
-            if current >= limit:
-                if request.is_json:
-                    return jsonify({
-                        'success': False,
-                        'message': '请求过于频繁，请稍后再试'
-                    }), 429
-                flash('请求过于频繁，请稍后再试', 'warning')
-                return redirect(url_for('auth.login'))
-            
-            # 更新计数器
-            current_app.cache.set(key, current + 1, timeout=per)
-            
-            return f(*args, **kwargs)
         return decorated_function
     return decorator
 
