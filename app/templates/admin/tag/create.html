@@ -10,7 +10,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.tag.create') }}" id="tagForm">
+            <form method="POST" action="{{ url_for('admin.tag.create') }}" id="tagForm" data-ajax="false">
                 {{ form.csrf_token }}
                 
                 <div class="mb-3">
@@ -27,10 +27,10 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="slug" class="form-label">别名（可选）</label>
+                    <label for="slug" class="form-label">别名 <span class="text-danger">*</span></label>
                     {{ form.slug(class="form-control") }}
                     <div class="invalid-feedback" id="slug-error" style="display: none;"></div>
-                    <small class="form-text text-muted">用于URL的友好显示，如果不填写将使用系统生成的值</small>
+                    <small class="form-text text-muted">用于URL的友好显示，只能包含小写字母、数字和连字符</small>
                     {% if form.slug.errors %}
                     <div class="invalid-feedback d-block">
                         {% for error in form.slug.errors %}
@@ -69,6 +69,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('tagForm');
     const submitBtn = document.getElementById('submitBtn');
+    let isSubmitting = false;
     
     // 清除所有错误提示
     function clearErrors() {
@@ -97,55 +98,59 @@ document.addEventListener('DOMContentLoaded', function() {
     
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        e.stopPropagation();  // 阻止事件冒泡
+        
+        // 防止重复提交
+        if (isSubmitting) {
+            return;
+        }
+        
         clearErrors();
+        isSubmitting = true;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
         
         const formData = new FormData(this);
-        console.log('提交的表单数据:', Object.fromEntries(formData));
         
         fetch(this.action, {
             method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': formData.get('csrf_token')
+                'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin'
         })
-        .then(response => {
-            console.log('服务器响应状态:', response.status);
-            return response.json().catch(error => {
-                console.error('JSON解析错误:', error);
-                throw new Error('服务器响应格式错误');
-            });
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('服务器响应数据:', data);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '保存';
-            
             if (data.success) {
                 showToast('success', data.message);
                 setTimeout(() => {
                     window.location.href = data.redirect_url;
                 }, 1000);
             } else {
-                showToast('danger', data.message);
-                
-                // 显示字段错误
+                // 显示错误消息
                 if (data.errors) {
+                    // 显示字段级别的错误
                     Object.entries(data.errors).forEach(([field, errors]) => {
-                        showFieldError(field, errors.join(', '));
+                        showFieldError(field, errors[0]);
                     });
                 }
+                showToast('error', data.message);
+                
+                // 重置提交状态
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '保存';
             }
         })
         .catch(error => {
             console.error('请求错误:', error);
+            showToast('error', '保存失败，请稍后重试');
+            
+            // 重置提交状态
+            isSubmitting = false;
             submitBtn.disabled = false;
             submitBtn.innerHTML = '保存';
-            showToast('danger', '保存失败，请稍后重试');
         });
     });
 });
