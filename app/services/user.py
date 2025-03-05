@@ -41,9 +41,8 @@ class UserService:
                 return {'status': False, 'message': '用户名长度不能小于3个字符'}
                 
             # 检查是否尝试创建超级管理员
-            super_admin = User.query.get(1)
-            if super_admin and username == super_admin.username:
-                return {'status': False, 'message': '不能创建与超级管理员相同用户名的用户'}
+            if username == 'admin':
+                return {'status': False, 'message': '不能创建超级管理员用户'}
             
             # 验证邮箱
             if not email:
@@ -120,19 +119,50 @@ class UserService:
             if not user:
                 return {'status': False, 'message': '用户不存在'}
                 
-            # 如果是超级管理员，不允许修改角色和状态
-            if user.is_super_admin:
-                role_ids = None
-                is_active = True  # 超级管理员始终保持激活状态
-            else:
-                # 对于普通用户，直接设置is_active状态
-                user.is_active = bool(is_active)  # 确保转换为布尔值
+            # 特殊处理超级管理员用户
+            if user.username == 'admin':
+                # 不允许修改用户名
+                if username and username != 'admin':
+                    return {'status': False, 'message': '不能修改超级管理员的用户名'}
+                    
+                # 强制设置超级管理员角色，忽略传入的role_ids
+                super_admin_role = Role.query.filter_by(name='super_admin').first()
+                if not super_admin_role:
+                    return {'status': False, 'message': '系统错误：未找到超级管理员角色'}
                 
-            # 验证用户名唯一性
-            if username and username != user.username:
-                if User.query.filter_by(username=username).first():
-                    return {'status': False, 'message': '用户名已存在'}
-                user.username = username
+                # 确保只有super_admin角色
+                if user.roles != [super_admin_role]:
+                    user.roles = [super_admin_role]
+                
+                # 忽略is_active参数，始终保持激活状态
+                if is_active is not None and not is_active:
+                    return {'status': False, 'message': '不能修改超级管理员的状态'}
+                user.is_active = True
+            else:
+                # 对于普通用户，验证用户名唯一性
+                if username and username != user.username:
+                    # 不允许使用 admin 作为用户名
+                    if username == 'admin':
+                        return {'status': False, 'message': '不能使用 admin 作为用户名'}
+                    if User.query.filter_by(username=username).first():
+                        return {'status': False, 'message': '用户名已存在'}
+                    user.username = username
+                
+                # 设置激活状态
+                if is_active is not None:
+                    user.is_active = bool(is_active)
+                
+                # 更新角色（非超级管理员）
+                if role_ids is not None:
+                    # 将字符串ID转换为整数
+                    role_ids = [int(rid) for rid in role_ids if rid]
+                    # 获取选中的角色，排除超级管理员角色
+                    selected_roles = Role.query.filter(
+                        Role.id.in_(role_ids),
+                        Role.name != 'super_admin'
+                    ).all()
+                    # 更新用户的角色
+                    user.roles = selected_roles
                 
             # 验证邮箱唯一性
             if email and email != user.email:
@@ -151,15 +181,6 @@ class UserService:
                 if not result['success']:
                     return {'status': False, 'message': result['message']}
                 user.set_password(password)
-                
-            # 更新角色（非超级管理员）
-            if role_ids is not None and not user.is_super_admin:
-                # 将字符串ID转换为整数
-                role_ids = [int(rid) for rid in role_ids if rid]
-                # 获取选中的角色
-                selected_roles = Role.query.filter(Role.id.in_(role_ids)).all()
-                # 更新用户的角色
-                user.roles = selected_roles
             
             # 更新时间
             user.updated_at = datetime.now(UTC)
@@ -174,11 +195,43 @@ class UserService:
             current_app.logger.error(f'更新用户失败: {str(e)}')
             return {'status': False, 'message': '更新失败'}
     
-    def delete_user(self, user_id):
+    def can_delete_user(self, current_user, target_user):
+        """检查当前用户是否可以删除目标用户
+        
+        Args:
+            current_user: 当前登录用户
+            target_user: 要删除的目标用户
+            
+        Returns:
+            bool: 是否可以删除
+        """
+        # 不能删除超级管理员
+        if target_user.username == 'admin':
+            return False
+            
+        # 不能删除自己
+        if current_user.id == target_user.id:
+            return False
+            
+        # 超级管理员可以删除任何用户（除了自己和其他超级管理员）
+        if current_user.username == 'admin':
+            return True
+            
+        # 检查当前用户是否是管理员
+        is_admin = any(role.name == 'admin' for role in current_user.roles)
+        if not is_admin:
+            return False
+            
+        # 管理员只能删除普通用户
+        target_is_admin = any(role.name == 'admin' for role in target_user.roles)
+        return not target_is_admin
+    
+    def delete_user(self, current_user, user_id):
         """删除用户
         
         Args:
-            user_id: 用户ID
+            current_user: 当前登录用户
+            user_id: 要删除的用户ID
             
         Returns:
             dict: 包含状态和消息的字典
@@ -188,9 +241,9 @@ class UserService:
             if not user:
                 return {'status': False, 'message': '用户不存在'}
                 
-            # 检查是否是超级管理员
-            if user.is_super_admin:
-                return {'status': False, 'message': '不能删除超级管理员'}
+            # 检查是否有权限删除
+            if not self.can_delete_user(current_user, user):
+                return {'status': False, 'message': '没有权限删除该用户'}
                 
             # 先删除该用户的操作日志
             from app.models.operation_log import OperationLog
@@ -243,8 +296,8 @@ class UserService:
             query = User.query
             
             # 如果不是超级管理员，则过滤掉超级管理员用户
-            if current_user and not current_user.is_super_admin:
-                query = query.filter(~User.roles.any(Role.name == 'super_admin'))
+            if current_user and current_user.username != 'admin':
+                query = query.filter(User.username != 'admin')
             
             # 执行分页查询
             pagination = query.paginate(
@@ -261,12 +314,7 @@ class UserService:
             
         except Exception as e:
             current_app.logger.error(f"获取用户列表失败: {str(e)}")
-            return {
-                'status': 'error',
-                'message': '获取用户列表失败，请稍后重试',
-                'users': [],
-                'pagination': None
-            }
+            return {'status': 'error', 'message': '获取用户列表失败'}
     
     def verify_password(self, user_id, password):
         """验证用户密码
@@ -291,9 +339,26 @@ class UserService:
             username: 用户名
             
         Returns:
-            User: 用户对象
+            dict: 包含用户信息和状态的字典
         """
-        return User.query.filter_by(username=username).first()
+        if not username:
+            return {'success': False, 'message': '用户名不能为空'}
+            
+        try:
+            user = User.query.filter_by(username=username).first()
+            if not user:
+                return {'success': False, 'message': '用户不存在'}
+                
+            # 检查用户状态
+            if not user.is_active:
+                current_app.logger.warning(f'禁用账号尝试登录: {username}')
+                return {'success': False, 'message': '您的账号已被禁用，请联系管理员'}
+                
+            return {'success': True, 'message': '获取用户成功', 'user': user}
+            
+        except Exception as e:
+            current_app.logger.error(f"获取用户失败: {str(e)}")
+            return {'success': False, 'message': '获取用户失败'}
     
     def get_user_by_email(self, email):
         """根据邮箱获取用户

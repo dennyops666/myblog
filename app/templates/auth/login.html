@@ -4,44 +4,37 @@
 {% block title %}MyBlog-管理后台{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">MyBlog-管理后台</h3>
-                </div>
                 <div class="card-body">
-                    <form method="post">
-                        {{ csrf_field() }}
+                    <h3 class="card-title text-center mb-4">用户登录</h3>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}">
+                        {{ form.hidden_tag() }}
                         <div class="mb-3">
                             {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
-                            {% if form.username.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.username.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                            {{ form.username(class="form-control", required="required") }}
                         </div>
                         <div class="mb-3">
                             {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
-                            {% if form.password.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.password.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
+                            {{ form.password(class="form-control", required="required") }}
                         </div>
                         <div class="mb-3 form-check">
                             {{ form.remember_me(class="form-check-input") }}
                             {{ form.remember_me.label(class="form-check-label") }}
                         </div>
                         <div class="d-grid gap-2">
-                            {{ form.submit(class="btn btn-primary") }}
+                            <button type="submit" class="btn btn-primary">登录</button>
                         </div>
                     </form>
                 </div>
@@ -49,4 +42,86 @@
         </div>
     </div>
 </div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/toastr.min.css') }}">
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/toastr.min.js') }}"></script>
+<script>
+    // 初始化 toastr 配置
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: "toast-top-center",
+        timeOut: 5000,
+        preventDuplicates: true,
+        newestOnTop: true,
+        showDuration: "300",
+        hideDuration: "1000",
+        extendedTimeOut: "1000",
+    };
+    
+    // 处理登录表单提交
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const submitBtn = $(form).find('button[type="submit"]');
+        const originalText = submitBtn.html();
+        
+        // 禁用提交按钮
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 登录中...');
+        
+        // 准备表单数据
+        const formData = new FormData(form);
+        
+        $.ajax({
+            url: form.action,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                console.log('登录响应:', response);  // 调试日志
+                
+                // 重置按钮状态
+                submitBtn.prop('disabled', false);
+                submitBtn.html(originalText);
+                
+                if (response.success) {
+                    toastr.success(response.message || '登录成功');
+                    setTimeout(() => {
+                        window.location.href = response.redirect_url || '{{ url_for("blog.index") }}';
+                    }, 1500);
+                } else {
+                    toastr.error(response.message || '登录失败');
+                    // 清空密码输入框
+                    $('#password').val('');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('登录错误:', xhr.responseText);  // 调试日志
+                console.error('状态码:', xhr.status);  // 添加状态码日志
+                
+                // 重置按钮状态
+                submitBtn.prop('disabled', false);
+                submitBtn.html(originalText);
+                
+                let message = '登录失败';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    message = (response && response.message) ? response.message : 
+                            (response && response.error) ? response.error : '登录失败';
+                    console.log('解析后的错误消息:', message);  // 添加错误消息日志
+                } catch (e) {
+                    console.error('解析错误响应失败:', e);
+                }
+                
+                toastr.error(message);
+                // 清空密码输入框
+                $('#password').val('');
+            }
+        });
+    });
+</script>
 {% endblock %} 

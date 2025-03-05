@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理后台登录 - {{ config.BLOG_NAME }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toastr.min.css') }}">
     <style>
         body {
             background-color: #f8f9fa;
@@ -65,25 +66,105 @@
                 {% endif %}
             {% endwith %}
             
-            <form method="POST">
+            <form id="loginForm" method="POST" action="{{ url_for('admin.login') }}">
                 {{ form.csrf_token }}
-                <div class="form-group">
-                    {{ form.username.label }}
-                    {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                <div class="form-group mb-3">
+                    <label for="username" class="form-label">用户名</label>
+                    {{ form.username(class="form-control", id="username", required="required") }}
                 </div>
-                <div class="form-group">
-                    {{ form.password.label }}
-                    {{ form.password(class="form-control", placeholder="请输入密码") }}
+                <div class="form-group mb-3">
+                    <label for="password" class="form-label">密码</label>
+                    {{ form.password(class="form-control", id="password", required="required") }}
                 </div>
                 <div class="form-check mb-3">
-                    {{ form.remember_me(class="form-check-input") }}
-                    {{ form.remember_me.label(class="form-check-label") }}
+                    {{ form.remember_me(class="form-check-input", id="remember") }}
+                    {{ form.remember_me.label(class="form-check-label", for="remember") }}
                 </div>
                 <button type="submit" class="btn btn-primary">登录</button>
             </form>
         </div>
     </div>
     
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toastr.min.js') }}"></script>
+    <script>
+        // 初始化 toastr 配置
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-center",
+            timeOut: 5000,
+            preventDuplicates: true,
+            newestOnTop: true,
+            showDuration: "300",
+            hideDuration: "1000",
+            extendedTimeOut: "1000",
+        };
+        
+        // 处理登录表单提交
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const form = this;
+            const submitBtn = $(form).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            
+            // 禁用提交按钮
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 登录中...');
+            
+            // 准备表单数据
+            const formData = new FormData(form);
+            
+            $.ajax({
+                url: '{{ url_for("admin.login") }}',  // 强制使用管理后台登录路由
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    console.log('登录响应:', response);  // 调试日志
+                    
+                    // 重置按钮状态
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html(originalText);
+                    
+                    if (response.success) {
+                        toastr.success(response.message || '登录成功');
+                        setTimeout(() => {
+                            window.location.href = response.redirect_url || '{{ url_for("admin.index") }}';
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message || '登录失败');
+                        // 清空密码输入框
+                        $('#password').val('');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('登录错误:', xhr.responseText);  // 调试日志
+                    console.error('状态码:', xhr.status);  // 添加状态码日志
+                    
+                    // 重置按钮状态
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html(originalText);
+                    
+                    let message = '登录失败';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        message = (response && response.message) ? response.message : 
+                                (response && response.error) ? response.error : '登录失败';
+                        console.log('解析后的错误消息:', message);  // 添加错误消息日志
+                    } catch (e) {
+                        console.error('解析错误响应失败:', e);
+                    }
+                    
+                    toastr.error(message);
+                    // 清空密码输入框
+                    $('#password').val('');
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

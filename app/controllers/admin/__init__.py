@@ -48,7 +48,7 @@ operation_log_service = OperationLogService()
 admin_bp.register_blueprint(user_bp, url_prefix='/users')
 admin_bp.register_blueprint(post_bp, url_prefix='/posts')
 admin_bp.register_blueprint(category_bp, url_prefix='/categories')
-admin_bp.register_blueprint(tag_bp, url_prefix='/tags')
+admin_bp.register_blueprint(tag_bp, url_prefix='/tag')
 admin_bp.register_blueprint(comment_bp, url_prefix='/comments')
 admin_bp.register_blueprint(upload_bp, url_prefix='/upload')
 
@@ -114,34 +114,8 @@ def index():
                              recent_comments=recent_comments,
                              PostStatus=PostStatus)
     except Exception as e:
-        current_app.logger.error(f"获取仪表盘数据时出错: {str(e)}")
-        flash('获取仪表盘数据时出错', 'error')
-        # 返回默认的空统计数据结构
-        default_stats = {
-            'posts': {
-                'total': 0,
-                'published': 0,
-                'draft': 0
-            },
-            'categories': {
-                'total': 0
-            },
-            'tags': {
-                'total': 0
-            },
-            'comments': {
-                'total': 0,
-                'pending': 0
-            },
-            'users': {
-                'total': 0
-            }
-        }
-        return render_template('admin/index.html',
-                             stats=default_stats,
-                             recent_posts=[],
-                             recent_comments=[],
-                             PostStatus=PostStatus)
+        flash('获取统计数据失败', 'error')
+        return redirect(url_for('blog.index'))
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -154,29 +128,48 @@ def login():
         password = request.form.get('password')
         remember = request.form.get('remember', False)
         
-        # 验证用户名和密码
-        result = user_service.validate_admin_login(username, password)
-        if result['status']:
-            user = result['user']
-            login_user(user, remember=remember)
-            
-            # 记录操作日志
-            operation_log_service.log_operation(
-                user=user,
-                action='登录',
-                details='管理员登录'
-            )
-            
+        # 获取用户信息
+        result = user_service.get_user_by_username(username)
+        if not result['success']:
+            current_app.logger.warning(f'登录失败: {result["message"]}')
             return jsonify({
-                'success': True,
-                'message': '登录成功',
-                'redirect_url': url_for('admin.index')
+                'success': False,
+                'message': result['message']
             })
-        else:
+            
+        user = result['user']
+            
+        # 验证密码
+        if not user.verify_password(password):
+            current_app.logger.warning(f'密码验证失败: {username}')
             return jsonify({
                 'success': False,
                 'message': '用户名或密码错误'
             })
+            
+        # 检查是否具有管理员权限
+        if not user.has_permission(Permission.ADMIN) and not user.has_permission(Permission.SUPER_ADMIN):
+            current_app.logger.warning(f'非管理员尝试登录后台: {username}')
+            return jsonify({
+                'success': False,
+                'message': '您没有管理员权限'
+            })
+            
+        # 登录成功
+        login_user(user, remember=remember)
+        
+        # 记录操作日志
+        operation_log_service.log_operation(
+            user=user,
+            action='登录',
+            details='管理员登录'
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': '登录成功',
+            'redirect_url': url_for('admin.index')
+        })
             
     return render_template('admin/login.html')
 

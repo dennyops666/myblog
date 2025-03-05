@@ -36,11 +36,24 @@ def login():
             remember_me = request.form.get('remember_me', False)
 
             if not username or not password:
+                if request.is_json:
+                    return jsonify({'success': False, 'message': '用户名和密码不能为空'})
                 flash('用户名和密码不能为空', 'danger')
                 return render_template('auth/login.html', form=form)
 
-            user = user_service.get_user_by_username(username)
-            if not user or not user.verify_password(password):
+            result = user_service.get_user_by_username(username)
+            if not result['success']:
+                current_app.logger.warning(f'登录失败: {result["message"]}')
+                if request.is_json:
+                    return jsonify({'success': False, 'message': result['message']})
+                flash(result['message'], 'danger')
+                return render_template('auth/login.html', form=form)
+
+            user = result['user']
+            if not user.verify_password(password):
+                current_app.logger.warning(f'密码验证失败: {username}')
+                if request.is_json:
+                    return jsonify({'success': False, 'message': '用户名或密码错误'})
                 flash('用户名或密码错误', 'danger')
                 return render_template('auth/login.html', form=form)
 
@@ -55,12 +68,21 @@ def login():
                 if not parsed_next.netloc:
                     redirect_url = next_url
             
+            if request.is_json:
+                return jsonify({
+                    'success': True,
+                    'message': '登录成功',
+                    'redirect_url': redirect_url
+                })
+                
             flash('登录成功', 'success')
             return redirect(redirect_url)
 
         return render_template('auth/login.html', form=form)
     except Exception as e:
         current_app.logger.error(f'登录过程中发生错误: {str(e)}\n{traceback.format_exc()}')
+        if request.is_json:
+            return jsonify({'success': False, 'message': '服务器内部错误，请稍后重试'})
         flash('服务器内部错误，请稍后重试', 'error')
         return render_template('auth/login.html', form=form)
 
