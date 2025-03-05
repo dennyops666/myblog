@@ -78,8 +78,70 @@ def require_login():
 @login_required
 @admin_required
 def index():
-    """管理后台首页"""
-    return render_template('admin/index.html')
+    """管理后台首页 - 显示统计信息和概览"""
+    try:
+        # 获取统计数据
+        stats = {
+            'posts': {
+                'total': Post.query.count(),
+                'published': Post.query.filter_by(status=PostStatus.PUBLISHED).count(),
+                'draft': Post.query.filter_by(status=PostStatus.DRAFT).count()
+            },
+            'categories': {
+                'total': Category.query.count()
+            },
+            'tags': {
+                'total': Tag.query.count()
+            },
+            'comments': {
+                'total': Comment.query.count(),
+                'pending': Comment.query.filter_by(status=0).count()
+            },
+            'users': {
+                'total': User.query.count()
+            }
+        }
+        
+        # 获取最近的文章
+        recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
+        
+        # 获取最近的评论
+        recent_comments = Comment.query.order_by(Comment.created_at.desc()).limit(5).all()
+        
+        return render_template('admin/index.html',
+                             stats=stats,
+                             recent_posts=recent_posts,
+                             recent_comments=recent_comments,
+                             PostStatus=PostStatus)
+    except Exception as e:
+        current_app.logger.error(f"获取仪表盘数据时出错: {str(e)}")
+        flash('获取仪表盘数据时出错', 'error')
+        # 返回默认的空统计数据结构
+        default_stats = {
+            'posts': {
+                'total': 0,
+                'published': 0,
+                'draft': 0
+            },
+            'categories': {
+                'total': 0
+            },
+            'tags': {
+                'total': 0
+            },
+            'comments': {
+                'total': 0,
+                'pending': 0
+            },
+            'users': {
+                'total': 0
+            }
+        }
+        return render_template('admin/index.html',
+                             stats=default_stats,
+                             recent_posts=[],
+                             recent_comments=[],
+                             PostStatus=PostStatus)
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():

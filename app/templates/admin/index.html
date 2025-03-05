@@ -1,40 +1,227 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}管理后台{% endblock %}
+{% block title %}仪表盘 - MyBlog 管理后台{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>管理后台</h1>
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">仪表盘</h1>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row">
+        <!-- 文章统计 -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">文章管理</h5>
-                    <p class="card-text">管理博客文章，包括创建、编辑和删除文章。</p>
-                    <div class="text-center">
-                        <a href="{{ url_for('admin.posts.index') }}" class="btn btn-primary">管理文章</a>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">文章</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.posts.total }}</div>
+                            <div class="small text-muted mt-2">
+                                已发布: {{ stats.posts.published }} | 草稿: {{ stats.posts.draft }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
+
+        <!-- 分类统计 -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">分类管理</h5>
-                    <p class="card-text">管理文章分类，包括创建、编辑和删除分类。</p>
-                    <a href="{{ url_for('admin.admin_category.index') }}" class="btn btn-primary">管理分类</a>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">分类</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.categories.total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card">
+
+        <!-- 标签统计 -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
-                    <h5 class="card-title">标签管理</h5>
-                    <p class="card-text">管理文章标签，包括创建、编辑和删除标签。</p>
-                    <a href="{{ url_for('admin.tag.index') }}" class="btn btn-primary">管理标签</a>
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">标签</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.tags.total }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评论统计 -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">评论</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.comments.total }}</div>
+                            <div class="small text-muted mt-2">
+                                待审核: {{ stats.comments.pending }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近活动 -->
+    <div class="row">
+        <!-- 最近文章 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">最近文章</h6>
+                    <a href="{{ url_for('admin.posts.index') }}" class="btn btn-sm btn-primary">
+                        查看全部
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for post in recent_posts %}
+                        <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ post.title }}</h6>
+                                <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <small class="text-muted">
+                                {% if post.status == PostStatus.PUBLISHED %}
+                                <span class="badge bg-success">已发布</span>
+                                {% else %}
+                                <span class="badge bg-secondary">草稿</span>
+                                {% endif %}
+                            </small>
+                        </a>
+                        {% else %}
+                        <div class="text-center text-muted py-3">暂无文章</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近评论 -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">最近评论</h6>
+                    <a href="{{ url_for('admin.comment.index') }}" class="btn btn-sm btn-primary">
+                        查看全部
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for comment in recent_comments %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ comment.author_name }}</h6>
+                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ comment.content[:100] }}{% if comment.content|length > 100 %}...{% endif %}</p>
+                            <small class="text-muted">
+                                {% if comment.status == 1 %}
+                                <span class="badge bg-success">已审核</span>
+                                {% else %}
+                                <span class="badge bg-warning">待审核</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-3">暂无评论</div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* 统计卡片样式 */
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+/* 卡片内容样式 */
+.card {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+.card-header {
+    background-color: #f8f9fc !important;
+    border-bottom: 1px solid #e3e6f0;
+}
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* 列表样式 */
+.list-group-item {
+    border-left: 0;
+    border-right: 0;
+    padding: 1rem;
+}
+.list-group-item:first-child {
+    border-top: 0;
+}
+.list-group-item:last-child {
+    border-bottom: 0;
+}
+.list-group-item-action:hover {
+    background-color: #f8f9fc;
+}
+
+/* 徽章样式 */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    border-radius: 0.25rem;
+}
+.bg-success {
+    background-color: #1cc88a !important;
+}
+.bg-warning {
+    background-color: #f6c23e !important;
+}
+.bg-secondary {
+    background-color: #858796 !important;
+}
+</style>
 {% endblock %} 
