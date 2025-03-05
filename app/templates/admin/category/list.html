@@ -2,6 +2,202 @@
 
 {% block title %}分类管理{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<style>
+dialog {
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    margin: 0;
+    max-width: 95vw;
+    min-width: 320px;
+    width: 400px;
+    z-index: 1050;
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+    background: white;
+}
+
+dialog[open] {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+}
+
+dialog[open]::backdrop {
+    opacity: 1;
+}
+
+.dialog-content {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.dialog-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.dialog-body {
+    padding: 1.25rem;
+    background: white;
+}
+
+.dialog-body p {
+    margin: 0;
+    color: #212529;
+    font-size: 1rem;
+}
+
+.dialog-body .category-name {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.dialog-body .warning-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #fff5f5;
+    border: 1px solid #fad7d7;
+    border-radius: 4px;
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+
+.dialog-body .warning-box i {
+    margin-top: 0.125rem;
+}
+
+.dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.btn-close {
+    padding: 0.375rem;
+    margin: -0.375rem -0.375rem -0.375rem 0;
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: #6c757d;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-close:hover {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #212529;
+}
+
+.btn-close:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.25);
+}
+
+.btn-close i {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.dialog-footer .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    min-width: 5rem;
+}
+
+.dialog-footer .btn-light {
+    background-color: #f8f9fa;
+    border-color: #dfe2e5;
+    color: #212529;
+}
+
+.dialog-footer .btn-light:hover {
+    background-color: #e9ecef;
+    border-color: #dfe2e5;
+}
+
+.dialog-footer .btn-danger {
+    min-width: 6rem;
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: calc(50% - 8px);
+    left: calc(50% - 8px);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: button-loading-spinner 0.75s linear infinite;
+}
+
+@keyframes button-loading-spinner {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+@media (max-width: 576px) {
+    dialog {
+        width: calc(100vw - 2rem);
+        margin: 1rem;
+    }
+    
+    .dialog-footer {
+        flex-direction: row;
+    }
+    
+    .dialog-footer .btn {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -39,7 +235,10 @@
                         <a href="{{ url_for('admin.admin_category.edit', id=category.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil"></i> 编辑
                         </a>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirm({{ category.id }}, '{{ category.name }}')">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger delete-btn"
+                                data-category-id="{{ category.id }}"
+                                data-category-name="{{ category.name }}">
                             <i class="bi bi-trash"></i> 删除
                         </button>
                     </td>
@@ -67,99 +266,173 @@
 {% endif %}
 
 <!-- 删除确认对话框 -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">确认删除</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<dialog id="deleteDialog">
+    <div class="dialog-content">
+        <div class="dialog-header">
+            <h5>确认删除</h5>
+            <button type="button" class="btn-close" onclick="closeDialog()" aria-label="Close">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="dialog-body">
+            <p>确定要删除分类"<span id="categoryName" class="category-name"></span>"吗？</p>
+            <div class="warning-box">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>此操作不可恢复，请谨慎操作。</span>
             </div>
-            <div class="modal-body">
-                <p>确定要删除分类 "<span id="categoryNameToDelete"></span>" 吗？此操作不可恢复。</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <form id="deleteForm" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-danger">确认删除</button>
-                </form>
-            </div>
+            <input type="hidden" id="categoryId">
+        </div>
+        <div class="dialog-footer">
+            <button type="button" class="btn btn-light" onclick="closeDialog()">
+                <i class="bi bi-x me-1"></i>取消
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">
+                <i class="bi bi-trash me-1"></i>确认删除
+            </button>
         </div>
     </div>
-</div>
+</dialog>
 
-<!-- 提示对话框 -->
-<div class="modal fade" id="messageModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">提示</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="messageContent"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="messageConfirm">确定</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
-const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-const deleteForm = document.getElementById('deleteForm');
-const categoryNameToDelete = document.getElementById('categoryNameToDelete');
-const messageContent = document.getElementById('messageContent');
-const messageConfirm = document.getElementById('messageConfirm');
-
-function showMessage(message, success = false) {
-    messageContent.textContent = message;
-    messageConfirm.onclick = () => {
-        if (success) {
-            window.location.reload();
-        }
-    };
-    messageModal.show();
-}
-
-function showDeleteConfirm(categoryId, categoryName) {
-    categoryNameToDelete.textContent = categoryName;
-    deleteForm.action = "{{ url_for('admin.admin_category.delete', id=0) }}".replace('0', categoryId);
-    deleteModal.show();
-}
-
-// 监听删除表单提交
-deleteForm.addEventListener('submit', function(e) {
-    e.preventDefault();
+$(document).ready(function() {
+    const deleteDialog = document.getElementById('deleteDialog');
+    let isProcessing = false;
     
-    fetch(this.action, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+    // 关闭对话框的函数
+    window.closeDialog = function() {
+        if (isProcessing) return;
+        deleteDialog.close();
+    };
+    
+    // 监听删除按钮点击事件
+    $('.delete-btn').on('click', function(e) {
+        e.preventDefault();
+        const categoryId = $(this).data('category-id');
+        const categoryName = $(this).data('category-name');
+        
+        console.log('Delete button clicked:', { categoryId, categoryName });
+        
+        $('#categoryName').text(categoryName);
+        $('#categoryId').val(categoryId);
+        
+        try {
+            deleteDialog.showModal();
+            $('#confirmDelete').focus();
+        } catch (error) {
+            console.error('Error showing dialog:', error);
+            showToast('error', '显示对话框失败，请重试');
         }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    });
+    
+    // 监听确认删除按钮点击事件
+    $('#confirmDelete').on('click', function() {
+        if (isProcessing) return;
+        
+        const categoryId = $('#categoryId').val();
+        if (!categoryId) {
+            showToast('error', '删除失败：无法获取分类ID');
+            return;
         }
-        return response.json();
-    })
-    .then(data => {
-        deleteModal.hide();
-        if (data.success) {
-            showMessage('分类删除成功', true);
-        } else {
-            showMessage(data.message || '删除失败');
+        
+        console.log('Confirm delete clicked for category:', categoryId);
+        
+        const $btn = $(this);
+        isProcessing = true;
+        
+        $btn.prop('disabled', true)
+           .addClass('btn-loading')
+           .css('width', $btn.outerWidth());
+        
+        const deleteUrl = "{{ url_for('admin.admin_category.delete', id=0) }}".replace('0', categoryId);
+        console.log('Delete URL:', deleteUrl);
+        
+        // 添加CSRF令牌
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        
+        $.ajax({
+            url: deleteUrl,
+            type: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            contentType: 'application/json',
+            dataType: 'json',
+            beforeSend: function(xhr) {
+                console.log('Sending delete request...');
+            },
+            success: function(data) {
+                console.log('Delete response:', data);
+                if (data.success) {
+                    deleteDialog.close();
+                    showToast('success', '分类删除成功');
+                    setTimeout(() => {
+                        console.log('Reloading page...');
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    console.error('Delete failed:', data.message);
+                    showToast('error', data.message || '删除失败');
+                    resetButton();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Delete request failed:', {
+                    status: status,
+                    error: error,
+                    response: xhr.responseText
+                });
+                
+                let errorMessage = '删除失败，请重试';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+                
+                showToast('error', errorMessage);
+                resetButton();
+            }
+        });
+    });
+    
+    function resetButton() {
+        console.log('Resetting button state');
+        isProcessing = false;
+        $('#confirmDelete')
+            .prop('disabled', false)
+            .removeClass('btn-loading')
+            .css('width', '');
+    }
+    
+    // 对话框关闭时重置状态
+    deleteDialog.addEventListener('close', function() {
+        console.log('Dialog closed');
+        $('#categoryName').text('');
+        $('#categoryId').val('');
+        resetButton();
+    });
+    
+    // 按ESC键关闭对话框
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && deleteDialog.open && !isProcessing) {
+            console.log('ESC pressed, closing dialog');
+            closeDialog();
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        deleteModal.hide();
-        showMessage('删除失败，请重试');
+    });
+    
+    // 按Enter键触发确认删除
+    deleteDialog.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && deleteDialog.open && !isProcessing) {
+            console.log('Enter pressed, triggering delete');
+            e.preventDefault();
+            $('#confirmDelete').click();
+        }
     });
 });
 </script>
