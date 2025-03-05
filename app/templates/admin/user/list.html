@@ -11,6 +11,9 @@
     .modal {
         z-index: 1050 !important;
     }
+    .role-badge {
+        margin-right: 4px;
+    }
 </style>
 {% endblock %}
 
@@ -47,7 +50,11 @@
                                     <td>{{ user.id }}</td>
                                     <td>{{ user.username }}</td>
                                     <td>{{ user.email }}</td>
-                                    <td>{{ user.role }}</td>
+                                    <td>
+                                        {% for role in user.roles %}
+                                            <span class="badge bg-info role-badge">{{ role.name }}</span>
+                                        {% endfor %}
+                                    </td>
                                     <td>
                                         {% if user.is_active %}
                                         <span class="badge bg-success">启用</span>
