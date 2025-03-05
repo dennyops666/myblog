@@ -1,4 +1,21 @@
 $(document).ready(function() {
+    // 侧边栏折叠功能
+    $('#sidebarToggle').on('click', function() {
+        $('.sidebar').toggleClass('collapsed');
+        $('.main-wrapper').toggleClass('expanded');
+        
+        // 保存状态到localStorage
+        const isCollapsed = $('.sidebar').hasClass('collapsed');
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    });
+
+    // 从localStorage恢复侧边栏状态
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+        $('.sidebar').addClass('collapsed');
+        $('.main-wrapper').addClass('expanded');
+    }
+
     // 删除确认
     $('.btn-delete').on('click', function(e) {
         if (!confirm('确定要删除吗？')) {

@@ -12,6 +12,8 @@
     min-height: calc(100vh - 56px);
     background-color: #f8f9fa;
     padding: 20px;
+    width: 250px;
+    transition: all 0.3s ease;
 }
 
 .content {
@@ -44,12 +46,10 @@ body {
     top: 0;
     left: 0;
     bottom: 0;
-    width: 240px;
     z-index: 1;
     padding: 48px 0 0;
     background-color: #f8f9fa;
     border-right: 1px solid #dee2e6;
-    transition: all 0.3s ease;
 }
 
 .sidebar .nav-link {
@@ -78,7 +78,7 @@ body {
 /* 主内容区域样式 */
 .main-wrapper {
     position: relative;
-    margin-left: 240px;
+    margin-left: 250px;
     min-height: 100vh;
     z-index: 2;
     background-color: #fff;
@@ -215,8 +215,33 @@ body {
     .sidebar {
         width: 60px;
     }
+    
     .main-wrapper {
         margin-left: 60px;
+    }
+    
+    .sidebar .nav-link span,
+    .sidebar .sidebar-heading span {
+        display: none;
+    }
+    
+    .sidebar .nav-link i {
+        margin-right: 0;
+        font-size: 1.2em;
+    }
+    
+    .sidebar:hover {
+        width: 250px;
+    }
+    
+    .sidebar:hover .nav-link span,
+    .sidebar:hover .sidebar-heading span {
+        display: inline;
+    }
+    
+    .sidebar:hover .nav-link i {
+        margin-right: 8px;
+        font-size: 1em;
     }
 }
 
@@ -287,4 +312,24 @@ body {
 
 .dropdown-menu {
     z-index: 1050;
+}
+
+/* 侧边栏折叠状态 */
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar.collapsed .nav-link span,
+.sidebar.collapsed .sidebar-heading span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-link i {
+    margin-right: 0;
+    font-size: 1.2em;
+}
+
+/* 主内容区域样式 */
+.main-wrapper.expanded {
+    margin-left: 60px;
 } 
