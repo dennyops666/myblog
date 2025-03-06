@@ -57,31 +57,37 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('blog.post', post_id=comment.post_id) }}" target="_blank">
-                                    {{ comment.post.title }}
-                                </a>
+                                {{ comment.post.title }}
                             </td>
                             <td>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td>
-                                {% if comment.status == 1 %}
-                                <span class="badge bg-success">已通过</span>
-                                {% else %}
+                                {% if comment.status == 0 %}
                                 <span class="badge bg-warning">待审核</span>
+                                {% elif comment.status == 1 %}
+                                <span class="badge bg-success">已通过</span>
+                                {% elif comment.status == 2 %}
+                                <span class="badge bg-danger">已拒绝</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div class="btn-group">
                                     {% if comment.status == 0 %}
-                                    <form action="{{ url_for('admin.comment.approve', comment_id=comment.id) }}" method="POST" class="d-inline">
+                                    <form action="{{ url_for('admin.comment.approve', comment_id=comment.id) }}" method="POST" class="d-inline approve-form">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <button type="submit" class="btn btn-sm btn-outline-success btn-approve" data-id="{{ comment.id }}">
                                             <i class="fas fa-check"></i> 通过
                                         </button>
                                     </form>
-                                    {% endif %}
-                                    <form action="{{ url_for('admin.comment.delete', comment_id=comment.id) }}" method="POST" class="d-inline">
+                                    <form action="{{ url_for('admin.comment.reject', comment_id=comment.id) }}" method="POST" class="d-inline reject-form">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('确定要删除这条评论吗？')">
+                                        <button type="button" class="btn btn-sm btn-outline-warning btn-reject" data-id="{{ comment.id }}">
+                                            <i class="fas fa-times"></i> 拒绝
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <form action="{{ url_for('admin.comment.delete', comment_id=comment.id) }}" method="POST" class="d-inline delete-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ comment.id }}">
                                             <i class="fas fa-trash"></i> 删除
                                         </button>
                                     </form>
@@ -134,15 +140,75 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }}
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 删除确认
-    const deleteButtons = document.querySelectorAll('.btn-outline-danger');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('确定要删除这条评论吗？')) {
-                e.preventDefault();
+$(document).ready(function() {
+    // 设置提示显示时间
+    const PAGE_REFRESH_DELAY = 5000;     // 所有操作5秒后刷新页面
+
+    // 通过评论
+    $('.btn-approve').click(function() {
+        const commentId = $(this).data('id');
+        showConfirmDialog({
+            title: '确认通过',
+            content: '确定要通过这条评论吗？',
+            onConfirm: function() {
+                $.post(`/admin/comments/${commentId}/approve`, function(response) {
+                    if (response.success) {
+                        showToast('success', response.message + ' （5秒后自动刷新）');
+                        
+                        // 延迟页面刷新
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, PAGE_REFRESH_DELAY);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                });
+            }
+        });
+    });
+
+    // 拒绝评论
+    $('.btn-reject').click(function() {
+        const commentId = $(this).data('id');
+        showConfirmDialog({
+            title: '确认拒绝',
+            content: '确定要拒绝这条评论吗？',
+            onConfirm: function() {
+                $.post(`/admin/comments/${commentId}/reject`, function(response) {
+                    if (response.success) {
+                        showToast('success', response.message + ' （5秒后自动刷新）');
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, PAGE_REFRESH_DELAY);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                });
+            }
+        });
+    });
+
+    // 删除评论
+    $('.btn-delete').click(function() {
+        const commentId = $(this).data('id');
+        showConfirmDialog({
+            title: '确认删除',
+            content: '确定要删除这条评论吗？此操作不可恢复！',
+            onConfirm: function() {
+                $.post(`/admin/comments/${commentId}/delete`, function(response) {
+                    if (response.success) {
+                        showToast('success', response.message + ' （5秒后自动刷新）');
+                        
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, PAGE_REFRESH_DELAY);
+                    } else {
+                        showToast('error', response.message);
+                    }
+                });
             }
         });
     });
