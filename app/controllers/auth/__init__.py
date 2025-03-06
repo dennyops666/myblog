@@ -26,65 +26,74 @@ def login():
         
         # 如果已经登录，重定向到管理后台首页
         if current_user.is_authenticated:
-            return redirect(next_url or url_for('admin.index'))
-
-        form = LoginForm()
-        # 处理POST请求
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            remember_me = request.form.get('remember_me', False)
-
-            if not username or not password:
-                if request.is_json:
-                    return jsonify({'success': False, 'message': '用户名和密码不能为空'})
-                flash('用户名和密码不能为空', 'danger')
-                return render_template('auth/login.html', form=form)
-
-            result = user_service.get_user_by_username(username)
-            if not result['success']:
-                current_app.logger.warning(f'登录失败: {result["message"]}')
-                if request.is_json:
-                    return jsonify({'success': False, 'message': result['message']})
-                flash(result['message'], 'danger')
-                return render_template('auth/login.html', form=form)
-
-            user = result['user']
-            if not user.verify_password(password):
-                current_app.logger.warning(f'密码验证失败: {username}')
-                if request.is_json:
-                    return jsonify({'success': False, 'message': '用户名或密码错误'})
-                flash('用户名或密码错误', 'danger')
-                return render_template('auth/login.html', form=form)
-
-            # 登录成功处理
-            login_user(user, remember=remember_me)
-            
-            # 如果有next参数且是相对路径，则跳转到next
-            redirect_url = url_for('admin.index')
-            if next_url:
-                # 确保next_url是相对路径，防止重定向攻击
-                parsed_next = urlparse(next_url)
-                if not parsed_next.netloc:
-                    redirect_url = next_url
-            
-            if request.is_json:
+            if request.is_xhr:
                 return jsonify({
                     'success': True,
-                    'message': '登录成功',
-                    'redirect_url': redirect_url
+                    'message': '已经登录',
+                    'redirect_url': next_url or url_for('admin.index')
                 })
-                
-            flash('登录成功', 'success')
-            return redirect(redirect_url)
+            return redirect(next_url or url_for('admin.index'))
 
-        return render_template('auth/login.html', form=form)
+        if request.method == 'GET':
+            return render_template('auth/login.html')
+
+        # 处理POST请求
+        username = request.form.get('username')
+        password = request.form.get('password')
+        remember_me = request.form.get('remember_me', '').lower() in ['true', '1', 'on', 'yes']
+
+        # 验证用户名和密码是否为空
+        if not username or not password:
+            return jsonify({
+                'success': False,
+                'message': '用户名和密码不能为空'
+            })
+
+        # 获取用户信息
+        result = user_service.get_user_by_username(username)
+        if not result['success']:
+            current_app.logger.warning(f'登录失败: {result["message"]}')
+            return jsonify({
+                'success': False,
+                'message': result['message']
+            })
+
+        user = result['user']
+        
+        # 验证密码
+        if not user.verify_password(password):
+            current_app.logger.warning(f'密码验证失败: {username}')
+            return jsonify({
+                'success': False,
+                'message': '用户名或密码错误'
+            })
+
+        # 登录用户
+        login_user(user, remember=remember_me)
+        
+        # 记录登录日志
+        current_app.logger.info(f'用户 {username} 登录成功')
+        
+        # 确定重定向URL
+        redirect_url = url_for('admin.index')
+        if next_url:
+            parsed_next = urlparse(next_url)
+            if not parsed_next.netloc:  # 确保是相对URL
+                redirect_url = next_url
+
+        # 返回成功响应
+        return jsonify({
+            'success': True,
+            'message': '登录成功',
+            'redirect_url': redirect_url
+        })
+
     except Exception as e:
         current_app.logger.error(f'登录过程中发生错误: {str(e)}\n{traceback.format_exc()}')
-        if request.is_json:
-            return jsonify({'success': False, 'message': '服务器内部错误，请稍后重试'})
-        flash('服务器内部错误，请稍后重试', 'error')
-        return render_template('auth/login.html', form=form)
+        return jsonify({
+            'success': False,
+            'message': '服务器内部错误，请稍后重试'
+        }), 500
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
 def logout():
@@ -93,15 +102,19 @@ def logout():
         # 检查是否是AJAX请求
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
-        # 如果用户未登录，直接返回到登录页
+        # 获取来源页面
+        referer = request.referrer
+        is_from_admin = referer and '/admin/' in referer if referer else False
+        
+        # 如果用户未登录
         if not current_user.is_authenticated:
             if is_ajax:
                 return jsonify({
                     'success': True,
                     'message': '未登录状态',
-                    'redirect_url': url_for('auth.login', _external=True)
+                    'redirect_url': url_for('blog.index' if not is_from_admin else 'auth.login')
                 })
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('blog.index' if not is_from_admin else 'auth.login'))
         
         username = current_user.username
         
@@ -114,11 +127,11 @@ def logout():
             response = jsonify({
                 'success': True,
                 'message': '已安全退出',
-                'redirect_url': url_for('auth.login', _external=True)
+                'redirect_url': url_for('auth.login' if is_from_admin else 'blog.index')
             })
         else:
             flash('已安全退出', 'success')
-            response = redirect(url_for('auth.login'))
+            response = redirect(url_for('auth.login' if is_from_admin else 'blog.index'))
         
         # 删除所有相关的cookie
         response.set_cookie('session_active', '', expires=0)
