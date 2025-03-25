@@ -1,0 +1,236 @@
+"""
+Flask应用程序工厂模块
+包含创建应用实例的工厂函数
+"""
+
+import time
+import uuid
+import json
+import pytz
+import random
+import sqlite3
+import datetime
+from operator import itemgetter
+from datetime import datetime, timedelta
+
+from flask import Flask, render_template, redirect, url_for, current_app, request, flash, session, abort, jsonify, make_response
+from flask_login import login_required, current_user
+from sqlalchemy import or_, text
+from werkzeug.exceptions import HTTPException
+
+from app.extensions import init_app
+from app.config import DevelopmentConfig
+from app.models.user import User
+from app.models.role import Role
+from app.models.comment import Comment, CommentStatus
+from app.models.post import Post, PostStatus
+from app.models.tag import Tag
+from app.models.visit import Visit
+from app.services.post import PostService
+from app.utils import template_filters
+from app.utils.log import setup_logging
+
+def register_blueprints(app):
+    """注册蓝图"""
+    # 根路由重定向到博客首页
+    @app.route('/')
+    def index():
+        return redirect(url_for('blog.index'))
+    
+    # 添加调试路由
+    @app.route('/debug-test')
+    def debug_test():
+        return "调试服务器正常工作!"
+    
+    # 预览文章的路由
+    @app.route('/admin/post/preview', methods=['POST'])
+    @login_required
+    def post_preview():
+        """预览文章内容"""
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({
+                    'success': False,
+                    'message': '未收到预览数据'
+                }), 400
+                
+            # 获取Markdown内容
+            markdown_content = data.get('content', '')
+            
+            # 使用服务处理Markdown
+            post_service = PostService()
+            html_content, toc, highlight_css = post_service.process_markdown(markdown_content)
+            
+            # 返回处理后的HTML
+            return jsonify({
+                'success': True,
+                'html_content': html_content,
+                'toc': toc,
+                'highlight_css': highlight_css
+            })
+        except Exception as e:
+            current_app.logger.error(f"预览文章失败: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': '生成预览失败: ' + str(e)
+            }), 500
+    
+    # 重定向路由
+    @app.route('/admin/posts')
+    @login_required
+    def admin_posts_redirect():
+        return redirect(url_for('admin_dashboard.posts'))
+    
+    @app.route('/admin/posts/new')
+    @login_required
+    def admin_posts_new_redirect():
+        return redirect(url_for('admin_dashboard.create_post'))
+    
+    @app.route('/admin/posts/<int:post_id>/edit')
+    @login_required
+    def admin_posts_edit_redirect(post_id):
+        return redirect(url_for('admin_dashboard.edit_post', post_id=post_id))
+    
+    @app.route('/admin/settings')
+    @login_required
+    def admin_settings_redirect():
+        return redirect(url_for('admin_dashboard.settings'))
+    
+    @app.route('/admin/categories')
+    @login_required
+    def admin_categories_redirect():
+        return redirect(url_for('admin_dashboard.categories'))
+    
+    @app.route('/admin/tags')
+    @login_required
+    def admin_tags_redirect():
+        return redirect(url_for('admin_dashboard.tags'))
+    
+    @app.route('/admin/users')
+    @login_required
+    def admin_users_redirect():
+        return redirect(url_for('admin_dashboard.users'))
+    
+    @app.route('/admin/comments')
+    @login_required
+    def admin_comments_redirect():
+        return redirect(url_for('admin_dashboard.comments'))
+    
+    @app.route('/admin/profile')
+    @login_required
+    def admin_profile_redirect():
+        return redirect(url_for('admin_dashboard.profile'))
+
+def create_app(test_config=None):
+    """创建并配置应用"""
+    app = Flask(__name__, instance_relative_config=True)
+    
+    # 配置应用
+    app.config.from_object(DevelopmentConfig)
+    
+    # 添加禁用缓存的中间件
+    @app.after_request
+    def add_no_cache_headers(response):
+        """为所有响应添加禁止缓存的头部"""
+        # 不为静态资源添加缓存头
+        if not request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '-1'
+        return response
+    
+    # 初始化扩展
+    init_app(app)
+    
+    # 注册蓝图
+    register_blueprints(app)
+    
+    # 注册命令行命令
+    from app.cli import register_commands
+    register_commands(app)
+    
+    # 应用启动后自动检查匿名评论状态
+    with app.app_context():
+        # 自动修正数据库中的匿名评论状态
+        fix_anonymous_comments_status()
+        
+        # 自动修正已登录用户评论状态
+        try:
+            from app.services.comment import CommentService
+            from flask import current_app
+            from app.models.comment import fix_comment_status_on_startup
+            
+            # 先通过直接SQL修正所有已登录用户评论状态
+            fixed_count = fix_comment_status_on_startup()
+            if fixed_count > 0:
+                current_app.logger.info(f"已自动修正 {fixed_count} 条已登录用户的评论状态")
+        except Exception as e:
+            current_app.logger.error(f"自动修正评论状态失败: {str(e)}")
+            
+        # 自动发布定时发布的文章
+        try:
+            Post.query.filter(
+                Post.status == PostStatus.SCHEDULED,
+                Post.created_at <= datetime.now()
+            ).update({
+                'status': PostStatus.PUBLISHED
+            })
+            app.extensions['db'].session.commit()
+        except Exception as e:
+            current_app.logger.error(f"自动发布定时文章失败: {str(e)}")
+    
+    # 注册模板全局变量和过滤器
+    from app.template_globals import register_template_globals
+    register_template_globals(app)
+    
+    # 注册错误处理器
+    register_error_handlers(app)
+    
+    # 启用CORS
+    app.after_request(add_cors_headers)
+    
+    # 返回应用实例
+    return app
+    
+def fix_anonymous_comments_status():
+    """修复匿名评论的状态"""
+    try:
+        # 直接使用SQL更新状态
+        connection = sqlite3.connect(current_app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', ''))
+        cursor = connection.cursor()
+        cursor.execute("UPDATE comments SET status = ? WHERE status = ?", (CommentStatus.APPROVED.value, 0))
+        fixed_count = cursor.rowcount
+        connection.commit()
+        connection.close()
+        
+        if fixed_count > 0:
+            current_app.logger.info(f"已自动修正 {fixed_count} 条匿名评论的状态")
+    except Exception as e:
+        current_app.logger.error(f"修复匿名评论状态失败: {str(e)}")
+
+def register_error_handlers(app):
+    """注册错误处理器"""
+    
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('errors/500.html'), 500
+    
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('errors/403.html'), 403
+    
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        return render_template('errors/generic.html', error=e), e.code
+
+def add_cors_headers(response):
+    """为响应添加CORS头，允许跨域请求"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response 

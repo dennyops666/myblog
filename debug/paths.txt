@@ -1,0 +1,1 @@
+['', '/usr/lib/python312.zip', '/usr/lib/python3.12', '/usr/lib/python3.12/lib-dynload', '/data/myblog/venv/lib/python3.12/site-packages']

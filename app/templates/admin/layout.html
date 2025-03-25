@@ -15,6 +15,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
     <!-- Custom styles -->
     <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+    <!-- 暗黑模式样式表 - 放在最后以确保优先级 -->
+    <link href="{{ url_for('static', filename='css/themes/dark.css') }}" rel="stylesheet">
     <style>
         /* 主布局样式 */
         #wrapper {
@@ -37,12 +39,12 @@
         .sidebar {
             position: fixed;
             top: 0;
-            bottom: 0;
             left: 0;
             z-index: 100;
             width: 250px;
+            height: 100vh;
             padding: 48px 0 0;
-            background-color: #f8f9fa;
+            background-color: #212529;
             border-right: 1px solid rgba(0, 0, 0, .1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-x: hidden;
@@ -52,7 +54,7 @@
         /* 导航链接样式 */
         .sidebar .nav-link {
             padding: .5rem 1rem;
-            color: #333;
+            color: rgba(255, 255, 255, 0.75);
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -62,8 +64,8 @@
 
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            color: #2470dc;
-            background-color: rgba(36, 112, 220, 0.05);
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .sidebar .nav-link i {
@@ -71,13 +73,13 @@
             margin-right: 8px;
             font-size: 1em;
             text-align: center;
-            color: #727272;
+            color: rgba(255, 255, 255, 0.5);
             transition: all 0.3s ease;
         }
 
         .sidebar .nav-link:hover i,
         .sidebar .nav-link.active i {
-            color: #2470dc;
+            color: #fff;
         }
 
         .sidebar .nav-link span {
@@ -90,7 +92,7 @@
             padding: .5rem 1rem;
             font-size: .75rem;
             text-transform: uppercase;
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.5);
             font-weight: bold;
             letter-spacing: .05em;
             white-space: nowrap;
@@ -108,7 +110,7 @@
             padding: 0;
             border: none;
             background: transparent;
-            color: #727272;
+            color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -117,45 +119,14 @@
         }
 
         #sidebarToggle:hover {
-            color: #2470dc;
-            background-color: rgba(36, 112, 220, 0.1);
+            color: #fff;
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
         }
 
         #sidebarToggle i {
             font-size: 16px;
             transition: transform 0.3s ease;
-        }
-
-        /* 折叠状态样式 */
-        .sidebar.collapsed {
-            width: 50px;
-        }
-
-        .sidebar.collapsed .nav-link {
-            padding: .5rem;
-            justify-content: center;
-        }
-
-        .sidebar.collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.2em;
-            width: 100%;
-        }
-
-        .sidebar.collapsed .nav-link span,
-        .sidebar.collapsed .sidebar-heading span {
-            opacity: 0;
-            width: 0;
-            display: none;
-        }
-
-        .sidebar.collapsed #sidebarToggle i {
-            transform: rotate(180deg);
-        }
-
-        .sidebar.collapsed + #content {
-            margin-left: 50px;
         }
 
         /* 响应式布局 */
@@ -212,6 +183,46 @@
                 margin-left: 250px;
             }
         }
+        
+        /* 主题切换图标样式 */
+        .theme-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1050;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .dark-theme .theme-toggle {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .dark-theme .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .theme-toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .theme-toggle-icon:hover {
+            transform: rotate(15deg);
+        }
     </style>
     {% endblock %}
 </head>
@@ -220,6 +231,11 @@
         {% include 'admin/includes/sidebar.html' %}
         
         <div id="content">
+            <!-- 主题切换按钮 -->
+            <button class="theme-toggle" title="切换主题">
+                <i class="bi bi-moon-fill theme-toggle-icon"></i>
+            </button>
+            
             {% block content %}{% endblock %}
         </div>
     </div>
@@ -231,51 +247,45 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Toastr -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- 主题切换脚本 -->
+    <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
     <!-- Custom scripts -->
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-    
-    <!-- 侧边栏脚本 -->
+    <!-- 在页面底部添加这段JavaScript代码 -->
     <script>
-    $(document).ready(function() {
-        console.log('Initializing sidebar...');
-        
-        const $sidebar = $('.sidebar');
-        const $toggleButton = $('#sidebarToggle');
-        const $content = $('#content');
-        
-        if ($sidebar.length === 0 || $toggleButton.length === 0) {
-            console.error('Sidebar elements not found');
-            return;
-        }
-        
-        // 从localStorage获取侧边栏状态
-        let isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        console.log('Initial collapsed state:', isCollapsed);
-        
-        // 设置初始状态
-        if (isCollapsed) {
-            $sidebar.addClass('collapsed');
-            console.log('Applied collapsed class');
-        }
-        
-        // 监听折叠按钮点击事件
-        $toggleButton.on('click', function(e) {
-            e.preventDefault();
-            console.log('Toggle sidebar clicked');
-            
-            // 切换状态
-            isCollapsed = !isCollapsed;
-            
-            // 更新DOM
-            $sidebar.toggleClass('collapsed', isCollapsed);
-            
-            // 保存状态到localStorage
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-            
-            console.log('Sidebar toggled, collapsed:', isCollapsed);
-            console.log('Sidebar classes:', $sidebar.attr('class'));
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果当前是暗黑模式，强制设置表格背景色
+            if (document.documentElement.classList.contains('dark-theme')) {
+                setTimeout(function() {
+                    const tableElements = document.querySelectorAll('.card-body, .table-responsive, .table, tbody, tr, td');
+                    tableElements.forEach(el => {
+                        el.style.backgroundColor = '#1e1e1e';
+                    });
+                    
+                    // 特别处理最近文章表格
+                    const recentPostsCard = document.querySelector('.card-body.p-0');
+                    if (recentPostsCard) {
+                        recentPostsCard.style.backgroundColor = '#1e1e1e';
+                    }
+                    
+                    const tableResponsive = document.querySelector('.table-responsive');
+                    if (tableResponsive) {
+                        tableResponsive.style.backgroundColor = '#1e1e1e';
+                    }
+                    
+                    const recentPostsTable = document.getElementById('recent-posts-table');
+                    if (recentPostsTable) {
+                        recentPostsTable.style.backgroundColor = '#1e1e1e';
+                    }
+                    
+                    // 处理奇数行
+                    const oddRows = document.querySelectorAll('.table tbody tr:nth-child(odd)');
+                    oddRows.forEach(row => {
+                        row.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                    });
+                }, 100);
+            }
         });
-    });
     </script>
     {% endblock %}
 </body>

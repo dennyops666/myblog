@@ -1,4 +1,4 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}查看文章 - {{ post.title }}{% endblock %}
 
@@ -8,11 +8,11 @@
         <h1 class="h2">{{ post.title }}</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
             <div class="btn-group" role="group">
-                <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> 编辑
+                <a href="{{ url_for('admin_dashboard.post.edit', post_id=post.id) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> 编辑文章
                 </a>
-                <a href="{{ url_for('admin.posts.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> 返回列表
+                <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> 返回列表
                 </a>
             </div>
         </div>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="col-auto">
                     <small class="text-muted">
-                        评论数：{{ post.comment_count }}
+                        评论数：{{ post.comments_count }}
                     </small>
                 </div>
             </div>

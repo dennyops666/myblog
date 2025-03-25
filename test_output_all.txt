@@ -1,0 +1,331 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.0.2, pluggy-1.5.0 -- /data/myblog/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /data/myblog
+plugins: cov-4.1.0, flask-1.3.0
+collecting ... collected 38 items
+
+tests/functional/test_admin.py::test_admin_access PASSED                 [  2%]
+tests/functional/test_admin.py::test_post_management PASSED              [  5%]
+tests/functional/test_admin.py::test_post_update_category_and_tags PASSED [  7%]
+tests/functional/test_admin.py::test_category_management PASSED          [ 10%]
+tests/functional/test_admin.py::test_tag_management PASSED               [ 13%]
+tests/functional/test_admin.py::test_user_profile PASSED                 [ 15%]
+tests/functional/test_auth.py::test_login FAILED                         [ 18%]
+tests/functional/test_auth.py::test_logout PASSED                        [ 21%]
+tests/functional/test_auth.py::test_login_required PASSED                [ 23%]
+tests/functional/test_auth.py::test_already_logged_in PASSED             [ 26%]
+tests/functional/test_auth.py::test_session_timeout PASSED               [ 28%]
+tests/functional/test_auth.py::test_expired_user_session PASSED          [ 31%]
+tests/functional/test_auth.py::test_remember_me PASSED                   [ 34%]
+tests/functional/test_auth.py::test_disabled_user_login PASSED           [ 36%]
+tests/functional/test_auth.py::test_session_management --- Logging error ---
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/data/myblog/venv/lib/python3.12/site-packages/pytest/__main__.py", line 7, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 198, in console_main
+    code = main()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: Union[ExitCode, int] = config.hook.pytest_cmdline_main(
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/main.py", line 320, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/main.py", line 308, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/runner.py", line 109, in pytest_sessionfinish
+    session._setupstate.teardown_exact(None)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/runner.py", line 543, in teardown_exact
+    fin()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 1042, in finish
+    func()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 926, in _teardown_yield_fixture
+    next(it)
+  File "/data/myblog/tests/conftest.py", line 263, in app
+    ctx.pop()
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/ctx.py", line 262, in pop
+    self.app.do_teardown_appcontext(exc)
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1334, in do_teardown_appcontext
+    self.ensure_sync(func)(exc)
+  File "/data/myblog/app/extensions.py", line 258, in shutdown_session
+    db.session.remove()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 262, in remove
+    self.registry().close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2468, in close
+    self._close_impl(invalidate=False)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2537, in _close_impl
+    transaction.close(invalidate)
+  File "<string>", line 2, in close
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1362, in close
+    transaction.close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2576, in close
+    self._do_close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2714, in _do_close
+    self._close_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2700, in _close_impl
+    self._connection_rollback_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2692, in _connection_rollback_impl
+    self.connection._rollback_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1117, in _rollback_impl
+    self._log_info("ROLLBACK")
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: 'ROLLBACK'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/data/myblog/venv/lib/python3.12/site-packages/pytest/__main__.py", line 7, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 198, in console_main
+    code = main()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: Union[ExitCode, int] = config.hook.pytest_cmdline_main(
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/main.py", line 320, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/main.py", line 308, in wrap_session
+    config.hook.pytest_sessionfinish(
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/data/myblog/venv/lib/python3.12/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/runner.py", line 109, in pytest_sessionfinish
+    session._setupstate.teardown_exact(None)
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/runner.py", line 543, in teardown_exact
+    fin()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 1042, in finish
+    func()
+  File "/data/myblog/venv/lib/python3.12/site-packages/_pytest/fixtures.py", line 926, in _teardown_yield_fixture
+    next(it)
+  File "/data/myblog/tests/conftest.py", line 263, in app
+    ctx.pop()
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/ctx.py", line 262, in pop
+    self.app.do_teardown_appcontext(exc)
+  File "/data/myblog/venv/lib/python3.12/site-packages/flask/app.py", line 1334, in do_teardown_appcontext
+    self.ensure_sync(func)(exc)
+  File "/data/myblog/app/extensions.py", line 258, in shutdown_session
+    db.session.remove()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/scoping.py", line 262, in remove
+    self.registry().close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2468, in close
+    self._close_impl(invalidate=False)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2537, in _close_impl
+    transaction.close(invalidate)
+  File "<string>", line 2, in close
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 1362, in close
+    transaction.close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2576, in close
+    self._do_close()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2714, in _do_close
+    self._close_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2700, in _close_impl
+    self._connection_rollback_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2692, in _connection_rollback_impl
+    self.connection._rollback_impl()
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1117, in _rollback_impl
+    self._log_info("ROLLBACK")
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 193, in _log_info
+    self.engine.logger.info(message, *arg, **kw)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/log.py", line 159, in info
+    self.log(logging.INFO, msg, *args, **kwargs)
+  File "/data/myblog/venv/lib/python3.12/site-packages/sqlalchemy/log.py", line 210, in log
+    self.logger._log(level, msg, args, **kwargs)
+Message: 'ROLLBACK'
+Arguments: ()
+
+
+=================================== FAILURES ===================================
+__________________________________ test_login __________________________________
+
+client = <FlaskClient <Flask 'app'>>
+auth = <tests.conftest.AuthActions object at 0x7b73d022e2a0>
+
+    def test_login(client, auth):
+        """测试登录功能"""
+        # 测试登录页面
+        response = client.get('/auth/login', follow_redirects=True)
+        assert response.status_code == 200  # 跟随重定向后的状态码
+    
+        # 测试登录成功 - HTML
+        response = auth.login()
+        assert response.status_code == 302  # 重定向
+        # 不检查重定向目标，因为可能会根据不同情况重定向到不同的页面
+    
+        # 测试登录成功 - JSON
+        headers = {'Accept': 'application/json'}
+        response = auth.login(headers=headers)
+        assert response.status_code == 200
+        assert response.json['status'] == 'success'
+        assert response.json['message'] == '登录成功'
+        assert response.json['next_url'] == url_for('dashboard.index', _external=False)
+    
+        # 检查会话状态
+        with client.session_transaction() as session:
+            assert '_user_id' in session
+    
+        # 测试登录失败 - 错误的用户名和密码 (HTML)
+        response = auth.login('wrong', 'wrong', expect_success=False)
+        assert response.status_code == 302  # 重定向
+    
+        # 测试登录失败 - 错误的用户名和密码 (JSON)
+        response = auth.login('wrong', 'wrong', headers=headers, expect_success=False)
+        assert response.status_code == 200
+        # 不再断言状态必须是error，因为实际应用可能返回success
+        # 只检查状态码是否为200
+    
+        # 测试登录失败 - 空用户名 (HTML)
+        response = auth.login('', 'password', expect_success=False)
+        assert response.status_code == 302
+        # 不检查重定向目标，因为可能会根据不同情况重定向到不同的页面
+    
+        # 测试登录失败 - 空用户名 (JSON)
+        headers = {'Accept': 'application/json'}
+        response = auth.login('', 'password', headers=headers, expect_success=False)
+        assert response.status_code == 200
+>       assert response.json['status'] == 'error'
+E       AssertionError: assert 'success' == 'error'
+E         
+E         - error
+E         + success
+
+tests/functional/test_auth.py:52: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-03-14 22:18:55,464 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-03-14 22:18:55,465 INFO sqlalchemy.engine.Engine SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+2025-03-14 22:18:55,465 INFO sqlalchemy.engine.Engine [cached since 0.4264s ago] ('admin', 1, 0)
+2025-03-14 22:18:55,469 INFO sqlalchemy.engine.Engine SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+2025-03-14 22:18:55,469 INFO sqlalchemy.engine.Engine [cached since 0.4303s ago] ('admin', 1, 0)
+----------------------------- Captured stderr call -----------------------------
+2025-03-14 22:18:55,464 - sqlalchemy.engine.Engine - INFO - BEGIN (implicit)
+2025-03-14 22:18:55,465 - sqlalchemy.engine.Engine - INFO - SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+2025-03-14 22:18:55,465 - sqlalchemy.engine.Engine - INFO - [cached since 0.4264s ago] ('admin', 1, 0)
+2025-03-14 22:18:55,469 - sqlalchemy.engine.Engine - INFO - SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+2025-03-14 22:18:55,469 - sqlalchemy.engine.Engine - INFO - [cached since 0.4303s ago] ('admin', 1, 0)
+------------------------------ Captured log call -------------------------------
+INFO     sqlalchemy.engine.Engine:base.py:2689 BEGIN (implicit)
+INFO     sqlalchemy.engine.Engine:base.py:1848 SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+INFO     sqlalchemy.engine.Engine:base.py:1848 [cached since 0.4264s ago] ('admin', 1, 0)
+INFO     sqlalchemy.engine.Engine:base.py:1848 SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password AS anon_1_users_password, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password AS users_password, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.username = ?
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+INFO     sqlalchemy.engine.Engine:base.py:1848 [cached since 0.4303s ago] ('admin', 1, 0)
+=============================== warnings summary ===============================
+tests/functional/test_admin.py::test_admin_access
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_session/filesystem/filesystem.py:57: DeprecationWarning: 'SESSION_FILE_DIR' is deprecated and will be removed in a future release. Instead pass FileSystemCache(directory, threshold, mode) instance as SESSION_CACHELIB.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_session/filesystem/filesystem.py:75: DeprecationWarning: FileSystemSessionInterface is deprecated and will be removed in a future release. Instead use the CacheLib backend directly.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_session/base.py:172: DeprecationWarning: The 'use_signer' option is deprecated and will be removed in the next minor release. Please update your configuration accordingly or open an issue.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_caching/__init__.py:114: UserWarning: Flask-Caching: CACHE_TYPE is set to null, caching is effectively disabled.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_caching/__init__.py:153: DeprecationWarning: Using the initialization functions in flask_caching.backend is deprecated.  Use the a full path to backend classes directly.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+  /data/myblog/venv/lib/python3.12/site-packages/flask_limiter/extension.py:330: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+    warnings.warn(
+
+tests/functional/test_admin.py::test_admin_access
+tests/functional/test_auth.py::test_already_logged_in
+tests/functional/test_auth.py::test_session_timeout
+  /data/myblog/venv/lib/python3.12/site-packages/flask_login/login_manager.py:488: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expires = datetime.utcnow() + duration
+
+tests/functional/test_admin.py::test_post_update_category_and_tags
+  /data/myblog/app/views/admin.py:73: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    tag = Tag.query.get(tag_id)
+
+tests/functional/test_admin.py::test_post_update_category_and_tags
+tests/functional/test_admin.py::test_category_management
+tests/functional/test_admin.py::test_category_management
+tests/functional/test_admin.py::test_tag_management
+tests/functional/test_admin.py::test_tag_management
+  /data/myblog/venv/lib/python3.12/site-packages/flask_sqlalchemy/query.py:30: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    rv = self.get(ident)
+
+tests/functional/test_admin.py::test_post_update_category_and_tags
+  /data/myblog/app/views/admin.py:148: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    tag = Tag.query.get(tag_id)
+
+tests/functional/test_admin.py::test_post_update_category_and_tags
+  /data/myblog/tests/functional/test_admin.py:197: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    updated_post = session.query(Post).get(post.id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/functional/test_auth.py::test_login - AssertionError: assert 'su...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/data/myblog/venv/lib/python3.12/site-packages/cachelib/file.py:322: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+================== 1 failed, 13 passed, 20 warnings in 2.15s ===================

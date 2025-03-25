@@ -11,28 +11,41 @@
                     <h5 class="mb-0">个人信息</h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" id="profileForm">
                         <div class="mb-3">
                             <label for="username" class="form-label">用户名</label>
-                            <input type="text" class="form-control" id="username" value="{{ current_user.username }}" readonly>
+                            <input type="text" class="form-control" id="username" value="{{ user.username }}" readonly>
                             <div class="form-text">用户名不可修改</div>
                         </div>
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">电子邮箱</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                            <div class="invalid-feedback" id="email-error"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称</label>
+                            <input type="text" class="form-control" id="nickname" name="nickname" value="{{ user.nickname }}" required>
+                            <div class="invalid-feedback" id="nickname-error"></div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">个人简介</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ user.bio }}</textarea>
+                            <div class="invalid-feedback" id="bio-error"></div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">注册时间</label>
-                            <input type="text" class="form-control" value="{{ current_user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}" readonly>
+                            <input type="text" class="form-control" value="{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}" readonly>
                         </div>
                         
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="fas fa-save"></i> 保存修改
                             </button>
-                            <a href="{{ url_for('admin.user.change_password') }}" class="btn btn-warning">
+                            <a href="{{ url_for('auth.change_password') }}" class="btn btn-warning">
                                 <i class="fas fa-key"></i> 修改密码
                             </a>
                         </div>
@@ -42,4 +55,84 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    const form = $('#profileForm');
+    const submitBtn = $('#submitBtn');
+    const emailInput = $('#email');
+    const emailError = $('#email-error');
+    const nicknameInput = $('#nickname');
+    const nicknameError = $('#nickname-error');
+    const bioInput = $('#bio');
+    const bioError = $('#bio-error');
+
+    form.on('submit', function(e) {
+        e.preventDefault();
+        
+        // 清除错误提示
+        emailInput.removeClass('is-invalid');
+        emailError.empty();
+        nicknameInput.removeClass('is-invalid');
+        nicknameError.empty();
+        bioInput.removeClass('is-invalid');
+        bioError.empty();
+        
+        // 禁用提交按钮
+        submitBtn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...');
+        
+        // 收集表单数据
+        const formData = new FormData(this);
+        
+        // 发送 AJAX 请求
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .done(function(response) {
+            if (response.success) {
+                showToast('success', response.message || '个人信息更新成功');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                if (response.errors) {
+                    if (response.errors.email) {
+                        emailInput.addClass('is-invalid');
+                        emailError.text(response.errors.email[0]);
+                    }
+                    if (response.errors.nickname) {
+                        nicknameInput.addClass('is-invalid');
+                        nicknameError.text(response.errors.nickname[0]);
+                    }
+                    if (response.errors.bio) {
+                        bioInput.addClass('is-invalid');
+                        bioError.text(response.errors.bio[0]);
+                    }
+                }
+                showToast('error', response.message || '更新失败，请重试');
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('更新失败:', error);
+            showToast('error', '更新失败，请稍后重试');
+        })
+        .always(function() {
+            // 恢复提交按钮状态
+            submitBtn.prop('disabled', false)
+                .html('<i class="fas fa-save"></i> 保存修改');
+        });
+    });
+});
+</script>
 {% endblock %} 

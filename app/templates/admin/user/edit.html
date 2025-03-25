@@ -1,275 +1,129 @@
-{% extends "admin/layout.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}编辑用户{% endblock %}
+{% block title %}{% if is_edit %}编辑用户{% else %}创建用户{% endif %} - 管理后台{% endblock %}
+
+{% block page_title %}{% if is_edit %}编辑用户{% else %}创建用户{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">编辑用户</h1>
-    </div>
-
-    {% if error %}
-    <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" id="editUserForm" novalidate>
-                <input type="hidden" id="is_super_admin" value="{{ 'true' if user.is_super_admin else 'false' }}">
-                
-                <div class="mb-3">
-                    <label for="username" class="form-label">用户名</label>
-                    <input type="text" class="form-control" id="username" name="username" 
-                           value="{{ user.username }}" readonly>
-                    {% if user.is_super_admin %}
-                    <small class="text-muted">超级管理员的用户名不能被修改</small>
-                    {% else %}
-                    <small class="text-muted">用户名创建后不能被修改</small>
+<h1>{{ '编辑' if is_edit else '创建' }}用户</h1>
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('admin_dashboard.user.edit', user_id=user.id) if is_edit else url_for('admin_dashboard.user.create') }}" novalidate>
+            <div class="mb-3">
+                {{ form.username.label(class="form-label") }}
+                {% if is_admin_user %}
+                    {{ form.username(class="form-control", readonly=true, title="超级管理员用户名不能修改") }}
+                    <small class="text-muted">超级管理员用户名不能修改</small>
+                {% else %}
+                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                    {% if form.username.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.username.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
                     {% endif %}
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">邮箱</label>
-                    <input type="email" class="form-control" id="email" name="email" 
-                           value="{{ user.email }}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="nickname" class="form-label">昵称</label>
-                    <input type="text" class="form-control" id="nickname" name="nickname" 
-                           value="{{ user.nickname }}">
-                </div>
-                <div class="mb-3">
-                    <label for="password" class="form-label">密码</label>
-                    <input type="password" class="form-control" id="password" name="password" 
-                           placeholder="留空表示不修改密码">
-                    <div class="invalid-feedback" id="password-error">
-                        密码长度至少6位，必须包含字母和数字
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label for="password2" class="form-label">确认密码</label>
-                    <input type="password" class="form-control" id="password2" name="password2" 
-                           placeholder="留空表示不修改密码">
-                    <div class="invalid-feedback" id="password2-error">
-                        两次输入的密码不一致
-                    </div>
-                </div>
-                
-                {% if user.is_super_admin %}
-                <div class="mb-3">
-                    <label class="form-label">角色</label>
-                    <div class="alert alert-info">
-                        超级管理员的角色不能被修改
-                    </div>
-                    {% for role in user.roles %}
-                    <span class="badge bg-primary me-1">{{ role.name }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                {% if form.email.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.email.errors %}
+                    {{ error }}
                     {% endfor %}
                 </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.nickname.label(class="form-label") }}
+                {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else "")) }}
+                {% if form.nickname.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.nickname.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                {% if form.password.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.password.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if is_edit %}
+                <small class="form-text text-muted">留空表示不修改密码</small>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.password2.label(class="form-label") }}
+                {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else "")) }}
+                {% if form.password2.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.password2.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">角色</label>
+                {% if is_admin_user %}
+                    {% for role in roles %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles_display" value="{{ role.id }}" checked disabled title="超级管理员角色不能修改">
+                        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
+                        <input type="hidden" name="roles" value="{{ role.id }}">
+                    </div>
+                    {% endfor %}
+                    <small class="text-muted">超级管理员角色不能修改</small>
                 {% else %}
-                <div class="mb-3">
-                    <label class="form-label">角色</label>
-                    <div class="role-list">
+                    <div class="role-checkboxes">
                         {% for role in roles %}
                         <div class="form-check">
-                            <input type="checkbox" name="roles" value="{{ role.id }}" 
-                                   id="role_{{ role.id }}" class="form-check-input"
-                                   {% if role in user.roles %}checked{% endif %}>
-                            <label class="form-check-label" for="role_{{ role.id }}">
-                                {{ role.name }}
-                                <div class="text-secondary small">{{ role.description }}</div>
-                            </label>
+                            <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles" value="{{ role.id }}" 
+                                {% if user and user.roles %}
+                                    {% for user_role in user.roles %}
+                                        {% if user_role.id == role.id %}
+                                            checked
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}>
+                            <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="invalid-feedback" id="roles-error">
-                        请至少选择一个角色
-                    </div>
-                </div>
                 {% endif %}
-
-                <div class="mb-3">
-                    <div class="form-check form-switch">
-                        {% if user.is_super_admin %}
-                        <input class="form-check-input" type="checkbox" id="is_active" checked disabled>
-                        <input type="hidden" name="is_active" value="on">
-                        <label class="form-check-label" for="is_active">账户状态</label>
-                        <small class="text-muted d-block">超级管理员账号始终处于激活状态</small>
-                        {% else %}
-                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                               {% if user.is_active %}checked{% endif %}>
-                        <label class="form-check-label" for="is_active">账户状态</label>
-                        <small class="text-muted d-block">选中表示账号处于激活状态，取消选中表示禁用账号</small>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">保存</button>
-                <a href="{{ url_for('admin.user.index') }}" class="btn btn-secondary">返回</a>
-            </form>
-        </div>
+            </div>
+            
+            <div class="mb-3 form-check">
+                {% if is_admin_user %}
+                    {{ form.is_active(class="form-check-input", checked=true, disabled=true, title="超级管理员用户必须保持激活状态") }}
+                    {{ form.is_active.label(class="form-check-label") }}
+                    <small class="d-block text-muted">超级管理员用户必须保持激活状态</small>
+                    <input type="hidden" name="is_active" value="on">
+                {% else %}
+                    {{ form.is_active(class="form-check-input") }}
+                    {{ form.is_active.label(class="form-check-label") }}
+                {% endif %}
+            </div>
+            
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <a href="{{ url_for('admin_dashboard.user.index') }}" class="btn btn-secondary">返回</a>
+                <button type="submit" class="btn btn-primary">保存修改</button>
+            </div>
+        </form>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-$(document).ready(function() {
-    const isSuperAdmin = $('#is_super_admin').val() === 'true';
-    
-    function validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }
-    
-    function validateRoles() {
-        if (isSuperAdmin) return true;
-        return $('input[name="roles"]:checked').length > 0;
-    }
-    
-    function validatePassword() {
-        const password = $('#password').val();
-        const password2 = $('#password2').val();
-        
-        // 如果密码为空，表示不修改密码
-        if (!password && !password2) {
-            $('#password').removeClass('is-invalid');
-            $('#password2').removeClass('is-invalid');
-            return true;
-        }
-
-        // 先验证两次密码是否一致
-        if (password !== password2) {
-            $('#password').removeClass('is-invalid');
-            $('#password2').addClass('is-invalid');
-            return false;
-        } else {
-            $('#password2').removeClass('is-invalid');
-        }
-        
-        // 再验证密码格式
-        const hasLetter = /[a-zA-Z]/.test(password);
-        const hasNumber = /[0-9]/.test(password);
-        const isLengthValid = password.length >= 6;
-        
-        if (!isLengthValid || !hasLetter || !hasNumber) {
-            $('#password').addClass('is-invalid');
-            $('#password2').removeClass('is-invalid');
-            return false;
-        } else {
-            $('#password').removeClass('is-invalid');
-        }
-        
-        return true;
-    }
-    
-    // 密码输入时进行验证
-    $('#password, #password2').on('input', validatePassword);
-    
-    $('#editUserForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // 验证邮箱
-        const email = $('#email').val().trim();
-        if (!email || !validateEmail(email)) {
-            showToast('error', '请输入有效的邮箱地址');
-            return;
-        }
-
-        // 验证昵称
-        const nickname = $('#nickname').val().trim();
-        if (!nickname) {
-            showToast('error', '请输入昵称');
-            return;
-        }
-        
-        if (!isSuperAdmin) {
-            if (!validateRoles()) {
-                showToast('error', '请至少选择一个角色');
-                return;
-            }
-        }
-        
-        // 验证密码
-        const validationResult = validatePassword();
-        if (!validationResult) {
-            const password = $('#password').val();
-            const password2 = $('#password2').val();
-            if (password !== password2) {
-                showToast('error', '两次输入的密码不一致');
-            } else {
-                showToast('error', '密码长度至少6位，必须包含字母和数字');
-            }
-            return;
-        }
-
-        // 提交表单
-        $.ajax({
-            url: window.location.href,
-            type: 'POST',
-            data: new FormData(this),
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    showToast('success', response.message);
-                    setTimeout(() => {
-                        window.location.href = response.redirect_url;
-                    }, 1000);
-                } else {
-                    showToast('error', response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                showToast('error', '保存失败，请稍后重试');
-            }
-        });
-    });
-});
-</script>
-
-<style>
-.role-list {
-    margin-bottom: 1rem;
-}
-
-.role-list .form-check {
-    margin-bottom: 0.75rem;
-}
-
-.role-list .form-check:last-child {
-    margin-bottom: 0;
-}
-
-.role-list .form-check-input {
-    margin-top: 0.25rem;
-}
-
-.role-list .form-check-label {
-    padding-left: 0.5rem;
-}
-
-.role-list .text-secondary {
-    margin-top: 0.125rem;
-    color: #6c757d !important;
-}
-
-.role-list.is-invalid .form-check-input {
-    border-color: #dc3545;
-}
-
-.invalid-feedback {
-    display: none;
-}
-
-.role-list.is-invalid + .invalid-feedback {
-    display: block;
-}
-
-.form-control.is-invalid {
-    border-color: #dc3545;
-}
-
-.form-control.is-invalid + .invalid-feedback {
-    display: block;
-}
-</style>
 {% endblock %} 

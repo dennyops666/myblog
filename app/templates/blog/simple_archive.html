@@ -1,0 +1,22 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">文章归档</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">目前没有可用的文章归档。</p>
+                    <p>请稍后再来查看，或者返回首页。</p>
+                    <a href="{{ url_for('blog.index') }}" class="btn btn-primary">返回首页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

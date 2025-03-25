@@ -5,16 +5,18 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required
-from app.services import TagService
+from app.services import get_tag_service
 from app.extensions import db
 from app.forms.tag_form import TagForm
 from app.models.tag import Tag
 from sqlalchemy.exc import IntegrityError
 
-tag_bp = Blueprint('tag', __name__, url_prefix='/tag')
-tag_service = TagService()
+tag_bp = Blueprint('tag', __name__)
+
+# 获取服务实例
+tag_service = get_tag_service()
 
 def is_xhr():
     """检查是否是 AJAX 请求"""
@@ -27,15 +29,44 @@ def index():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     
-    # 获取标签列表
-    pagination = tag_service.get_tag_list(page=page, per_page=per_page)
-    
-    # 获取标签统计信息
-    stats = tag_service.get_tag_stats()
-    
-    return render_template('admin/tag/list.html', 
-                         pagination=pagination,
-                         stats=stats)
+    try:
+        # 获取所有标签
+        all_tags = Tag.query.order_by(Tag.id.desc()).all()
+        
+        # 预加载所有标签关联的文章
+        for tag in all_tags:
+            # 使用延迟加载，确保模板中可以使用
+            _ = len(tag.posts)
+        
+        # 分页处理
+        total = len(all_tags)
+        start = (page - 1) * per_page
+        end = min(start + per_page, total)
+        
+        # 创建分页对象
+        pagination = {
+            'page': page,
+            'per_page': per_page,
+            'total': total,
+            'items': all_tags[start:end],
+            'has_prev': page > 1,
+            'has_next': end < total,
+            'pages': (total + per_page - 1) // per_page
+        }
+        
+        # 获取标签统计信息
+        stats = tag_service.get_tag_stats()
+        
+        return render_template('admin/tag/list.html', 
+                             pagination=pagination,
+                             tags=pagination['items'],
+                             stats=stats)
+    except Exception as e:
+        current_app.logger.error(f"获取标签列表失败: {str(e)}")
+        return render_template('admin/tag/list.html', 
+                             pagination=None,
+                             tags=[],
+                             stats=None)
 
 @tag_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -150,7 +181,7 @@ def edit(tag_id):
                             'errors': {'name': ['标签名称已存在，请使用其他名称']}
                         })
                     flash('标签名称已存在，请使用其他名称', 'warning')
-                    return render_template('admin/tag/edit.html', form=form, tag=tag)
+                    return render_template('admin/tag/edit.html', form=form, tag=tag, is_edit=True)
                 
                 # 检查别名是否已存在
                 if form.slug.data:
@@ -166,7 +197,7 @@ def edit(tag_id):
                                 'errors': {'slug': ['标签别名已存在，请使用其他别名']}
                             })
                         flash('标签别名已存在，请使用其他别名', 'warning')
-                        return render_template('admin/tag/edit.html', form=form, tag=tag)
+                        return render_template('admin/tag/edit.html', form=form, tag=tag, is_edit=True)
                 
                 # 更新标签
                 tag.name = form.name.data
@@ -191,7 +222,7 @@ def edit(tag_id):
                         'message': '标签名称或别名已存在，请修改后重试'
                     })
                 flash('标签名称或别名已存在，请修改后重试', 'warning')
-                return render_template('admin/tag/edit.html', form=form, tag=tag)
+                return render_template('admin/tag/edit.html', form=form, tag=tag, is_edit=True)
                 
             except Exception as e:
                 db.session.rollback()
@@ -201,7 +232,7 @@ def edit(tag_id):
                         'message': '更新标签时发生错误，请稍后重试'
                     })
                 flash('更新标签时发生错误，请稍后重试', 'error')
-                return render_template('admin/tag/edit.html', form=form, tag=tag)
+                return render_template('admin/tag/edit.html', form=form, tag=tag, is_edit=True)
         else:
             if is_xhr():
                 return jsonify({
@@ -213,33 +244,34 @@ def edit(tag_id):
                 for error in errors:
                     flash(f'{getattr(form, field).label.text}: {error}', 'error')
             
-    return render_template('admin/tag/edit.html', form=form, tag=tag)
+    return render_template('admin/tag/edit.html', form=form, tag=tag, is_edit=True)
 
 @tag_bp.route('/<int:tag_id>/delete', methods=['POST'])
 @login_required
 def delete(tag_id):
     """删除标签"""
     try:
-        result = tag_service.delete_tag(tag_id)
-        if result['status'] == 'success':
-            if is_xhr():
-                return jsonify({
-                    'success': True,
-                    'message': result['message']
-                })
-            flash(result['message'], 'success')
-        else:
-            if is_xhr():
-                return jsonify({
-                    'success': False,
-                    'message': result['message']
-                })
-            flash(result['message'], 'error')
-    except Exception as e:
+        tag_service.delete_tag(tag_id)
+        if is_xhr():
+            return jsonify({
+                'success': True,
+                'message': '标签删除成功'
+            })
+        flash('标签删除成功', 'success')
+        return redirect(url_for('.index'))
+    except ValueError as e:
         if is_xhr():
             return jsonify({
                 'success': False,
                 'message': str(e)
-            })
+            }), 400  # 添加400状态码表示客户端错误
         flash(str(e), 'error')
-    return redirect(url_for('admin.tag.index')) 
+        return redirect(url_for('.index'))
+    except Exception as e:
+        if is_xhr():
+            return jsonify({
+                'success': False,
+                'message': '删除标签时发生错误，请稍后重试'
+            }), 500  # 添加500状态码表示服务器错误
+        flash('删除标签时发生错误，请稍后重试', 'error')
+        return redirect(url_for('.index')) 

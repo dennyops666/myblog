@@ -9,19 +9,10 @@ import pytest
 from flask import url_for, json
 from app.models import Post, Comment
 from datetime import datetime, UTC
-from app.services.security import SecurityService
 
-security_service = SecurityService()
 
 def test_get_posts(client, test_post):
     """测试获取文章列表"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     response = client.get('/api/posts')
     assert response.status_code == 200
     
@@ -45,13 +36,6 @@ def test_get_posts(client, test_post):
 
 def test_get_post_detail(client, test_post):
     """测试获取文章详情"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     response = client.get(f'/api/posts/{test_post.id}')
     assert response.status_code == 200
     
@@ -68,13 +52,6 @@ def test_get_post_detail(client, test_post):
 
 def test_get_nonexistent_post(client):
     """测试获取不存在的文章"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     response = client.get('/api/posts/99999')
     assert response.status_code == 404
 
@@ -106,13 +83,6 @@ def test_create_comment_without_login(client, test_post):
 
 def test_get_post_comments(client, test_post, test_comment):
     """测试获取文章评论"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     response = client.get(f'/api/posts/{test_post.id}/comments')
     assert response.status_code == 200
     
@@ -132,13 +102,6 @@ def test_get_post_comments(client, test_post, test_comment):
 
 def test_search_posts(client, test_post):
     """测试搜索文章"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     # 使用文章标题作为关键词
     response = client.get(f'/api/search?q={test_post.title}')
     assert response.status_code == 200
@@ -155,13 +118,6 @@ def test_search_posts(client, test_post):
 
 def test_get_stats(client, test_post):
     """测试获取统计信息"""
-    # 设置会话属性
-    with client.session_transaction() as sess:
-        sess['_fresh'] = True
-        sess['user_agent'] = 'werkzeug/test'
-        sess['last_active'] = security_service.get_current_timestamp()
-        sess['csrf_token'] = security_service.generate_csrf_token()
-    
     response = client.get('/api/stats')
     assert response.status_code == 200
     

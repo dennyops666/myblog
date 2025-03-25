@@ -1,85 +1,315 @@
-{% extends "admin/layout.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}仪表盘 - MyBlog 管理后台{% endblock %}
+{% block title %}管理后台 - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}">
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    .quick-actions a {
+        text-decoration: none;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    .stats-card h2 {
+        font-size: 2.5rem;
+        margin-top: 10px;
+        margin-bottom: 0;
+    }
+    .stats-card h5 {
+        margin-bottom: 0;
+    }
+    /* 确保卡片内容可见 */
+    .bg-primary, .bg-success, .bg-warning, .bg-info {
+        color: white !important;
+    }
+    .text-white {
+        color: white !important;
+    }
+    /* 暗黑模式样式调整 */
+    .dark-theme .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    .dark-theme .card-header {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-color: var(--border-color);
+    }
+    .dark-theme .table {
+        color: var(--body-color);
+    }
+    .dark-theme .table > thead {
+        background-color: var(--table-header-bg);
+    }
+    .dark-theme .table td, .dark-theme .table th {
+        border-color: var(--border-color);
+    }
+    .dark-theme .quick-actions .card {
+        background-color: var(--card-bg);
+        color: var(--body-color);
+    }
+    .dark-theme .quick-actions .card-text {
+        color: var(--body-color);
+    }
+    /* 最近文章表格样式 */
+    #recent-posts-table {
+        margin-bottom: 0;
+    }
+    .dark-theme #recent-posts-table tbody tr {
+        border-color: var(--border-color);
+    }
+    .dark-theme #recent-posts-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    /* 暗黑模式下的标签样式调整 */
+    .dark-theme .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .dark-theme .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    .dark-theme .badge-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    /* 移除可能导致冲突的暗黑模式表格样式 */
+    .dark-theme .table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: transparent !important;
+    }
+    .dark-theme .table-striped > tbody > tr:nth-of-type(even) {
+        background-color: transparent !important;
+    }
+    /* 使用纯黑色版本的表格样式 - 确保覆盖所有冲突样式 */
+    body.dark-theme table,
+    body.dark-theme .table,
+    body.dark-theme .table-striped,
+    body.dark-theme thead,
+    body.dark-theme tbody,
+    body.dark-theme tr,
+    body.dark-theme th,
+    body.dark-theme td {
+        background-color: #1e1e1e !important;
+        border-color: #333 !important;
+    }
+    /* 暗黑模式下的按钮样式 */
+    .dark-theme .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .dark-theme .btn-light {
+        background-color: #f8f9fa;
+        border-color: #f8f9fa;
+        color: #212529;
+    }
+    /* 表格响应式显示 */
+    @media (max-width: 767.98px) {
+        .table-responsive {
+            overflow-x: auto;
+        }
+    }
+    
+    /* 暗黑模式下的最近文章表格强制样式 - 内联样式优先级最高 */
+    html.dark-theme .card-body.p-0,
+    html.dark-theme .table-responsive,
+    html.dark-theme .table-striped,
+    html.dark-theme #recent-posts-table,
+    html.dark-theme #recent-posts-table thead,
+    html.dark-theme #recent-posts-table tbody,
+    html.dark-theme #recent-posts-table tr,
+    html.dark-theme #recent-posts-table td,
+    html.dark-theme #recent-posts-table th {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #333 !important;
+    }
+    
+    /* 确保暗黑模式下奇数行有轻微的背景差异 */
+    html.dark-theme #recent-posts-table tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+    
+    /* 确保暗黑模式下表头行有深色背景 */
+    html.dark-theme #recent-posts-table thead tr {
+        background-color: #272727 !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<script>
+// 强制设置暗黑模式下表格背景色
+if (document.documentElement.classList.contains('dark-theme')) {
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = `
+        .card-body, .table-responsive, .table, .table-striped, #recent-posts-table,
+        #recent-posts-table thead, #recent-posts-table tbody, #recent-posts-table tr,
+        #recent-posts-table th, #recent-posts-table td,
+        .card-body.p-0, .table-responsive table {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+        #recent-posts-table thead tr {
+            background-color: #272727 !important;
+        }
+        #recent-posts-table tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 延迟执行，确保DOM元素已经渲染
+    setTimeout(function() {
+        var tableElements = document.querySelectorAll('.card-body, .table-responsive, .table, tbody, tr, td, th');
+        for (var i = 0; i < tableElements.length; i++) {
+            tableElements[i].style.backgroundColor = '#1e1e1e';
+        }
+        
+        var recentPostsCard = document.querySelector('.card-body.p-0');
+        if (recentPostsCard) {
+            recentPostsCard.style.backgroundColor = '#1e1e1e';
+        }
+        
+        var tableResponsive = document.querySelector('.table-responsive');
+        if (tableResponsive) {
+            tableResponsive.style.backgroundColor = '#1e1e1e';
+        }
+        
+        var recentPostsTable = document.getElementById('recent-posts-table');
+        if (recentPostsTable) {
+            recentPostsTable.style.backgroundColor = '#1e1e1e';
+        }
+        
+        var tableHeaders = document.querySelectorAll('#recent-posts-table thead tr');
+        for (var i = 0; i < tableHeaders.length; i++) {
+            tableHeaders[i].style.backgroundColor = '#272727';
+        }
+        
+        var tableOddRows = document.querySelectorAll('#recent-posts-table tbody tr:nth-child(odd)');
+        for (var i = 0; i < tableOddRows.length; i++) {
+            tableOddRows[i].style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+        }
+    }, 100);
+}
+</script>
+<div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            <h1 class="h3 mb-4">仪表盘</h1>
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>管理后台首页</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="p-4">
+                        <h2>欢迎回来，{{ current_user.username }}</h2>
+                        <p>您可以通过左侧菜单管理博客内容。</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- 统计卡片 -->
     <div class="row">
-        <!-- 文章统计 -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card bg-primary text-white stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-text card-icon"></i>
+                    <h5>文章总数</h5>
+                    <h2 id="post-count">{{ post_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card bg-success text-white stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-check card-icon"></i>
+                    <h5>已发布</h5>
+                    <h2 id="published-count">{{ published_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card bg-warning text-white stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-file-earmark-diff card-icon"></i>
+                    <h5>草稿</h5>
+                    <h2 id="draft-count">{{ draft_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card bg-info text-white stats-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-folder card-icon"></i>
+                    <h5>分类数</h5>
+                    <h2 id="category-count">{{ category_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">快速操作</h5>
+                </div>
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">文章</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.posts.total }}</div>
-                            <div class="small text-muted mt-2">
-                                已发布: {{ stats.posts.published }} | 草稿: {{ stats.posts.draft }}
+                    <div class="row quick-actions">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-file-earmark-plus display-4 mb-3 text-primary"></i>
+                                    <h5 class="card-title">写文章</h5>
+                                    <p class="card-text">创建新的博客文章</p>
+                                    <a href="{{ url_for('admin_dashboard.post.create') }}" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="bi bi-pencil-square"></i> 开始写作
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 分类统计 -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">分类</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.categories.total }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-folder fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 标签统计 -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">标签</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.tags.total }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-tags fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 评论统计 -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">评论</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.comments.total }}</div>
-                            <div class="small text-muted mt-2">
-                                待审核: {{ stats.comments.pending }}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-folder-plus display-4 mb-3 text-success"></i>
+                                    <h5 class="card-title">添加分类</h5>
+                                    <p class="card-text">创建新的文章分类</p>
+                                    <a href="{{ url_for('admin_dashboard.category.create') }}" class="btn btn-outline-success btn-lg w-100">
+                                        <i class="bi bi-plus-circle"></i> 创建分类
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-tag display-4 mb-3 text-info"></i>
+                                    <h5 class="card-title">添加标签</h5>
+                                    <p class="card-text">创建新的文章标签</p>
+                                    <a href="{{ url_for('admin_dashboard.tag.create') }}" class="btn btn-outline-info btn-lg w-100">
+                                        <i class="bi bi-plus-circle"></i> 创建标签
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -87,70 +317,57 @@
         </div>
     </div>
 
-    <!-- 最近活动 -->
+    <!-- 最近文章 -->
     <div class="row">
-        <!-- 最近文章 -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">最近文章</h6>
-                    <a href="{{ url_for('admin.posts.index') }}" class="btn btn-sm btn-primary">
-                        查看全部
-                    </a>
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0" id="recent-articles-title">最近文章</h5>
+                    <a href="/admin/post/" class="btn btn-sm btn-light">查看全部</a>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for post in recent_posts %}
-                        <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ post.title }}</h6>
-                                <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
-                            </div>
-                            <small class="text-muted">
-                                {% if post.status == PostStatus.PUBLISHED %}
-                                <span class="badge bg-success">已发布</span>
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0" id="recent-posts-table">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>发布日期</th>
+                                    <th>状态</th>
+                                    <th>浏览量</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 服务器端渲染部分，第一次加载时显示 -->
+                                {% if recent_posts and recent_posts|length > 0 %}
+                                    {% for post in recent_posts %}
+                                    <tr>
+                                        <td>{{ post.title }}</td>
+                                        <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') if post.created_at else '未知' }}</td>
+                                        <td>
+                                            {% if post.status.value == 'PUBLISHED' %}
+                                            <span class="badge bg-success">已发布</span>
+                                            {% elif post.status.value == 'DRAFT' %}
+                                            <span class="badge bg-warning">草稿</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ post.status.value }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ post.view_count or 0 }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin_dashboard.post.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
+                                                <i class="fa fa-edit"></i> 编辑
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
                                 {% else %}
-                                <span class="badge bg-secondary">草稿</span>
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">暂无文章</td>
+                                    </tr>
                                 {% endif %}
-                            </small>
-                        </a>
-                        {% else %}
-                        <div class="text-center text-muted py-3">暂无文章</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 最近评论 -->
-        <div class="col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">最近评论</h6>
-                    <a href="{{ url_for('admin.comment.index') }}" class="btn btn-sm btn-primary">
-                        查看全部
-                    </a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        {% for comment in recent_comments %}
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ comment.author_name }}</h6>
-                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d') }}</small>
-                            </div>
-                            <p class="mb-1">{{ comment.content[:100] }}{% if comment.content|length > 100 %}...{% endif %}</p>
-                            <small class="text-muted">
-                                {% if comment.status == 1 %}
-                                <span class="badge bg-success">已审核</span>
-                                {% else %}
-                                <span class="badge bg-warning">待审核</span>
-                                {% endif %}
-                            </small>
-                        </div>
-                        {% else %}
-                        <div class="text-center text-muted py-3">暂无评论</div>
-                        {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -158,70 +375,156 @@
     </div>
 </div>
 
-<style>
-/* 统计卡片样式 */
-.border-left-primary {
-    border-left: 4px solid #4e73df !important;
-}
-.border-left-success {
-    border-left: 4px solid #1cc88a !important;
-}
-.border-left-info {
-    border-left: 4px solid #36b9cc !important;
-}
-.border-left-warning {
-    border-left: 4px solid #f6c23e !important;
-}
+<script>
+// 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 检查当前主题
+    if (document.documentElement.classList.contains('dark-theme') || 
+        document.cookie.indexOf('theme=dark') !== -1) {
+        applyDarkThemeToTable();
+    }
+    
+    // 当主题切换时应用样式
+    document.addEventListener('themeChanged', function() {
+        // 检查当前主题
+        if (document.documentElement.classList.contains('dark-theme') || 
+            document.cookie.indexOf('theme=dark') !== -1) {
+            applyDarkThemeToTable();
+        } else {
+            applyLightThemeToTable();
+        }
+    });
+    
+    function applyDarkThemeToTable() {
+        // 设置表格容器背景
+        const tableContainers = document.querySelectorAll('.card-body.p-0, .table-responsive');
+        tableContainers.forEach(container => {
+            container.style.backgroundColor = '#1e1e1e';
+            container.style.color = '#e0e0e0';
+            container.style.borderColor = '#333';
+        });
+        
+        // 设置表格背景
+        const table = document.getElementById('recent-posts-table');
+        if (table) {
+            table.style.backgroundColor = '#1e1e1e';
+            table.style.color = '#e0e0e0';
+            table.style.borderColor = '#333';
+            
+            // 设置表头背景
+            const thead = table.querySelector('thead');
+            if (thead) {
+                thead.style.backgroundColor = '#272727';
+                thead.style.color = '#ffffff';
+                
+                const theadTr = thead.querySelectorAll('tr');
+                theadTr.forEach(tr => {
+                    tr.style.backgroundColor = '#272727';
+                    tr.style.color = '#ffffff';
+                });
+                
+                const ths = thead.querySelectorAll('th');
+                ths.forEach(th => {
+                    th.style.backgroundColor = '#272727';
+                    th.style.color = '#ffffff';
+                    th.style.borderColor = '#333';
+                });
+            }
+            
+            // 设置表格内容背景
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.style.backgroundColor = '#1e1e1e';
+                tbody.style.color = '#e0e0e0';
+                
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach((tr, index) => {
+                    // 奇数行略微不同的背景色
+                    tr.style.backgroundColor = index % 2 === 0 ? 'rgba(255, 255, 255, 0.03)' : '#1e1e1e';
+                    tr.style.color = '#e0e0e0';
+                    tr.style.borderColor = '#333';
+                    
+                    // 设置单元格样式
+                    const cells = tr.querySelectorAll('td');
+                    cells.forEach(td => {
+                        td.style.backgroundColor = 'transparent';
+                        td.style.color = '#e0e0e0';
+                        td.style.borderColor = '#333';
+                    });
+                });
+            }
+        }
+    }
+    
+    function applyLightThemeToTable() {
+        // 清除表格容器内联样式
+        const tableContainers = document.querySelectorAll('.card-body.p-0, .table-responsive');
+        tableContainers.forEach(container => {
+            container.style.backgroundColor = '';
+            container.style.color = '';
+            container.style.borderColor = '';
+        });
+        
+        // 清除表格内联样式
+        const table = document.getElementById('recent-posts-table');
+        if (table) {
+            table.style.backgroundColor = '';
+            table.style.color = '';
+            table.style.borderColor = '';
+            
+            // 清除表头内联样式
+            const thead = table.querySelector('thead');
+            if (thead) {
+                thead.style.backgroundColor = '';
+                thead.style.color = '';
+                
+                const theadTr = thead.querySelectorAll('tr');
+                theadTr.forEach(tr => {
+                    tr.style.backgroundColor = '';
+                    tr.style.color = '';
+                });
+                
+                const ths = thead.querySelectorAll('th');
+                ths.forEach(th => {
+                    th.style.backgroundColor = '';
+                    th.style.color = '';
+                    th.style.borderColor = '';
+                });
+            }
+            
+            // 清除表格内容内联样式
+            const tbody = table.querySelector('tbody');
+            if (tbody) {
+                tbody.style.backgroundColor = '';
+                tbody.style.color = '';
+                
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(tr => {
+                    tr.style.backgroundColor = '';
+                    tr.style.color = '';
+                    tr.style.borderColor = '';
+                    
+                    // 清除单元格内联样式
+                    const cells = tr.querySelectorAll('td');
+                    cells.forEach(td => {
+                        td.style.backgroundColor = '';
+                        td.style.color = '';
+                        td.style.borderColor = '';
+                    });
+                });
+            }
+        }
+        
+        // 添加Bootstrap条纹表格类
+        if (table && !table.classList.contains('table-striped')) {
+            table.classList.add('table-striped');
+        }
+    }
+});
+</script>
+{% endblock %}
 
-/* 卡片内容样式 */
-.card {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
-}
-.card-header {
-    background-color: #f8f9fc !important;
-    border-bottom: 1px solid #e3e6f0;
-}
-.text-gray-300 {
-    color: #dddfeb !important;
-}
-.text-gray-800 {
-    color: #5a5c69 !important;
-}
-.font-weight-bold {
-    font-weight: 700 !important;
-}
-
-/* 列表样式 */
-.list-group-item {
-    border-left: 0;
-    border-right: 0;
-    padding: 1rem;
-}
-.list-group-item:first-child {
-    border-top: 0;
-}
-.list-group-item:last-child {
-    border-bottom: 0;
-}
-.list-group-item-action:hover {
-    background-color: #f8f9fc;
-}
-
-/* 徽章样式 */
-.badge {
-    padding: 0.35em 0.65em;
-    font-size: 0.75em;
-    font-weight: 700;
-    border-radius: 0.25rem;
-}
-.bg-success {
-    background-color: #1cc88a !important;
-}
-.bg-warning {
-    background-color: #f6c23e !important;
-}
-.bg-secondary {
-    background-color: #858796 !important;
-}
-</style>
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {% endblock %} 

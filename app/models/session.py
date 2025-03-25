@@ -5,10 +5,31 @@
 创建日期：2024-03-21
 """
 
-from datetime import datetime, UTC
-from app.extensions import db
+from datetime import datetime, timedelta
 import secrets
+from app.extensions import db
 import json
+
+class Session(db.Model):
+    """会话模型"""
+    __tablename__ = 'sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(128), unique=True, nullable=False)
+    data = db.Column(db.Text)
+    expiry = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __init__(self, session_id=None, data=None, expiry=None):
+        """初始化会话"""
+        self.session_id = session_id or secrets.token_urlsafe(32)
+        self.data = data
+        self.expiry = expiry or datetime.utcnow() + timedelta(days=7)
+    
+    def __repr__(self):
+        """字符串表示"""
+        return f'<Session {self.session_id}>'
 
 class UserSession(db.Model):
     """用户会话模型"""
@@ -22,7 +43,6 @@ class UserSession(db.Model):
     
     # 用户会话相关字段
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    csrf_token = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     last_active = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     ip_address = db.Column(db.String(45))
@@ -37,7 +57,6 @@ class UserSession(db.Model):
         self.data = json.dumps(data) if isinstance(data, dict) else data
         self.expiry = expiry
         self.user_id = user_id
-        self.csrf_token = secrets.token_urlsafe(32)
         self.ip_address = ip_address
         self.user_agent = user_agent
     

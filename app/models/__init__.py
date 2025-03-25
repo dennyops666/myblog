@@ -14,8 +14,8 @@ from .category import Category
 from .tag import Tag
 from .comment import Comment
 from .role import Role
-from .session import UserSession
 from .permission import Permission
+from .operation_log import OperationLog
 
 __all__ = [
     'db',
@@ -26,6 +26,6 @@ __all__ = [
     'Tag',
     'Comment',
     'Role',
-    'UserSession',
-    'Permission'
+    'Permission',
+    'OperationLog'
 ]

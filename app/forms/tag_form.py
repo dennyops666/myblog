@@ -6,8 +6,9 @@
 """
 
 from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, Regexp
+from wtforms.validators import DataRequired, Length, Optional, Regexp, ValidationError
 from . import BaseForm
+from app.models import Tag
 
 class TagForm(BaseForm):
     """标签表单"""
@@ -24,4 +25,17 @@ class TagForm(BaseForm):
         Optional(),
         Length(max=200, message='描述长度不能超过200个字符')
     ])
-    submit = SubmitField('保存') 
+    submit = SubmitField('保存')
+    
+    def validate_name(self, field):
+        # 检查标签名称是否已存在
+        tag = Tag.query.filter(Tag.name == field.data).first()
+        if tag and (not hasattr(self, 'tag_id') or tag.id != self.tag_id):
+            raise ValidationError('标签名称已存在')
+    
+    def validate_slug(self, field):
+        # 如果提供了别名，检查是否已存在
+        if field.data:
+            tag = Tag.query.filter(Tag.slug == field.data).first()
+            if tag and (not hasattr(self, 'tag_id') or tag.id != self.tag_id):
+                raise ValidationError('别名已存在') 

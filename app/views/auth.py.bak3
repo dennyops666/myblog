@@ -1,0 +1,279 @@
+"""
+文件名：auth.py
+描述：认证视图
+作者：denny
+创建日期：2024-03-10
+"""
+
+from flask import (
+    Blueprint, render_template, request, url_for, redirect,
+    flash, session, current_app, abort, jsonify, make_response
+)
+from flask_login import (
+    login_user, logout_user, login_required,
+    current_user
+)
+from app.forms.auth import LoginForm, RegisterForm, PasswordResetRequestForm, PasswordResetForm, PasswordChangeForm
+from app.models.user import User
+from app.models.role import Role
+from app.extensions import db
+from datetime import datetime, timedelta, UTC
+from werkzeug.security import check_password_hash
+
+bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+@bp.route('/login', methods=('GET', 'POST'))
+def login():
+    """用户登录"""
+    if current_user.is_authenticated:
+        if request.is_json:
+            return jsonify({
+                'status': 'success',
+                'message': '登录成功',
+                'next_url': url_for('dashboard.index', _external=False)
+            }), 200
+        return redirect(url_for('dashboard.index', _external=False))
+
+    form = LoginForm()
+    if request.method == 'POST':
+        is_json_request = request.is_json
+        if is_json_request:
+            form = LoginForm(formdata=None)
+            form.username.data = request.json.get('username')
+            form.password.data = request.json.get('password')
+            form.remember_me.data = request.json.get('remember_me', False)
+        
+        # 检查用户是否存在
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None:
+            if is_json_request:
+                return jsonify({
+                    'status': 'error',
+                    'message': '用户名或密码错误',
+                    'next_url': url_for('auth.login', _external=False)
+                }), 401
+            flash('用户名或密码错误')
+            return redirect(url_for('auth.login', _external=False))
+        
+        # 检查密码是否正确
+        if not user.verify_password(form.password.data):
+            if is_json_request:
+                return jsonify({
+                    'status': 'error',
+                    'message': '用户名或密码错误',
+                    'next_url': url_for('auth.login', _external=False)
+                }), 401
+            flash('用户名或密码错误')
+            return redirect(url_for('auth.login', _external=False))
+        
+        # 检查用户是否被禁用
+        if not user.is_active:
+            if is_json_request:
+                return jsonify({
+                    'status': 'error',
+                    'message': '账号已被禁用',
+                    'next_url': url_for('auth.login', _external=False)
+                }), 401
+            flash('账号已被禁用')
+            return redirect(url_for('auth.login', _external=False))
+        
+        # 登录成功
+        login_user(user, remember=form.remember_me.data)
+        if is_json_request:
+            return jsonify({
+                'status': 'success',
+                'message': '登录成功',
+                'next_url': url_for('dashboard.index', _external=False)
+            }), 200
+        return redirect(url_for('dashboard.index', _external=False))
+        
+    return render_template('auth/login.html', form=form, title='登录')
+
+@bp.route('/logout')
+@login_required
+def logout():
+    """用户登出"""
+    is_json_request = request.is_json
+    logout_user()
+    
+    if is_json_request:
+        return jsonify({
+            'status': 'success',
+            'message': '登出成功',
+            'next_url': url_for('auth.login', _external=False)
+        }), 200
+    
+    return redirect(url_for('auth.login', _external=False))
+
+@bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """注册视图函数"""
+    # 如果用户已经登录，返回相应的响应
+    if current_user.is_authenticated:
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '用户已登录',
+                'next_url': url_for('dashboard.index', _external=False)
+            }), 200
+        flash('您已经登录')
+        return redirect(url_for('dashboard.index', _external=False))
+
+    form = RegisterForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            nickname=form.nickname.data,
+            password=form.password.data
+        )
+        # 设置用户角色
+        user.role = Role.query.filter_by(name='user').first()
+        db.session.add(user)
+        db.session.commit()
+
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '注册成功',
+                'next_url': url_for('auth.login', _external=False)
+            }), 200
+        flash('注册成功')
+        return redirect(url_for('auth.login', _external=False))
+
+    if request.accept_mimetypes.accept_json:
+        return jsonify({
+            'status': 'success',
+            'message': '请注册',
+            'next_url': url_for('auth.register', _external=False)
+        }), 200
+
+    return render_template('auth/register.html', form=form)
+
+@bp.route('/password/reset', methods=['GET', 'POST'])
+def password_reset_request():
+    """密码重置请求视图函数"""
+    if current_user.is_authenticated:
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '用户已登录',
+                'next_url': url_for('dashboard.index', _external=False)
+            }), 200
+        flash('您已经登录')
+        return redirect(url_for('dashboard.index', _external=False))
+
+    form = PasswordResetRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            if request.accept_mimetypes.accept_json:
+                return jsonify({
+                    'status': 'success',
+                    'message': '重置密码的邮件已发送',
+                    'next_url': url_for('auth.login', _external=False)
+                }), 200
+            flash('重置密码的邮件已发送')
+            return redirect(url_for('auth.login', _external=False))
+
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'error',
+                'message': '邮箱地址不存在',
+                'next_url': url_for('auth.password_reset_request', _external=False)
+            }), 401
+        flash('邮箱地址不存在')
+        return render_template('auth/password_reset_request.html', form=form)
+
+    if request.accept_mimetypes.accept_json:
+        return jsonify({
+            'status': 'success',
+            'message': '请输入您的邮箱地址',
+            'next_url': url_for('auth.password_reset_request', _external=False)
+        }), 200
+
+    return render_template('auth/password_reset_request.html', form=form)
+
+@bp.route('/password/reset/<token>', methods=['GET', 'POST'])
+def password_reset(token):
+    """密码重置视图函数"""
+    if current_user.is_authenticated:
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '用户已登录',
+                'next_url': url_for('dashboard.index', _external=False)
+            }), 200
+        flash('您已经登录')
+        return redirect(url_for('dashboard.index', _external=False))
+
+    form = PasswordResetForm()
+    if form.validate_on_submit():
+        user = User.verify_reset_token(token)
+        if user is None:
+            if request.accept_mimetypes.accept_json:
+                return jsonify({
+                    'status': 'error',
+                    'message': '无效的重置链接',
+                    'next_url': url_for('auth.password_reset_request', _external=False)
+                }), 401
+            flash('无效的重置链接')
+            return redirect(url_for('auth.password_reset_request', _external=False))
+
+        user.password = form.password.data
+        db.session.commit()
+
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '密码重置成功',
+                'next_url': url_for('auth.login', _external=False)
+            }), 200
+        flash('密码重置成功')
+        return redirect(url_for('auth.login', _external=False))
+
+    if request.accept_mimetypes.accept_json:
+        return jsonify({
+            'status': 'success',
+            'message': '请设置新密码',
+            'next_url': url_for('auth.password_reset', token=token, _external=False)
+        }), 200
+
+    return render_template('auth/password_reset.html', form=form)
+
+@bp.route('/password/change', methods=['GET', 'POST'])
+@login_required
+def password_change():
+    """修改密码视图函数"""
+    form = PasswordChangeForm()
+    if form.validate_on_submit():
+        if not current_user.verify_password(form.old_password.data):
+            if request.accept_mimetypes.accept_json:
+                return jsonify({
+                    'status': 'error',
+                    'message': '原密码错误',
+                    'next_url': url_for('auth.password_change', _external=False)
+                }), 401
+            flash('原密码错误')
+            return render_template('auth/password_change.html', form=form)
+
+        current_user.password = form.new_password.data
+        db.session.commit()
+
+        if request.accept_mimetypes.accept_json:
+            return jsonify({
+                'status': 'success',
+                'message': '密码修改成功',
+                'next_url': url_for('auth.login', _external=False)
+            }), 200
+        flash('密码修改成功')
+        return redirect(url_for('auth.login', _external=False))
+
+    if request.accept_mimetypes.accept_json:
+        return jsonify({
+            'status': 'success',
+            'message': '请修改密码',
+            'next_url': url_for('auth.password_change', _external=False)
+        }), 200
+
+    return render_template('auth/password_change.html', form=form)

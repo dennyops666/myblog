@@ -69,7 +69,7 @@ def test():
         # 验证关联
         assert comment.post_id == post.id
         assert comment in post.comments
-        assert post.comment_count == 1
+        assert post.comments_count == 1
 
     def test_notification_system(self, comment_service, notification_service, test_client):
         """测试通知系统"""
@@ -96,7 +96,7 @@ def test():
         assert notifications[0].type == 'comment'
         assert notifications[0].target_id == comment.id
 
-    def test_comment_count_update(self, comment_service, test_client):
+    def test_comments_count_update(self, comment_service, test_client):
         """测试评论计数更新"""
         # 创建测试用户
         user = User(username="testuser", email="test@example.com")
@@ -118,7 +118,7 @@ def test():
             )
 
         # 验证计数
-        assert post.comment_count == 3
+        assert post.comments_count == 3
 
 
 class TestCommentManagementIntegration:
@@ -247,7 +247,7 @@ class TestCommentManagementIntegration:
         assert parent.replies.count() == 2
         assert child1.parent_id == parent.id
         assert child2.parent_id == parent.id
-        assert post.comment_count == 3
+        assert post.comments_count == 3
 
         # 更新评论
         comment_service.update(
@@ -258,4 +258,4 @@ class TestCommentManagementIntegration:
         # 验证数据一致性
         assert child1.content == "Updated comment"
         assert parent.replies.count() == 2
-        assert post.comment_count == 3 
+        assert post.comments_count == 3 

@@ -1,150 +1,88 @@
-{% extends "blog/layout.html" %}
+{% extends "blog/base.html" %}
 
-{% block title %}关于 - MyBlog{% endblock %}
+{% block title %}关于 - {{ config.BLOG_NAME }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container">
     <div class="row">
-        <div class="col-md-8 mx-auto">
-            <!-- 博客介绍 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="card-title text-center mb-4">关于 MyBlog</h2>
-                    <div class="about-content">
-                        <p class="lead text-center">
-                            MyBlog 是一个专注于技术分享和知识记录的个人博客平台
-                        </p>
-                        <hr class="my-4">
-                        <p>
-                            这里记录了我在编程领域的学习心得、技术积累和实践经验。主要涉及以下领域：
-                        </p>
-                        <ul>
-                            <li>Web 开发技术</li>
-                            <li>Python 编程</li>
-                            <li>数据库设计与优化</li>
-                            <li>系统架构设计</li>
-                            <li>开发工具使用技巧</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 作者信息 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">关于作者</h3>
-                    <div class="row align-items-center">
-                        <div class="col-md-4 text-center">
-                            <img src="{{ url_for('static', filename='images/avatar.jpg') }}" 
-                                 alt="作者头像" 
-                                 class="rounded-circle img-fluid mb-3"
-                                 style="max-width: 150px;">
-                        </div>
-                        <div class="col-md-8">
-                            <h4>Denny</h4>
-                            <p class="text-muted">全栈开发工程师</p>
-                            <p>
-                                热爱编程，专注于 Web 开发和系统架构设计。
-                                致力于用技术解决实际问题，同时乐于分享技术经验。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 联系方式 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">联系方式</h3>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li class="mb-3">
-                                    <i class="fas fa-envelope me-2"></i>
-                                    <a href="mailto:contact@myblog.com">contact@myblog.com</a>
-                                </li>
-                                <li class="mb-3">
-                                    <i class="fab fa-github me-2"></i>
-                                    <a href="https://github.com/yourusername" target="_blank">GitHub</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li class="mb-3">
-                                    <i class="fab fa-twitter me-2"></i>
-                                    <a href="https://twitter.com/yourusername" target="_blank">Twitter</a>
-                                </li>
-                                <li class="mb-3">
-                                    <i class="fab fa-linkedin me-2"></i>
-                                    <a href="https://linkedin.com/in/yourusername" target="_blank">LinkedIn</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 技术栈 -->
+        <!-- 主内容区 -->
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
-                    <h3 class="card-title mb-4">技术栈</h3>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>后端技术</h5>
-                            <ul class="list-unstyled">
-                                <li><i class="fab fa-python me-2"></i>Python</li>
-                                <li><i class="fas fa-flask me-2"></i>Flask</li>
-                                <li><i class="fas fa-database me-2"></i>SQLAlchemy</li>
-                                <li><i class="fas fa-server me-2"></i>Redis</li>
-                            </ul>
+                    <h1 class="card-title mb-4">关于本站</h1>
+                    
+                    <div class="about-content">
+                        <h2 class="h4 mb-3">博客简介</h2>
+                        <p class="mb-4">{{ about.blog_description }}</p>
+                        
+                        <h2 class="h4 mb-3">博客统计</h2>
+                        <div class="row mb-4">
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="h2 mb-0">{{ about.post_count }}</h3>
+                                        <p class="mb-0 text-muted">文章</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="h2 mb-0">{{ about.category_count }}</h3>
+                                        <p class="mb-0 text-muted">分类</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="h2 mb-0">{{ about.tag_count }}</h3>
+                                        <p class="mb-0 text-muted">标签</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="h2 mb-0">{{ about.comment_count }}</h3>
+                                        <p class="mb-0 text-muted">评论</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h5>前端技术</h5>
-                            <ul class="list-unstyled">
-                                <li><i class="fab fa-html5 me-2"></i>HTML5</li>
-                                <li><i class="fab fa-css3-alt me-2"></i>CSS3</li>
-                                <li><i class="fab fa-js me-2"></i>JavaScript</li>
-                                <li><i class="fab fa-bootstrap me-2"></i>Bootstrap</li>
-                            </ul>
-                        </div>
+                        
+                        <h2 class="h4 mb-3">技术栈</h2>
+                        <ul class="list-unstyled mb-4">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>后端框架：Flask</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>数据库：SQLite</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>前端框架：Bootstrap 5</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i>Markdown 支持</li>
+                        </ul>
+                        
+                        <h2 class="h4 mb-3">博客作者</h2>
+                        <p class="mb-4">
+                            <strong>Denny</strong>
+                        </p>
+                        
+                        <h2 class="h4 mb-3">联系方式</h2>
+                        <p class="mb-4">
+                            <i class="bi bi-envelope me-2"></i>邮箱：<a href="mailto:{{ about.email }}">{{ about.email }}</a><br>
+                            <i class="bi bi-github me-2"></i>GitHub：<a href="{{ about.github }}" target="_blank">{{ about.github }}</a>
+                        </p>
+                        
+                        <h2 class="h4 mb-3">版权信息</h2>
+                        <p class="mb-0">
+                            © {{ about.current_year }} {{ about.blog_name }}. All rights reserved.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            {% include 'blog/includes/sidebar.html' %}
+        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block styles %}
-{{ super() }}
-<style>
-.about-content {
-    line-height: 1.8;
-}
-
-.card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    transition: transform 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.list-unstyled li {
-    margin-bottom: 0.5rem;
-}
-
-.list-unstyled a {
-    color: #666;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.list-unstyled a:hover {
-    color: #007bff;
-}
-</style>
 {% endblock %} 

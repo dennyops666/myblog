@@ -1,132 +1,56 @@
-{% extends "admin/layout.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}编辑分类{% endblock %}
+{% block title %}{% if is_edit %}编辑分类{% else %}添加分类{% endif %} - 管理后台{% endblock %}
+
+{% block page_title %}{% if is_edit %}编辑分类{% else %}添加分类{% endif %}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">编辑分类</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <a href="{{ url_for('admin.admin_category.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> 返回列表
-            </a>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <form method="post" action="{{ url_for('admin.admin_category.edit', id=category.id) }}">
-                        {{ form.csrf_token }}
-                        <div class="mb-3">
-                            <label for="name" class="form-label">分类名称</label>
-                            {{ form.name(class="form-control", placeholder="请输入分类名称") }}
-                            {% if form.name.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.name.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="slug" class="form-label">别名</label>
-                            {{ form.slug(class="form-control", placeholder="请输入分类别名") }}
-                            {% if form.slug.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.slug.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">描述</label>
-                            {{ form.description(class="form-control", rows="3", placeholder="请输入分类描述") }}
-                            {% if form.description.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.description.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> 保存
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% if category.posts %}
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="mb-0">该分类下的文章</h5>
-    </div>
+<div class="card">
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>标题</th>
-                        <th>作者</th>
-                        <th>发布时间</th>
-                        <th>状态</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for post in category.posts %}
-                    <tr>
-                        <td>{{ post.id }}</td>
-                        <td>{{ post.title }}</td>
-                        <td>{{ post.author.username }}</td>
-                        <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            {% if post.status == 1 %}
-                            <span class="badge bg-success">已发布</span>
-                            {% else %}
-                            <span class="badge bg-warning">草稿</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-edit"></i> 编辑
-                            </a>
-                            <a href="{{ url_for('blog.post', post_id=post.id) }}" class="btn btn-sm btn-info" target="_blank">
-                                <i class="fas fa-eye"></i> 查看
-                            </a>
-                        </td>
-                    </tr>
+        <form method="post" action="{{ url_for('admin_dashboard.category.edit', category_id=category.id) if is_edit else url_for('admin_dashboard.category.create') }}">
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+                {% if form.name.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.name.errors %}
+                    {{ error }}
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.slug.label(class="form-label") }}
+                {{ form.slug(class="form-control") }}
+                {% if form.slug.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.slug.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">可选，用于URL中显示的别名，只能包含小写字母、数字和连字符</div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=3) }}
+                {% if form.description.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.description.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="form-text">可选，简短描述这个分类</div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin_dashboard.category.index') }}" class="btn btn-secondary">取消</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
     </div>
 </div>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-<script>
-$(document).ready(function() {
-    // 自动生成别名
-    $('#name').on('input', function() {
-        if (!$('#slug').val()) {  // 只在别名为空时自动生成
-            let slug = $(this).val()
-                .toLowerCase()
-                .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')  // 将非字母数字汉字字符替换为连字符
-                .replace(/^-+|-+$/g, '');  // 去除首尾连字符
-            $('#slug').val(slug);
-        }
-    });
-});
-</script>
 {% endblock %} 

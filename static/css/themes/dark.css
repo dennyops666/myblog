@@ -1,0 +1,113 @@
+/* 暗色主题样式 */
+.dark-theme, html.dark-theme body {
+    --body-bg: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --card-border: #333;
+    --header-color: #f0f0f0;
+    --menu-hover-bg: #2c2c2c;
+    --light-color: #2c2c2c;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --table-stripe-bg: rgba(255, 255, 255, 0.03);
+    --table-hover-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: #2c2c2c;
+    --input-border: #444;
+    --sidebar-bg: #0a0a0a;
+    --sidebar-color: #e0e0e0;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: #007bff;
+}
+
+/* 基础样式覆盖 */
+.dark-theme body {
+    background-color: var(--body-bg);
+    color: var(--text-color);
+}
+
+/* 卡片样式覆盖 */
+.dark-theme .card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+}
+
+.dark-theme .card-header {
+    background-color: var(--light-color);
+    border-color: var(--card-border);
+}
+
+/* 表格样式覆盖 */
+.dark-theme .table th {
+    background-color: var(--light-color);
+}
+
+.dark-theme .table th,
+.dark-theme .table td {
+    border-color: var(--card-border);
+}
+
+.dark-theme .table tbody tr:hover {
+    background-color: var(--table-hover-bg);
+}
+
+/* 表单样式覆盖 */
+.dark-theme .form-control {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-color);
+}
+
+.dark-theme .form-control:focus {
+    background-color: var(--input-bg);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* 按钮样式覆盖 */
+.dark-theme .btn-secondary {
+    background-color: #444;
+    border-color: #555;
+}
+
+/* 菜单样式覆盖 */
+.dark-theme .menu {
+    background-color: var(--card-bg);
+}
+
+.dark-theme .menu a {
+    color: var(--text-color);
+}
+
+.dark-theme .menu a:hover {
+    background-color: var(--menu-hover-bg);
+}
+
+.dark-theme .menu a.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* 侧边栏样式覆盖 */
+.dark-theme .sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-color);
+    border-right: 1px solid var(--card-border);
+}
+
+.dark-theme .sidebar-header {
+    border-bottom: 1px solid var(--card-border);
+}
+
+.dark-theme .sidebar-menu a {
+    color: var(--sidebar-color);
+}
+
+.dark-theme .sidebar-menu a:hover {
+    background-color: var(--sidebar-hover-bg);
+}
+
+.dark-theme .sidebar-menu a.active {
+    background-color: var(--sidebar-active-bg);
+}
+
+.dark-theme .sidebar-footer {
+    border-top: 1px solid var(--card-border);
+} 

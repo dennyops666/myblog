@@ -6,6 +6,7 @@
 """
 
 import hashlib
+from datetime import datetime, UTC
 
 def gravatar(email, size=100, default='mp', rating='g'):
     """生成 Gravatar URL
@@ -25,6 +26,51 @@ def gravatar(email, size=100, default='mp', rating='g'):
     email_hash = hashlib.md5(email.lower().encode('utf-8')).hexdigest()
     return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d={default}&r={rating}"
 
+def format_datetime(value, format='%Y-%m-%d %H:%M:%S'):
+    """格式化日期时间
+    
+    Args:
+        value: 日期时间对象或字符串
+        format: 格式化字符串
+        
+    Returns:
+        str: 格式化后的日期时间字符串
+    """
+    if not value:
+        return ''
+        
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except ValueError:
+            return value
+            
+    return value.strftime(format)
+
+def format_date(value, format='%Y-%m-%d'):
+    """格式化日期
+    
+    Args:
+        value: 日期时间对象或字符串
+        format: 格式化字符串
+        
+    Returns:
+        str: 格式化后的日期字符串
+    """
+    return format_datetime(value, format)
+
+def format_time(value, format='%H:%M:%S'):
+    """格式化时间
+    
+    Args:
+        value: 日期时间对象或字符串
+        format: 格式化字符串
+        
+    Returns:
+        str: 格式化后的时间字符串
+    """
+    return format_datetime(value, format)
+
 def init_filters(app):
     """初始化自定义过滤器"""
     
@@ -43,4 +89,19 @@ def init_filters(app):
         email = email.lower().encode('utf-8')
         email_hash = hashlib.md5(email).hexdigest()
         url = f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d={default}"
-        return url 
+        return url
+        
+    @app.template_filter('datetime')
+    def datetime_filter(value, format='%Y-%m-%d %H:%M:%S'):
+        """日期时间过滤器"""
+        return format_datetime(value, format)
+        
+    @app.template_filter('date')
+    def date_filter(value, format='%Y-%m-%d'):
+        """日期过滤器"""
+        return format_date(value, format)
+        
+    @app.template_filter('time')
+    def time_filter(value, format='%H:%M:%S'):
+        """时间过滤器"""
+        return format_time(value, format) 

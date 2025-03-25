@@ -1,0 +1,307 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}编辑用户 - MyBlog 管理后台{% endblock %}
+
+{% block content %}
+<!-- Toast container -->
+<div id="toast-container" class="toast-top-right"></div>
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-gray-800">编辑用户</h1>
+            <p class="mb-4 text-gray-600">
+                <i class="fas fa-info-circle me-1"></i>
+                {% if user.username == 'admin' %}
+                这是系统超级管理员账号，大部分功能已锁定
+                {% elif user.is_super_admin %}
+                这是超级管理员账号，部分功能受限
+                {% elif user.is_admin %}
+                这是管理员账号
+                {% else %}
+                这是普通用户账号
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form id="editUserForm" method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" 
+                           value="{{ user.username }}" readonly>
+                    {% if user.username == 'admin' %}
+                    <div class="form-text text-danger">
+                        <i class="fas fa-lock me-1"></i>系统超级管理员用户名不可修改
+                    </div>
+                    {% else %}
+                    <div class="form-text text-muted">用户名创建后不可修改</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">邮箱地址</label>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           value="{{ user.email }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="nickname" class="form-label">昵称</label>
+                    <input type="text" class="form-control" id="nickname" name="nickname" 
+                           value="{{ user.nickname }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">密码</label>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="不修改请留空">
+                    <div class="form-text">留空表示不修改密码</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">确认密码</label>
+                    <input type="password" class="form-control" id="confirm_password" 
+                           name="confirm_password" placeholder="不修改请留空">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">角色</label>
+                    <div class="role-options">
+                        {% for role in roles %}
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" name="roles" value="{{ role.id }}" id="role_{{ role.id }}"
+                                {% if role in user.roles %}checked{% endif %}
+                                {% if role.name == 'super_admin' and current_user.username != 'admin' %}disabled{% endif %}
+                                {% if user.username == 'admin' and role.name == 'super_admin' %}checked disabled{% endif %}>
+                            <label class="form-check-label" for="role_{{ role.id }}">
+                                {% if role.name == 'super_admin' %}
+                                超级管理员
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle me-1"></i> 
+                                    拥有系统最高权限，可以管理所有用户和内容。此角色只能由admin用户拥有。
+                                </small>
+                                {% elif role.name == 'admin' %}
+                                管理员
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle me-1"></i> 
+                                    可以管理普通用户、文章、评论和标签等内容，但不能管理其他管理员。
+                                </small>
+                                {% else %}
+                                普通用户
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle me-1"></i> 
+                                    可以发布文章、评论，管理自己的内容。
+                                </small>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if user.username != 'admin' %}
+                <div class="mb-3">
+                    <label class="form-label">账号状态</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" 
+                               name="is_active" id="is_active"
+                               {% if user.is_active %}checked{% endif %}
+                               {% if user.username == 'admin' or user.is_super_admin %}disabled{% endif %}>
+                        <label class="form-check-label" for="is_active">
+                            启用账号
+                        </label>
+                    </div>
+                    {% if user.username == 'admin' or user.is_super_admin %}
+                    <div class="form-text text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        超级管理员账号始终保持启用状态
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <button type="button" class="btn btn-secondary" onclick="history.back()">
+                        <i class="fas fa-arrow-left me-1"></i> 返回
+                    </button>
+                    <div>
+                        {% if user.username != 'admin' and has_delete_permission(current_user, user) %}
+                        <button type="button" class="btn btn-danger me-2" id="deleteUserBtn">
+                            <i class="fas fa-trash me-1"></i> 删除用户
+                        </button>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> 保存更改
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除对话框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除用户 "<span class="fw-bold">{{ user.username }}</span>" 吗？</p>
+                <p class="text-danger mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    此操作不可恢复，请谨慎操作！
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="fas fa-trash me-1"></i> 确定删除
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.role-options .form-check {
+    padding: 12px 15px;
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    margin-bottom: 12px !important;
+    border: 1px solid #e9ecef;
+}
+
+.role-options .form-check:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.role-options .text-muted {
+    margin-left: 24px;
+    font-size: 0.875rem;
+    color: #6c757d !important;
+}
+
+.role-options .fas.fa-info-circle {
+    color: #0d6efd;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    const form = $('#editUserForm');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+
+    // 表单提交处理
+    form.on('submit', function(e) {
+        e.preventDefault();
+        
+        // 检查密码匹配
+        const password = $('#password').val();
+        const confirmPassword = $('#confirm_password').val();
+        
+        if (password && password !== confirmPassword) {
+            showToast('error', '两次输入的密码不匹配');
+            return;
+        }
+
+        // 检查角色选择
+        {% if user.is_super_admin %}
+        const superAdminRole = $('input[name="roles"][value="{{ super_admin_role_id }}"]');
+        if (!superAdminRole.prop('checked')) {
+            showToast('error', '超级管理员用户必须具有超级管理员角色');
+            return;
+        }
+        {% endif %}
+        
+        // 收集表单数据
+        const formData = new FormData(this);
+        
+        // 发送请求
+        $.ajax({
+            url: '{{ url_for("admin.users.edit", user_id=user.id) }}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    showToast('success', response.message || '保存成功');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("admin.users.index") }}';
+                    }, 2000);
+                } else {
+                    showToast('error', response.message || '保存失败');
+                }
+            },
+            error: function(xhr) {
+                let message = '保存失败';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        message = response.message;
+                    }
+                } catch (e) {}
+                showToast('error', message);
+            }
+        });
+    });
+
+    {% if not user.is_super_admin %}
+    // 删除用户功能
+    $('#deleteUserBtn').on('click', function() {
+        deleteModal.show();
+    });
+
+    $('#confirmDelete').on('click', function() {
+        const btn = $(this);
+        btn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 删除中...');
+
+        $.ajax({
+            url: '{{ url_for("admin.users.delete", user_id=user.id) }}',
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    deleteModal.hide();
+                    showToast('success', response.message || '删除成功');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("admin.users.index") }}';
+                    }, 2000);
+                } else {
+                    showToast('error', response.message || '删除失败');
+                    deleteModal.hide();
+                }
+            },
+            error: function(xhr) {
+                let message = '删除失败';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        message = response.message;
+                    }
+                } catch (e) {}
+                showToast('error', message);
+                deleteModal.hide();
+            },
+            complete: function() {
+                btn.prop('disabled', false)
+                    .html('<i class="fas fa-trash me-1"></i> 确定删除');
+            }
+        });
+    });
+    {% endif %}
+});
+</script>
+{% endblock %} 

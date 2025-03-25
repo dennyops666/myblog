@@ -12,13 +12,13 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <form id="uploadForm" enctype="multipart/form-data">
-                        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token }}">
                         <div class="mb-3">
                             <label for="file" class="form-label">选择文件</label>
                             <input type="file" class="form-control" id="file" name="file" accept="image/*" required>
-                            <div class="form-text">支持的文件类型：PNG、JPG、JPEG、GIF、WEBP</div>
+                            <div class="invalid-feedback" id="file-error"></div>
+                            <div class="form-text">支持的文件类型：PNG、JPG、JPEG、GIF、WEBP，最大尺寸：16MB</div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
                             <i class="fas fa-upload"></i> 上传
                         </button>
                     </form>
@@ -60,29 +60,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('uploadForm');
     const fileInput = document.getElementById('file');
+    const fileError = document.getElementById('file-error');
+    const submitBtn = document.getElementById('submitBtn');
     const uploadedFiles = document.getElementById('uploadedFiles').getElementsByTagName('tbody')[0];
-    const csrfTokenInput = document.getElementById('csrf_token');
-
-    // 更新CSRF令牌
-    function updateCsrfToken(token) {
-        if (token) {
-            csrfTokenInput.value = token;
-        }
-    }
 
     // 加载已上传文件列表
     function loadUploadedFiles() {
-        fetch('/admin/upload/list', {
-            headers: {
-                'X-CSRF-Token': csrfTokenInput.value
-            }
-        })
+        fetch('/admin/upload/list')
         .then(response => response.json())
         .then(data => {
-            if (data.csrf_token) {
-                updateCsrfToken(data.csrf_token);
-            }
             uploadedFiles.innerHTML = '';
+            if (data.error) {
+                showToast('error', data.error || '加载文件列表失败');
+                return;
+            }
             data.files.forEach(file => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -101,7 +92,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadedFiles.appendChild(row);
             });
         })
-        .catch(error => console.error('加载文件列表失败:', error));
+        .catch(error => {
+            console.error('加载文件列表失败:', error);
+            showToast('error', '加载文件列表失败，请刷新页面重试');
+        });
     }
 
     // 格式化文件大小
@@ -116,33 +110,57 @@ document.addEventListener('DOMContentLoaded', function() {
     // 处理文件上传
     uploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // 清除错误提示
+        fileInput.classList.remove('is-invalid');
+        fileError.textContent = '';
+        
+        // 检查文件是否选择
+        if (!fileInput.files || !fileInput.files[0]) {
+            fileInput.classList.add('is-invalid');
+            fileError.textContent = '请选择要上传的文件';
+            return;
+        }
+        
+        // 检查文件大小
+        const maxSize = 16 * 1024 * 1024; // 16MB
+        if (fileInput.files[0].size > maxSize) {
+            fileInput.classList.add('is-invalid');
+            fileError.textContent = '文件大小超过限制，最大支持 16MB';
+            return;
+        }
+        
+        // 禁用提交按钮
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 上传中...';
+        
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        formData.append('csrf_token', csrfTokenInput.value);
 
         fetch('/admin/upload/', {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-Token': csrfTokenInput.value
-            }
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
-            if (data.csrf_token) {
-                updateCsrfToken(data.csrf_token);
-            }
             if (data.success) {
-                alert('文件上传成功');
+                showToast('success', '文件上传成功');
                 loadUploadedFiles();
                 uploadForm.reset();
             } else {
-                alert('文件上传失败: ' + data.message);
+                fileInput.classList.add('is-invalid');
+                fileError.textContent = data.message || '上传失败';
+                showToast('error', data.message || '文件上传失败');
             }
         })
         .catch(error => {
             console.error('上传失败:', error);
-            alert('上传失败，请重试');
+            showToast('error', '上传失败，请重试');
+        })
+        .finally(() => {
+            // 恢复提交按钮
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-upload"></i> 上传';
         });
     });
 
@@ -153,31 +171,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const filename = button.dataset.filename;
             
             if (confirm('确定要删除这个文件吗？')) {
-                const formData = new FormData();
-                formData.append('csrf_token', csrfTokenInput.value);
+                // 禁用删除按钮
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                 
                 fetch(`/admin/upload/delete/${filename}`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRF-Token': csrfTokenInput.value
-                    }
+                    method: 'POST'
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.csrf_token) {
-                        updateCsrfToken(data.csrf_token);
-                    }
                     if (data.success) {
-                        alert('文件删除成功');
+                        showToast('success', '文件删除成功');
                         loadUploadedFiles();
                     } else {
-                        alert('文件删除失败: ' + data.message);
+                        showToast('error', data.message || '文件删除失败');
+                        // 恢复删除按钮
+                        button.disabled = false;
+                        button.innerHTML = '<i class="fas fa-trash"></i> 删除';
                     }
                 })
                 .catch(error => {
                     console.error('删除失败:', error);
-                    alert('删除失败，请重试');
+                    showToast('error', '删除失败，请重试');
+                    // 恢复删除按钮
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-trash"></i> 删除';
                 });
             }
         }

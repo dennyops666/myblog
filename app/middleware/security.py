@@ -6,7 +6,7 @@
 """
 
 from functools import wraps
-from flask import request, redirect, url_for, jsonify, current_app
+from flask import request, redirect, url_for, jsonify, current_app, abort
 from flask_login import current_user
 import time
 from app.models.permission import Permission
@@ -220,10 +220,12 @@ def secure_headers():
                 'X-Frame-Options': 'SAMEORIGIN',
                 'X-XSS-Protection': '1; mode=block',
                 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-                'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+                'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src 'self' data:",
                 'Referrer-Policy': 'strict-origin-when-cross-origin',
                 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-                'Pragma': 'no-cache'
+                'Pragma': 'no-cache',
+                'Permissions-Policy': 'browsing-topics=()',
+                'Access-Control-Allow-Origin': '*'
             }
             
             # 将安全响应头添加到响应中
@@ -234,7 +236,34 @@ def secure_headers():
         return decorated_function
     return decorator
 
-def validate_csrf():
-    """验证 CSRF Token"""
-    # 禁用 CSRF 验证
-    return True 
+def check_ip_whitelist():
+    """检查IP白名单"""
+    if current_app.config.get('IP_WHITELIST'):
+        client_ip = request.remote_addr
+        if client_ip not in current_app.config['IP_WHITELIST']:
+            abort(403, description='IP地址不在白名单中')
+
+def check_api_key():
+    """检查API密钥"""
+    if current_app.config.get('API_KEY_REQUIRED'):
+        api_key = request.headers.get('X-API-Key')
+        if not api_key or api_key != current_app.config['API_KEY']:
+            abort(401, description='无效的API密钥')
+
+def check_rate_limit():
+    """检查请求频率限制"""
+    if current_app.config.get('RATE_LIMIT_ENABLED'):
+        # 实现请求频率限制逻辑
+        pass
+
+def security_check():
+    """执行安全检查的装饰器"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            check_ip_whitelist()
+            check_api_key()
+            check_rate_limit()
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator 

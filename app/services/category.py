@@ -9,7 +9,7 @@ from datetime import datetime, UTC
 from flask import current_app
 from app.extensions import db
 from app.models.category import Category
-from app.services import SecurityService
+from app.services import get_security_service
 from typing import List, Optional, Dict
 from sqlalchemy import func
 
@@ -17,7 +17,7 @@ class CategoryService:
     """分类服务类"""
     
     def __init__(self):
-        self.security = SecurityService()
+        self.security_service = get_security_service()
 
     def create_category(self, name, slug=None, description=None):
         """创建分类
@@ -98,7 +98,8 @@ class CategoryService:
                 return {'status': 'error', 'message': '分类不存在'}
                 
             # 检查是否有文章使用此分类
-            if category.posts.count() > 0:
+            from app.models.post import Post
+            if Post.query.filter_by(category_id=category.id).count() > 0:
                 return {'status': 'error', 'message': '该分类下还有文章，无法删除'}
                 
             db.session.delete(category)
@@ -109,13 +110,19 @@ class CategoryService:
             db.session.rollback()
             return {'status': 'error', 'message': f'删除分类失败：{str(e)}'}
             
-    def get_all_categories(self) -> List[Category]:
+    def get_all_categories(self):
         """获取所有分类
         
         Returns:
             list: 分类列表
         """
-        return Category.query.all()
+        try:
+            categories = Category.query.all()
+            return categories
+        except Exception as e:
+            current_app.logger.error(f"获取所有分类失败: {str(e)}")
+            current_app.logger.exception(e)
+            return []
         
     def get_category_by_id(self, category_id: int) -> Optional[Category]:
         """根据ID获取分类
@@ -145,11 +152,11 @@ class CategoryService:
         Returns:
             list: 包含分类信息和文章数量的字典列表
         """
-        from app.models import Post
         categories = Category.query.all()
         result = []
         
         for category in categories:
+            from app.models.post import Post
             post_count = Post.query.filter_by(
                 category_id=category.id, 
                 status=1
@@ -175,88 +182,212 @@ class CategoryService:
         Returns:
             dict: 包含分页信息的字典
         """
-        from app.models import Post
-        
-        pagination = Category.query.paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
-        
-        categories = []
-        for category in pagination.items:
-            post_count = Post.query.filter_by(
-                category_id=category.id,
-                status=1
-            ).count()
-            categories.append({
-                'id': category.id,
-                'name': category.name,
-                'slug': category.slug,
-                'post_count': post_count,
-                'created_at': category.created_at
+        try:
+            pagination = Category.query.paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            
+            categories = []
+            for category in pagination.items:
+                from app.models.post import Post
+                post_count = Post.query.filter_by(
+                    category_id=category.id,
+                    status=1
+                ).count()
+                categories.append({
+                    'id': category.id,
+                    'name': category.name,
+                    'slug': category.slug,
+                    'post_count': post_count,
+                    'created_at': category.created_at
+                })
+                
+            current_app.logger.info('成功获取分类列表', extra={
+                'data': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total
+                }
             })
             
-        return {
-            'items': categories,
-            'page': page,
-            'per_page': per_page,
-            'total': pagination.total,
-            'pages': pagination.pages,
-            'has_prev': pagination.has_prev,
-            'has_next': pagination.has_next,
-            'prev_num': pagination.prev_num,
-            'next_num': pagination.next_num
-        }
+            return {
+                'items': categories,
+                'page': page,
+                'per_page': per_page,
+                'total': pagination.total,
+                'pages': pagination.pages,
+                'has_prev': pagination.has_prev,
+                'has_next': pagination.has_next,
+                'prev_num': pagination.prev_num if pagination.has_prev else None,
+                'next_num': pagination.next_num if pagination.has_next else None
+            }
+            
+        except Exception as e:
+            current_app.logger.error(f'获取分类列表失败: {str(e)}')
+            current_app.logger.exception(e)
+            return {
+                'items': [],
+                'page': page,
+                'per_page': per_page,
+                'total': 0,
+                'pages': 0,
+                'has_prev': False,
+                'has_next': False,
+                'prev_num': None,
+                'next_num': None
+            }
+            
+    def get_total_categories(self):
+        """获取分类总数
+        
+        Returns:
+            int: 分类总数
+        """
+        try:
+            total = Category.query.count()
+            current_app.logger.info(f'成功获取分类总数: {total}')
+            return total
+            
+        except Exception as e:
+            current_app.logger.error(f'获取分类总数失败: {str(e)}')
+            current_app.logger.exception(e)
+            return 0
 
     def search_categories(self, keyword, page=1, per_page=10):
-        """搜索分类"""
-        return Category.query.filter(
-            Category.name.ilike(f'%{keyword}%')
-        ).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+        """搜索分类
+        
+        Args:
+            keyword: 搜索关键词
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        try:
+            pagination = Category.query.filter(
+                Category.name.ilike(f'%{keyword}%')
+            ).paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            
+            current_app.logger.info('成功搜索分类', extra={
+                'data': {
+                    'keyword': keyword,
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total
+                }
+            })
+            
+            return pagination
+            
+        except Exception as e:
+            current_app.logger.error(f'搜索分类失败: {str(e)}')
+            current_app.logger.exception(e)
+            return None
 
     def get_category_stats(self):
-        """获取分类统计信息"""
-        total_categories = Category.query.count()
-        categories_with_posts = Category.query.filter(
-            Category.posts.any()
-        ).count()
+        """获取分类统计信息
         
-        # 获取每个分类的文章数量
-        category_post_counts = []
-        for category in Category.query.all():
-            category_post_counts.append({
-                'id': category.id,
-                'name': category.name,
-                'post_count': category.posts.count()
+        Returns:
+            dict: 包含分类统计信息的字典
+        """
+        try:
+            total_categories = Category.query.count()
+            
+            # 获取有文章的分类数量
+            from app.models.post import Post
+            categories_with_posts = Category.query.join(
+                Post, Category.id == Post.category_id
+            ).distinct().count()
+            
+            # 获取每个分类的文章数量
+            category_post_counts = []
+            for category in Category.query.all():
+                post_count = Post.query.filter_by(
+                    category_id=category.id,
+                    status=1
+                ).count()
+                category_post_counts.append({
+                    'id': category.id,
+                    'name': category.name,
+                    'post_count': post_count
+                })
+            
+            current_app.logger.info('成功获取分类统计信息', extra={
+                'data': {
+                    'total_categories': total_categories,
+                    'categories_with_posts': categories_with_posts
+                }
             })
-        
-        return {
-            'total_categories': total_categories,
-            'categories_with_posts': categories_with_posts,
-            'category_post_counts': category_post_counts
-        }
+            
+            return {
+                'total_categories': total_categories,
+                'categories_with_posts': categories_with_posts,
+                'category_post_counts': category_post_counts
+            }
+            
+        except Exception as e:
+            current_app.logger.error(f'获取分类统计信息失败: {str(e)}')
+            current_app.logger.exception(e)
+            return {
+                'total_categories': 0,
+                'categories_with_posts': 0,
+                'category_post_counts': []
+            }
 
-    @staticmethod
-    def get_total_categories():
-        """获取分类总数"""
-        return Category.query.count()
-
-    @staticmethod
-    def get_posts_by_category(category_id, page=1, per_page=10):
-        """获取分类下的文章列表（分页）"""
-        category = CategoryService.get_category_by_id(category_id)
-        if not category:
-            raise ValueError("分类不存在")
+    def get_posts_by_category(self, category_id, page=1, per_page=10):
+        """获取分类下的文章列表（分页）
         
-        return category.posts.order_by(
-            db.desc('created_at')
-        ).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        ) 
+        Args:
+            category_id: 分类 ID
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+            
+        Raises:
+            ValueError: 如果分类不存在
+        """
+        try:
+            category = self.get_category_by_id(category_id)
+            if not category:
+                raise ValueError('分类不存在')
+            
+            from app.models.post import Post
+            pagination = Post.query.filter_by(
+                category_id=category.id,
+                status=1
+            ).order_by(
+                Post.created_at.desc()
+            ).paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            
+            current_app.logger.info('成功获取分类文章列表', extra={
+                'data': {
+                    'category_id': category_id,
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total
+                }
+            })
+            
+            return pagination
+            
+        except ValueError as e:
+            current_app.logger.error(f'获取分类文章列表失败: {str(e)}')
+            raise
+            
+        except Exception as e:
+            current_app.logger.error(f'获取分类文章列表失败: {str(e)}')
+            current_app.logger.exception(e)
+            return None

@@ -5,11 +5,30 @@
 创建日期：2024-03-21
 """
 
-from .security import sql_injection_protect, xss_protect
 from .markdown import markdown_to_html
+from .logging import log_error, log_info, log_warning
+from .validation import validate_email, validate_username, validate_password
+from datetime import datetime, UTC
 
 __all__ = [
-    'sql_injection_protect',
-    'xss_protect',
     'markdown_to_html',
-] 
+    'log_error',
+    'log_info',
+    'log_warning',
+    'validate_email',
+    'validate_username',
+    'validate_password',
+]
+
+def get_current_date():
+    """获取当前日期，格式为YYYY-MM
+    
+    Returns:
+        str: 当前日期，格式为YYYY-MM
+    """
+    now = datetime.now(UTC)
+    return now.strftime('%Y-%m')
+
+"""
+工具函数包
+""" 

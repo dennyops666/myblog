@@ -9,21 +9,23 @@
             <div class="card mt-5">
                 <div class="card-body">
                     <h1 class="text-center mb-4">管理员登录</h1>
-                    <form method="post">
+                    <form method="post" id="loginForm">
                         <div class="mb-3">
                             <label for="username" class="form-label">用户名</label>
                             <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="invalid-feedback" id="username-error"></div>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">密码</label>
                             <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="invalid-feedback" id="password-error"></div>
                         </div>
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="remember" name="remember">
                             <label class="form-check-label" for="remember">记住我</label>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">登录</button>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">登录</button>
                         </div>
                     </form>
                 </div>
@@ -31,4 +33,78 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    const form = $('#loginForm');
+    const submitBtn = $('#submitBtn');
+    const usernameInput = $('#username');
+    const passwordInput = $('#password');
+    const usernameError = $('#username-error');
+    const passwordError = $('#password-error');
+
+    form.on('submit', function(e) {
+        e.preventDefault();
+        
+        // 清除错误提示
+        $('.form-control').removeClass('is-invalid');
+        $('.invalid-feedback').empty();
+        
+        // 禁用提交按钮
+        submitBtn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 登录中...');
+        
+        // 收集表单数据
+        const formData = new FormData(this);
+        
+        // 发送 AJAX 请求
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .done(function(response) {
+            if (response.success) {
+                showToast('success', response.message || '登录成功');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('admin_dashboard.dashboard') }}";
+                }, 1000);
+            } else {
+                if (response.errors) {
+                    if (response.errors.username) {
+                        usernameInput.addClass('is-invalid');
+                        usernameError.text(response.errors.username[0]);
+                    }
+                    if (response.errors.password) {
+                        passwordInput.addClass('is-invalid');
+                        passwordError.text(response.errors.password[0]);
+                    }
+                }
+                showToast('error', response.message || '登录失败，请检查用户名和密码');
+                // 清空密码输入框
+                passwordInput.val('');
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('登录失败:', error);
+            showToast('error', '登录失败，请稍后重试');
+            // 清空密码输入框
+            passwordInput.val('');
+        })
+        .always(function() {
+            // 恢复提交按钮状态
+            submitBtn.prop('disabled', false)
+                .html('登录');
+        });
+    });
+});
+</script>
 {% endblock %} 

@@ -1,209 +1,56 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/base.html" %}
 
-{% block title %}编辑标签 - MyBlog 管理后台{% endblock %}
+{% block title %}{% if is_edit %}编辑标签{% else %}新建标签{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">编辑标签</h1>
-        <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> 返回列表
-        </a>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h2">{% if is_edit %}编辑标签{% else %}新建标签{% endif %}</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('admin_dashboard.tag.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回列表
+            </a>
+        </div>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.tag.edit', tag_id=tag.id) }}" id="tagForm" data-ajax="false">
-                {{ form.csrf_token }}
+            <form method="post">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control") }}
+                    {% for error in form.name.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
                 
                 <div class="mb-3">
-                    <label for="name" class="form-label">名称 <span class="text-danger">*</span></label>
-                    {{ form.name(class="form-control") }}
-                    <div class="invalid-feedback" id="name-error" style="display: none;"></div>
-                    {% if form.name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.name.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="slug" class="form-label">别名（可选）</label>
+                    {{ form.slug.label(class="form-label") }}
                     {{ form.slug(class="form-control") }}
-                    <div class="invalid-feedback" id="slug-error" style="display: none;"></div>
-                    <small class="form-text text-muted">用于URL的友好显示，如果不填写将使用系统生成的值</small>
-                    {% if form.slug.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.slug.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    <div class="form-text">用于URL，留空将自动根据名称生成</div>
+                    {% for error in form.slug.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
-
+                
                 <div class="mb-3">
-                    <label for="description" class="form-label">描述</label>
+                    {{ form.description.label(class="form-label") }}
                     {{ form.description(class="form-control", rows=3) }}
-                    <div class="invalid-feedback" id="description-error" style="display: none;"></div>
-                    {% if form.description.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.description.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    <div class="form-text">标签的简短描述</div>
+                    {% for error in form.description.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
-
-                <div class="text-end">
-                    <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary me-2">返回</a>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('admin_dashboard.tag.index') }}" class="btn btn-secondary">取消</a>
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
     </div>
-
-    {% if tag.posts %}
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">使用该标签的文章</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>标题</th>
-                            <th>作者</th>
-                            <th>发布时间</th>
-                            <th>状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for post in tag.posts %}
-                        <tr>
-                            <td>{{ post.id }}</td>
-                            <td>{{ post.title }}</td>
-                            <td>{{ post.author.username }}</td>
-                            <td>{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                            <td>
-                                {% if post.status == 1 %}
-                                <span class="badge bg-success">已发布</span>
-                                {% else %}
-                                <span class="badge bg-warning">草稿</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('admin.posts.edit', post_id=post.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i> 编辑
-                                </a>
-                                <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="btn btn-sm btn-info" target="_blank">
-                                    <i class="fas fa-eye"></i> 查看
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('tagForm');
-    const submitBtn = document.getElementById('submitBtn');
-    let isSubmitting = false;
-    
-    // 清除所有错误提示
-    function clearErrors() {
-        const errorDivs = document.querySelectorAll('.invalid-feedback');
-        errorDivs.forEach(div => {
-            div.style.display = 'none';
-            div.textContent = '';
-        });
-        
-        const inputs = form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-    }
-    
-    // 显示字段错误
-    function showFieldError(fieldName, errorMessage) {
-        const errorDiv = document.getElementById(`${fieldName}-error`);
-        const input = form.querySelector(`#${fieldName}`);
-        if (errorDiv && input) {
-            errorDiv.textContent = errorMessage;
-            errorDiv.style.display = 'block';
-            input.classList.add('is-invalid');
-        }
-    }
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();  // 阻止事件冒泡
-        
-        // 防止重复提交
-        if (isSubmitting) {
-            return;
-        }
-        
-        clearErrors();
-        isSubmitting = true;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
-        
-        const formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('success', data.message);
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 1000);
-            } else {
-                // 如果有字段错误，显示字段错误
-                if (data.errors) {
-                    Object.entries(data.errors).forEach(([field, errors]) => {
-                        showFieldError(field, errors[0]); // 只显示第一个错误
-                    });
-                }
-                showToast('error', data.message);
-                
-                // 重置提交状态
-                isSubmitting = false;
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '保存';
-            }
-        })
-        .catch(error => {
-            console.error('请求错误:', error);
-            showToast('error', '保存失败，请稍后重试');
-            
-            // 重置提交状态
-            isSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '保存';
-        });
-    });
-});
-</script>
-{% endblock %} 

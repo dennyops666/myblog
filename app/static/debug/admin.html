@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <!-- 暗黑模式样式表 -->
+    <link href="/static/css/themes/dark.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        /* 侧边栏样式 */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 100;
+                padding: 0;
+                width: 250px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+                display: none;
+            }
+            
+            .sidebar-backdrop.show {
+                display: block;
+            }
+        }
+    </style>
+    
+<link rel="stylesheet" href="/static/css/admin-dashboard.css">
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    .quick-actions a {
+        text-decoration: none;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    .stats-card h2 {
+        font-size: 2.5rem;
+        margin-top: 10px;
+        margin-bottom: 0;
+    }
+    .stats-card h5 {
+        margin-bottom: 0;
+    }
+    /* 确保卡片内容可见 */
+    .bg-primary, .bg-success, .bg-warning, .bg-info {
+        color: white !important;
+    }
+    .text-white {
+        color: white !important;
+    }
+    /* 暗黑模式样式调整 */
+    .dark-theme .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+    .dark-theme .card-header {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-color: var(--border-color);
+    }
+    .dark-theme .table {
+        color: var(--body-color);
+    }
+    .dark-theme .table > thead {
+        background-color: var(--table-header-bg);
+    }
+    .dark-theme .table td, .dark-theme .table th {
+        border-color: var(--border-color);
+    }
+    .dark-theme .quick-actions .card {
+        background-color: var(--card-bg);
+        color: var(--body-color);
+    }
+    .dark-theme .quick-actions .card-text {
+        color: var(--body-color);
+    }
+    /* 最近文章表格样式 */
+    .recent-posts-table {
+        margin-bottom: 0;
+    }
+    .dark-theme .recent-posts-table tbody tr {
+        border-color: var(--border-color);
+    }
+    .dark-theme .recent-posts-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+</style>
+
+</head>
+<body>
+    <!-- 移动设备侧边栏切换按钮 -->
+    <div class="d-md-none mb-3 px-3">
+        <button class="btn btn-primary" id="sidebarToggle">
+            <i class="bi bi-list"></i> 菜单
+        </button>
+    </div>
+    
+    <!-- 侧边栏背景遮罩 -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h5 class="text-white">博客管理系统</h5>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/">
+                                <i class="bi bi-house-door"></i> 首页
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/post/">
+                                <i class="bi bi-file-earmark-text"></i> 文章管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/category/">
+                                <i class="bi bi-folder"></i> 分类管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/tag/">
+                                <i class="bi bi-tags"></i> 标签管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/comment/">
+                                <i class="bi bi-chat-dots"></i> 评论管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/user/">
+                                <i class="bi bi-people"></i> 用户管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/profile">
+                                <i class="bi bi-person"></i> 个人资料
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/admin/settings/">
+                                <i class="bi bi-gear"></i> 系统设置
+                            </a>
+                        </li>
+                    </ul>
+                    <hr class="text-white">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/blog/" target="_blank">
+                                <i class="bi bi-box-arrow-up-right"></i> 查看网站
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link theme-toggle" href="javascript:void(0);" title="切换主题">
+                                <i class="bi bi-moon-fill theme-toggle-icon"></i> 切换主题
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/auth/logout">
+                                <i class="bi bi-box-arrow-right"></i> 退出
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">管理后台</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            
+                        </div>
+                        <!-- 主题切换按钮（大屏幕显示） -->
+                        <button class="btn btn-sm btn-outline-secondary theme-toggle d-none d-md-block" title="切换主题">
+                            <i class="bi bi-moon-fill theme-toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 消息提示 -->
+                
+                    
+                
+
+                <!-- 主要内容 -->
+                
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>管理后台首页</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="p-4">
+                        <h2>欢迎回来，</h2>
+                        <p>您可以通过左侧菜单管理博客内容。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📝</div>
+                    <h5 class="card-title">文章总数</h5>
+                    <h2></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📢</div>
+                    <h5 class="card-title">已发布</h5>
+                    <h2></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📋</div>
+                    <h5 class="card-title">草稿</h5>
+                    <h2></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">🏷️</div>
+                    <h5 class="card-title">标签</h5>
+                    <h2></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">快速操作</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row quick-actions">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-file-earmark-plus display-4 mb-3 text-primary"></i>
+                                    <h5 class="card-title">写文章</h5>
+                                    <p class="card-text">创建新的博客文章</p>
+                                    <a href="/admin/post/create" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="bi bi-pencil-square"></i> 开始写作
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-folder-plus display-4 mb-3 text-success"></i>
+                                    <h5 class="card-title">添加分类</h5>
+                                    <p class="card-text">创建新的文章分类</p>
+                                    <a href="/admin/category/create" class="btn btn-outline-success btn-lg w-100">
+                                        <i class="bi bi-plus-circle"></i> 创建分类
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-tag display-4 mb-3 text-info"></i>
+                                    <h5 class="card-title">添加标签</h5>
+                                    <p class="card-text">创建新的文章标签</p>
+                                    <a href="/admin/tag/create" class="btn btn-outline-info btn-lg w-100">
+                                        <i class="bi bi-plus-circle"></i> 创建标签
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近文章 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-text me-1"></i>
+                        最近文章
+                    </div>
+                    <a href="/admin/post/" class="btn btn-sm btn-primary">查看全部</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table recent-posts-table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>发布日期</th>
+                                    <th>状态</th>
+                                    <th>阅读次数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 文章列表 -->
+                                <!-- 
+                                DEBUG信息:
+                                recent_posts长度: 0
+                                
+                                END DEBUG
+                                -->
+                                
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">暂无文章</td>
+                                    </tr>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <!-- 主题切换脚本 -->
+    <script src="/static/js/theme-switcher.js"></script>
+    
+    <!-- 侧边栏切换脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+            
+            // 切换侧边栏
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+                sidebarBackdrop.classList.toggle('show');
+            });
+            
+            // 点击背景遮罩关闭侧边栏
+            sidebarBackdrop.addEventListener('click', function() {
+                sidebar.classList.remove('show');
+                sidebarBackdrop.classList.remove('show');
+            });
+            
+            // 点击侧边栏链接后关闭侧边栏（在移动设备上）
+            const sidebarLinks = sidebar.querySelectorAll('a.nav-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 768) {
+                        sidebar.classList.remove('show');
+                        sidebarBackdrop.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <!-- 引入基础脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/fetch-utils.js"></script>
+    
+
+<script>
+    // 简单脚本，仅用于调试
+    console.log("管理后台首页加载完成");
+    
+    // 后端查询问题调试信息
+    console.log("JS调试: 检查渲染模板时传递的数据");
+    
+    
+    console.log("JS调试: 后端没有传递文章数据");
+    
+    
+    // 定时刷新统计数据
+    function refreshStats() {
+        console.log("尝试刷新统计数据");
+        // 使用fetch API获取最新统计数据
+        fetch('/admin/get_stats')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应异常');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("获取到统计数据:", data);
+                
+                // 更新统计数据
+                document.querySelectorAll(".row.mb-4 .col-md-3").forEach(function(el, index) {
+                    const title = el.querySelector(".card-title").textContent.trim();
+                    const valueElement = el.querySelector("h2");
+                    
+                    if (title === "文章总数") {
+                        valueElement.textContent = data.post_count;
+                    } else if (title === "已发布") {
+                        valueElement.textContent = data.published_count;
+                    } else if (title === "草稿") {
+                        valueElement.textContent = data.draft_count;
+                    } else if (title === "标签") {
+                        valueElement.textContent = data.tag_count;
+                    }
+                });
+                
+                console.log("统计数据已更新");
+            })
+            .catch(error => {
+                console.error('获取统计数据失败:', error);
+            });
+    }
+    
+    // 每30秒刷新一次数据
+    setInterval(refreshStats, 30000);
+    
+    // 页面加载后立即刷新一次数据
+    document.addEventListener('DOMContentLoaded', function() {
+        // 延迟一秒执行，确保页面完全加载
+        setTimeout(refreshStats, 1000);
+    });
+</script>
+
+    
+    <!-- Toast提示容器 -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <!-- 动态添加的Toast消息将显示在这里 -->
+    </div>
+</body>
+</html> 

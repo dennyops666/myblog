@@ -1,0 +1,15 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="jumbotron">
+        <h1 class="display-4">欢迎来到我的博客</h1>
+        <p class="lead">这是一个简单的博客系统，用于展示我的文章和想法。</p>
+        <hr class="my-4">
+        <p>目前系统正在维护中，请稍后再来查看最新文章。</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('blog.about') }}" role="button">了解更多</a>
+    </div>
+</div>
+{% endblock %} 

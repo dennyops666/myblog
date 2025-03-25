@@ -5,23 +5,17 @@
 创建日期：2024-03-21
 """
 
+from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Length, Optional, Regexp
-from . import BaseForm
+from wtforms.validators import DataRequired, Length, Optional
+from app.forms import BaseForm
 
 class CategoryForm(BaseForm):
     """分类表单"""
-    name = StringField('名称', validators=[
-        DataRequired(message='请输入分类名称'),
-        Length(min=1, max=50, message='分类名称长度必须在1-50个字符之间')
-    ])
-    slug = StringField('别名', validators=[
-        Optional(),
-        Length(max=50, message='别名长度不能超过50个字符'),
-        Regexp(r'^[a-z0-9-]+$', message='别名只能包含小写字母、数字和连字符')
-    ])
-    description = TextAreaField('描述', validators=[
-        Optional(),
-        Length(max=200, message='描述长度不能超过200个字符')
-    ])
-    submit = SubmitField('保存') 
+    name = StringField('分类名称', validators=[DataRequired(), Length(1, 64)])
+    slug = StringField('别名', validators=[Optional(), Length(0, 64)])
+    description = TextAreaField('描述', validators=[Optional(), Length(0, 256)])
+    submit = SubmitField('保存')
+    
+    def __init__(self, *args, **kwargs):
+        super(CategoryForm, self).__init__(*args, **kwargs) 

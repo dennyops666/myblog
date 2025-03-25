@@ -1,0 +1,159 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ post.title }} - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <article>
+                        <h1 class="mb-3">{{ post.title }}</h1>
+                        
+                        <p class="text-muted">
+                            <small>
+                                <i class="bi bi-calendar"></i> {{ post.created_at.strftime('%Y-%m-%d') }} | 
+                                {% if post.category %}
+                                <i class="bi bi-folder"></i> <a href="{{ url_for('blog.category_posts', category_id=post.category.id) }}" class="text-decoration-none">{{ post.category.name }}</a> | 
+                                {% endif %}
+                                <i class="bi bi-eye"></i> {{ post.view_count }} 次浏览 | 
+                                <i class="bi bi-chat"></i> {{ comments|length }} 条评论
+                                {% if post.author %}
+                                | <i class="bi bi-person"></i> {{ post.author.username }}
+                                {% endif %}
+                            </small>
+                        </p>
+                        
+                        {% if post.tags %}
+                        <div class="mb-3">
+                            <i class="bi bi-tags"></i>
+                            {% for tag in post.tags %}
+                            <a href="{{ url_for('blog.tag_posts', tag_id=tag.id) }}" class="badge bg-secondary text-decoration-none">{{ tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="post-content mb-4">
+                            {% if post.html_content %}
+                                {{ post.html_content|safe }}
+                            {% else %}
+                                {{ post.content|safe }}
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
+            </div>
+            
+            <!-- 评论区 - 重新设计 -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">评论 ({{ comments|length }})</h4>
+                </div>
+                <div class="card-body">
+                    <!-- 评论列表 -->
+                    {% if comments %}
+                    <div class="comment-list">
+                        {% for comment in comments %}
+                        <div class="card mb-3 border-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">{{ comment.nickname }}</h5>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <p class="card-text">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light">
+                        暂无评论，来发表第一条评论吧！
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 发表评论 - 专门的卡片 -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">发表评论</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <strong>请注意：</strong> 评论提交后将自动审核通过。
+                        </div>
+                    </div>
+                    
+                    <!-- 简化评论表单 -->
+                    <form method="post" action="{{ url_for('blog.create_comment', post_id=post.id) }}" id="simple-comment-form">
+                        {% if not current_user.is_authenticated %}
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nickname" name="nickname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                您已登录为 <strong>{{ current_user.username }}</strong>，评论将以您的用户名发布
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label for="content" class="form-label">评论内容 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">提交评论</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 分类列表 -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-folder me-2"></i>分类
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                    <ul class="list-unstyled mb-0">
+                        {% for category in categories %}
+                        <li class="mb-2">
+                            <a href="{{ url_for('blog.category_posts', category_id=category.id) }}" class="text-decoration-none">
+                                {{ category.name }} 
+                                <span class="badge bg-secondary float-end">{{ category_post_counts.get(category.id, 0) }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">暂无分类</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 其他侧边栏内容... -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 代码高亮初始化
+    document.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
+    });
+});
+</script>
+{% endblock %} 

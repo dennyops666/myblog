@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - MyBlog{% endblock %}
+
+{% block styles %}
+<style>
+    .post-card {
+        transition: transform 0.3s;
+        margin-bottom: 20px;
+    }
+    .post-card:hover {
+        transform: translateY(-5px);
+    }
+    .post-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .sidebar-card {
+        margin-bottom: 20px;
+    }
+    .tag-cloud a {
+        display: inline-block;
+        margin: 0 5px 5px 0;
+        padding: 3px 8px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        font-size: 0.9rem;
+        color: #495057;
+        text-decoration: none;
+    }
+    .tag-cloud a:hover {
+        background-color: #e9ecef;
+    }
+    .category-header {
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <!-- 分类标题 -->
+            <div class="category-header">
+                <h1>分类: {{ category.name }}</h1>
+                {% if category.description %}
+                <p class="text-muted">{{ category.description }}</p>
+                {% endif %}
+                <p>共 {{ pagination.total }} 篇文章</p>
+            </div>
+            
+            <!-- 文章列表 -->
+            {% if posts %}
+            {% for post in posts %}
+            <div class="card post-card">
+                {% if post.cover_image %}
+                <img src="{{ post.cover_image }}" class="card-img-top" alt="{{ post.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="text-dark">{{ post.title }}</a>
+                    </h5>
+                    <div class="post-meta mb-2">
+                        <span><i class="fa fa-calendar"></i> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
+                        <span class="ml-3"><i class="fa fa-comments"></i> {{ post.comments.count() }}</span>
+                        {% if post.author %}
+                        <span class="ml-3"><i class="fa fa-user"></i> {{ post.author.username }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="card-text">{{ post.content|striptags|truncate(150) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="btn btn-sm btn-primary">阅读全文</a>
+                        <div>
+                            {% for tag in post.tags %}
+                            <a href="{{ url_for('blog.tag_posts', tag_id=tag.id) }}" class="badge badge-secondary">{{ tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- 分页 -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('blog.category_posts', category_id=category.id, page=pagination.prev_num) }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                    {% if page %}
+                    {% if page == pagination.page %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ page }}</a></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('blog.category_posts', category_id=category.id, page=page) }}">{{ page }}</a></li>
+                    {% endif %}
+                    {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('blog.category_posts', category_id=category.id, page=pagination.next_num) }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">该分类下暂无文章</div>
+            {% endif %}
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 搜索框 -->
+            <div class="card sidebar-card">
+                <div class="card-body">
+                    <h5 class="card-title">搜索</h5>
+                    <form action="{{ url_for('blog.search') }}" method="get">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="搜索文章..." name="q" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">搜索</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 分类列表 -->
+            <div class="card sidebar-card">
+                <div class="card-body">
+                    <h5 class="card-title">分类</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for cat in categories %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center {% if cat.id == category.id %}active{% endif %}">
+                            <a href="{{ url_for('blog.category_posts', category_id=cat.id) }}" class="{% if cat.id == category.id %}text-white{% else %}text-dark{% endif %}">{{ cat.name }}</a>
+                            <span class="badge {% if cat.id == category.id %}badge-light{% else %}badge-primary{% endif %} badge-pill">{{ cat.posts.count() }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 标签云 -->
+            <div class="card sidebar-card">
+                <div class="card-body">
+                    <h5 class="card-title">标签云</h5>
+                    <div class="tag-cloud">
+                        {% for tag in tags %}
+                        <a href="{{ url_for('blog.tag_posts', tag_id=tag.id) }}">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

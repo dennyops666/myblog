@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <!-- 禁止浏览器缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>文章归档 -  - MyBlog</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/blog.css" rel="stylesheet">
+    <link href="/static/css/toast.css" rel="stylesheet">
+    
+    
+<style>
+    .year-section {
+        margin-bottom: 30px;
+    }
+    .month-section {
+        margin-bottom: 20px;
+    }
+    .post-item {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed #eee;
+    }
+    .post-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .post-title {
+        font-weight: 500;
+    }
+    .month-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+
+</head>
+<body>
+    <!-- 消息容器 -->
+    <div id="messages" class="toast-container position-fixed top-0 end-0 p-3"></div>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/blog/">MyBlog</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog/">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog/archive">归档</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog/about">关于</a>
+                    </li>
+                </ul>
+                <!-- 搜索框 -->
+                <form class="d-flex search-form" action="/blog/" method="get">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="搜索文章..." 
+                               value="">
+                        <button class="btn btn-outline-light" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="navbar-nav">
+                    
+                        <a class="nav-link" href="/auth/login">登录</a>
+                    
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- 消息提示 -->
+
+    
+ 
+            
+<div class="container">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">文章归档</h1>
+                    
+                    
+                        
+                        <div class="year-section">
+                            <h2 class="h3 mb-3">2025年</h2>
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                            
+                                
+                                <div class="month-section">
+                                    <h3 class="month-title">3月 (2篇)</h3>
+                                    <ul class="list-unstyled">
+                                        
+                                        <li class="post-item">
+                                            <span class="post-date">2025-03-18</span>
+                                            <a href="/blog/post/4" class="post-title ms-2">基于AI的DevOps助手的设计与开发需求说明书</a>
+                                            
+                                            <span class="badge bg-secondary ms-2">test02</span>
+                                            
+                                        </li>
+                                        
+                                        <li class="post-item">
+                                            <span class="post-date">2025-03-18</span>
+                                            <a href="/blog/post/3" class="post-title ms-2">test03</a>
+                                            
+                                            <span class="badge bg-secondary ms-2">test03</span>
+                                            
+                                        </li>
+                                        
+                                    </ul>
+                                </div>
+                                
+                            
+                                
+                            
+                                
+                            
+                        </div>
+                        
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 侧边栏 -->
+<div class="sidebar">
+    <!-- 分类列表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-folder me-2"></i>分类
+        </div>
+        <div class="card-body">
+            
+            <ul class="list-unstyled mb-0">
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=1" 
+                       class="text-decoration-none ">
+                        test01 
+                        <span class="badge bg-secondary">0</span>
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=2" 
+                       class="text-decoration-none ">
+                        test02 
+                        <span class="badge bg-secondary">1</span>
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=3" 
+                       class="text-decoration-none ">
+                        test03 
+                        <span class="badge bg-secondary">1</span>
+                    </a>
+                </li>
+                
+            </ul>
+            
+        </div>
+    </div>
+
+    <!-- 标签云 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-tags me-2"></i>标签
+        </div>
+        <div class="card-body">
+            
+            <div class="tag-cloud">
+                
+                
+                <a href="/blog/?tag_id=5" 
+                   class="btn btn-outline-secondary btn-sm me-2 mb-2 ">
+                    test03
+                    <span class="badge bg-secondary">1</span>
+                </a>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 最新文章 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-clock-history me-2"></i>最新文章
+        </div>
+        <div class="card-body">
+            
+            <ul class="list-unstyled mb-0">
+                
+                <li class="mb-2">
+                    <a href="/blog/post/4" class="text-decoration-none">
+                        基于AI的DevOps助手的设计与开发需求说明书
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/post/3" class="text-decoration-none">
+                        test03
+                    </a>
+                </li>
+                
+            </ul>
+            
+        </div>
+    </div>
+</div> 
+        </div>
+    </div>
+</div>
+
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">©  . All rights reserved.</span>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- 自定义弹窗函数 -->
+    <script>
+        function showAlert(message, type = 'info', duration = 3000) {
+            // 创建弹窗元素
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `custom-alert ${type}`;
+            alertDiv.textContent = message;
+            
+            // 添加到页面
+            document.body.appendChild(alertDiv);
+            
+            // 显示弹窗
+            setTimeout(() => {
+                alertDiv.classList.add('show');
+            }, 10);
+            
+            // 自动关闭
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(alertDiv);
+                }, 300);
+            }, duration);
+        }
+    </script>
+    
+    <!-- 全局 Toast 函数 -->
+    <script>
+    window.showToast = function(type, message) {
+        // 确定背景样式类：成功用绿色，错误用红色，其他使用蓝色
+        let bgClass = 'bg-info';
+        if (type === 'success') bgClass = 'bg-success';
+        if (type === 'error') bgClass = 'bg-danger';
+        
+        // 创建 toast 元素
+        const toast = $(`
+            <div class="toast align-items-center text-white ${bgClass} border-0" 
+                 role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `);
+        
+        // 添加到容器
+        $('.toast-container').append(toast);
+        
+        // 初始化并显示 toast
+        const bsToast = new bootstrap.Toast(toast, {
+            delay: 3000,
+            animation: true
+        });
+        bsToast.show();
+        
+        // 监听隐藏事件，移除元素
+        toast.on('hidden.bs.toast', function() {
+            $(this).remove();
+        });
+    };
+    </script>
+
+    <!-- 自定义JavaScript -->
+    <script src="/static/js/blog.js"></script>
+    
+    <!-- 页面特定的JavaScript -->
+    
+    
+    <!-- 代码块复制功能 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为所有代码块添加复制按钮
+            var codeBlocks = document.querySelectorAll('.code-block, .highlight, pre');
+            console.log('找到代码块数量:', codeBlocks.length);
+            
+            codeBlocks.forEach(function(codeBlock) {
+                // 检查是否已经有复制按钮
+                if (codeBlock.querySelector('.code-copy-btn')) {
+                    return;
+                }
+                
+                // 创建复制按钮
+                const copyButton = document.createElement('button');
+                copyButton.className = 'code-copy-btn';
+                copyButton.textContent = '复制';
+                
+                // 添加点击事件
+                copyButton.addEventListener('click', function() {
+                    // 找到代码块内的代码内容
+                    const pre = codeBlock.querySelector('pre') || codeBlock;
+                    if (!pre) return;
+                    
+                    // 提取文本内容
+                    let code = pre.textContent || pre.innerText;
+                    
+                    // 创建临时textarea元素
+                    const textarea = document.createElement('textarea');
+                    textarea.value = code;
+                    textarea.style.position = 'fixed';  // 避免滚动到页面底部
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    
+                    try {
+                        // 选择文本并复制
+                        textarea.select();
+                        const successful = document.execCommand('copy');
+                        
+                        if (successful) {
+                            // 修改按钮状态
+                            copyButton.textContent = '已复制';
+                            copyButton.classList.add('copied');
+                            
+                            // 2秒后恢复按钮状态
+                            setTimeout(function() {
+                                copyButton.textContent = '复制';
+                                copyButton.classList.remove('copied');
+                            }, 2000);
+                        } else {
+                            console.error('复制失败');
+                            alert('复制失败，请手动复制');
+                        }
+                    } catch (err) {
+                        console.error('复制出错:', err);
+                        alert('复制失败，请手动复制');
+                    } finally {
+                        // 移除临时元素
+                        document.body.removeChild(textarea);
+                    }
+                });
+                
+                // 如果不是相对定位，设置为相对定位
+                if (window.getComputedStyle(codeBlock).position === 'static') {
+                    codeBlock.style.position = 'relative';
+                }
+                
+                // 添加按钮到代码块
+                codeBlock.appendChild(copyButton);
+            });
+        });
+        
+        // 确保脚本在页面加载完成后执行一次
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(function() {
+                var event = new Event('DOMContentLoaded');
+                document.dispatchEvent(event);
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

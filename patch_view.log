@@ -1,0 +1,17 @@
+[2025-03-21 12:53:52] 开始修补博客视图...
+[2025-03-21 12:53:52] 找到视图文件: /data/myblog/app/blog/views.py
+[2025-03-21 12:53:52] 读取视图文件，长度: 19240
+[2025-03-21 12:53:52] 已创建备份文件: /data/myblog/app/blog/views.py.bak.20250321125352
+[2025-03-21 12:53:52] 找到 1 个version_info代码块
+[2025-03-21 12:53:52] 原始代码块: version_info = {
+        'content_length': len(post.content or ''),
+        'html_length': len(post.html_content or ''),
+        'updated_at': post.updated_at.strftime('%Y-%m-%d %H:%M:%S') if post.updated_at else 'N/A',
+        'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+[2025-03-21 12:53:52] 已修复version_info代码块
+[2025-03-21 12:53:52] 找到 1 个datetime格式化代码
+[2025-03-21 12:53:52] 找到post_detail函数
+[2025-03-21 12:53:52] 找到version_info代码，准备替换
+[2025-03-21 12:53:52] 已替换version_info代码块
+[2025-03-21 12:53:52] 已保存修改后的视图文件

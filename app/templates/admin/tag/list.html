@@ -1,94 +1,82 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/base.html" %}
 
-{% block title %}标签管理 - MyBlog 管理后台{% endblock %}
+{% block title %}标签管理{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">标签管理</h1>
-        <a href="{{ url_for('admin.tag.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> 新建标签
-        </a>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h2">标签管理</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('admin_dashboard.tag.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> 添加标签
+            </a>
+        </div>
     </div>
 
     <div class="card">
         <div class="card-body">
+            {% if tags %}
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>名称</th>
-                            <th>别名</th>
-                            <th>文章数量</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for tag in pagination.items %}
+                        {% for tag in tags %}
                         <tr>
                             <td>{{ tag.id }}</td>
                             <td>{{ tag.name }}</td>
-                            <td>{{ tag.slug }}</td>
-                            <td>{{ tag.post_count }}</td>
-                            <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ tag.created_at.strftime('%Y-%m-%d %H:%M') if tag.created_at else '未知' }}</td>
                             <td>
-                                <a href="{{ url_for('admin.tag.edit', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i> 编辑
+                                <a href="{{ url_for('admin_dashboard.tag.edit', tag_id=tag.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil"></i> 编辑
                                 </a>
-                                <form action="{{ url_for('admin.tag.delete', tag_id=tag.id) }}" method="POST" class="d-inline delete-form">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                    <button type="button" class="btn btn-sm btn-danger delete-btn" data-id="{{ tag.id }}" data-name="{{ tag.name }}">
-                                        <i class="fas fa-trash"></i> 删除
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-danger delete-btn" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                        data-id="{{ tag.id }}" data-name="{{ tag.name }}">
+                                    <i class="bi bi-trash"></i> 删除
+                                </button>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center">暂无标签</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-
-            {% if pagination.pages > 1 %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% for page in pagination.iter_pages() %}
-                        {% if page %}
-                            <li class="page-item {% if page == pagination.page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('admin.tag.index', page=page) }}">{{ page }}</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            </nav>
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted">暂无标签</p>
+                <a href="{{ url_for('admin_dashboard.tag.create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 添加标签
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- 确认删除对话框 -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">确认删除</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>确定要删除标签 "<span id="tagName"></span>" 吗？如果标签下有文章将无法删除。</p>
+                确定要删除标签 <span id="tagName" class="fw-bold"></span> 吗？此操作不可恢复。
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">确定删除</button>
+                <form id="deleteForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
             </div>
         </div>
     </div>
@@ -98,57 +86,18 @@
 {% block scripts %}
 {{ super() }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-    let currentForm = null;
-
-    // 删除按钮点击事件
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const tagName = this.dataset.name;
-            document.getElementById('tagName').textContent = tagName;
-            currentForm = this.closest('form');
-            deleteModal.show();
-        });
-    });
-
-    // 确认删除按钮点击事件
-    document.getElementById('confirmDelete').addEventListener('click', function() {
-        if (currentForm) {
-            currentForm.submit();
-        }
-        deleteModal.hide();
-    });
-
-    // 处理删除表单提交
-    document.querySelectorAll('.delete-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('success', data.message || '删除成功');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    showToast('danger', data.message || '删除失败');
-                }
-            })
-            .catch(error => {
-                showToast('danger', '操作失败，请稍后重试');
+    document.addEventListener('DOMContentLoaded', function() {
+        // 处理删除按钮点击事件
+        const deleteButtons = document.querySelectorAll('.delete-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tagId = this.getAttribute('data-id');
+                const tagName = this.getAttribute('data-name');
+                
+                document.getElementById('tagName').textContent = tagName;
+                document.getElementById('deleteForm').action = "{{ url_for('admin_dashboard.tag.delete', tag_id=0) }}".replace('0', tagId);
             });
         });
     });
-});
 </script>
 {% endblock %} 

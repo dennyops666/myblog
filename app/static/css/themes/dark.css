@@ -1,0 +1,695 @@
+/* 暗黑模式样式 */
+:root.dark-theme {
+    --body-bg: #121212;
+    --body-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --card-border: #333;
+    --heading-color: #fff;
+    --nav-bg: #1a1a1a;
+    --nav-color: #e0e0e0;
+    --link-color: #6ea8fe;
+    --link-hover-color: #8bb9fe;
+    --border-color: #333;
+    --input-bg: #2a2a2a;
+    --input-color: #e0e0e0;
+    --input-border: #444;
+    --btn-default-bg: #2a2a2a;
+    --btn-default-color: #e0e0e0;
+    --sidebar-bg: #1a1a1a;
+    --sidebar-color: #e0e0e0;
+    --sidebar-active-bg: #333;
+    --code-bg: #2a2a2a;
+    --code-color: #e0e0e0;
+    --table-border: #333;
+    --table-header-bg: #2a2a2a;
+    --table-striped-bg: #252525;
+    --table-hover-bg: #2c2c2c;
+}
+
+/* 应用暗黑模式样式到所有元素 */
+.dark-theme body {
+    background-color: var(--body-bg);
+    color: var(--body-color);
+}
+
+.dark-theme .card {
+    background-color: #1e1e1e !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden !important;
+    border-radius: 6px !important;
+    margin-bottom: 1.5rem !important;
+    padding: 0 !important; /* 移除内部填充 */
+}
+
+.dark-theme .navbar {
+    background-color: var(--nav-bg) !important;
+}
+
+.dark-theme .navbar-brand,
+.dark-theme .navbar-nav .nav-link {
+    color: var(--nav-color);
+}
+
+.dark-theme .navbar-nav .nav-link:hover,
+.dark-theme .navbar-nav .nav-link:focus {
+    color: var(--link-hover-color);
+}
+
+.dark-theme a {
+    color: var(--link-color);
+}
+
+.dark-theme a:hover {
+    color: var(--link-hover-color);
+}
+
+.dark-theme .form-control,
+.dark-theme .form-select {
+    background-color: var(--input-bg);
+    color: var(--input-color);
+    border-color: var(--input-border);
+}
+
+.dark-theme .btn-outline-secondary {
+    color: var(--btn-default-color);
+    border-color: var(--btn-default-color);
+}
+
+.dark-theme .btn-outline-secondary:hover {
+    background-color: var(--btn-default-bg);
+    color: var(--btn-default-color);
+}
+
+.dark-theme .list-group-item {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--body-color);
+}
+
+.dark-theme .text-muted {
+    color: #adb5bd !important;
+}
+
+.dark-theme hr {
+    border-color: var(--border-color);
+}
+
+.dark-theme pre, 
+.dark-theme code {
+    background-color: var(--code-bg);
+    color: var(--code-color);
+}
+
+.dark-theme .modal-content {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--body-color);
+}
+
+.dark-theme .modal-header,
+.dark-theme .modal-footer {
+    border-color: var(--border-color);
+}
+
+.dark-theme .table {
+    color: var(--body-color);
+    border-color: var(--table-border);
+}
+
+.dark-theme .table th {
+    background-color: var(--table-header-bg);
+    color: var(--heading-color);
+    border-color: var(--table-border);
+}
+
+.dark-theme .table td {
+    border-color: var(--table-border);
+}
+
+.dark-theme .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--table-striped-bg);
+}
+
+.dark-theme .table-hover tbody tr:hover {
+    background-color: var(--table-hover-bg);
+}
+
+/* 修复表格边框问题 */
+.dark-theme .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: var(--table-striped-bg);
+    color: var(--body-color);
+}
+
+.dark-theme .table-hover > tbody > tr:hover > * {
+    --bs-table-accent-bg: var(--table-hover-bg);
+    color: var(--body-color);
+}
+
+/* 确保表格内容可见 */
+.dark-theme .table-responsive {
+    background-color: #1e1e1e !important;
+    padding: 0 !important;
+    border-radius: 0 0 6px 6px !important;
+    margin-top: 0 !important;
+    border-top: none !important;
+}
+
+/* 管理后台侧边栏暗黑模式样式 - 重写 */
+.dark-theme #wrapper {
+    background-color: var(--body-bg);
+}
+
+.dark-theme .sidebar {
+    background-color: var(--sidebar-bg) !important;
+    border-color: var(--border-color);
+}
+
+.dark-theme .sb-sidenav,
+.dark-theme .sb-sidenav-dark,
+.dark-theme .accordion {
+    background-color: var(--sidebar-bg) !important;
+}
+
+/* 修复侧边栏导航链接 */
+.dark-theme .sidebar .nav-link,
+.dark-theme .sb-sidenav .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.dark-theme .sidebar .nav-link:hover,
+.dark-theme .sb-sidenav .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .sidebar .nav-link.active,
+.dark-theme .sb-sidenav .nav-link.active {
+    color: #fff;
+    background-color: var(--sidebar-active-bg);
+}
+
+/* 侧边栏图标 */
+.dark-theme .sidebar .nav-link i,
+.dark-theme .sb-sidenav .sb-nav-link-icon i,
+.dark-theme .sb-sidenav .nav-link .sb-nav-link-icon {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-theme .sidebar .nav-link:hover i,
+.dark-theme .sidebar .nav-link.active i,
+.dark-theme .sb-sidenav .nav-link:hover .sb-nav-link-icon,
+.dark-theme .sb-sidenav .nav-link.active .sb-nav-link-icon {
+    color: #fff;
+}
+
+/* 侧边栏分组标题 */
+.dark-theme .sb-sidenav-menu-heading,
+.dark-theme .sidebar-heading {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* 侧边栏底部 */
+.dark-theme .sb-sidenav-footer {
+    background-color: var(--sidebar-bg);
+    color: rgba(255, 255, 255, 0.65);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 侧边栏徽章 */
+.dark-theme .badge {
+    color: #fff;
+    padding: 0.4em 0.7em !important;
+    font-weight: 500 !important;
+    border-radius: 30px !important; /* 更圆润的外观 */
+    letter-spacing: 0.03em !important;
+}
+
+/* 侧边栏折叠时的样式 */
+.dark-theme .sidebar.collapsed {
+    background-color: var(--sidebar-bg);
+}
+
+/* 下拉菜单 */
+.dark-theme .dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.dark-theme .dropdown-item {
+    color: var(--body-color);
+}
+
+.dark-theme .dropdown-item:hover {
+    background-color: var(--sidebar-active-bg);
+}
+
+/* 按钮和表单元素暗色模式 */
+.dark-theme .btn-primary {
+    background-color: #2c7be5 !important;
+    border-color: #2c7be5 !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(44, 123, 229, 0.3) !important;
+    padding: 0.375rem 0.75rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.dark-theme .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.dark-theme .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.dark-theme .btn-info {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #000;
+}
+
+/* 搜索框 */
+.dark-theme .form-control-dark {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.dark-theme .form-control-dark:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+/* 代码高亮暗色模式调整 */
+.dark-theme .highlight {
+    background-color: #2a2a2a !important;
+}
+
+.dark-theme .highlight pre {
+    color: #f8f8f2 !important;
+}
+
+/* 主题切换图标样式 */
+.theme-toggle-icon {
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: transform 0.3s;
+}
+
+.theme-toggle-icon:hover {
+    transform: rotate(15deg);
+}
+
+/* 最近文章区域的暗黑模式样式增强 - 更新版 */
+.dark-theme .recent-posts-table,
+.dark-theme #recent-posts-table {
+    color: var(--body-color);
+    border-color: var(--border-color);
+    background-color: #1e1e1e !important;
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+/* 优化表格标题区域 - 消除卡片和标题区域之间的间距 */
+.dark-theme .card-header {
+    background-color: #1a563c !important; /* 深绿色背景 */
+    border: none !important;
+    padding: 1rem 1.25rem !important;
+    color: white !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-radius: 6px 6px 0 0 !important; /* 只保留顶部圆角 */
+    margin: 0 !important; /* 移除外边距 */
+}
+
+/* 确保"最近文章"标题在暗黑模式下可见 */
+.dark-theme #recent-articles-title {
+    color: white !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.03em !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 优化"查看全部"按钮 */
+.dark-theme .btn-light {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 500 !important;
+    padding: 0.375rem 0.75rem !important;
+    border-radius: 4px !important;
+    transition: all 0.2s !important;
+}
+
+.dark-theme .btn-light:hover {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+    transform: translateY(-1px) !important;
+}
+
+/* 优化表头样式 */
+.dark-theme .recent-posts-table thead,
+.dark-theme #recent-posts-table thead,
+.dark-theme .table thead {
+    background-color: #272727 !important;
+    color: #ffffff !important;
+    border-top: none !important;
+}
+
+.dark-theme #recent-posts-table thead th,
+.dark-theme .recent-posts-table thead th,
+.dark-theme .table thead th {
+    padding: 12px 16px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.05em !important;
+    border: none !important;
+}
+
+.dark-theme .recent-posts-table tbody tr {
+    transition: background-color 0.15s ease-in-out !important;
+}
+
+.dark-theme .recent-posts-table tbody td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #333 !important;
+    vertical-align: middle !important;
+    color: #e0e0e0 !important;
+}
+
+/* 奇偶行样式 */
+.dark-theme .recent-posts-table tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark-theme .recent-posts-table tbody tr:nth-of-type(even) {
+    background-color: #1e1e1e !important;
+}
+
+/* 表格最后一行去除底部边框 */
+.dark-theme .recent-posts-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* 悬停效果修复 */
+.dark-theme .recent-posts-table tbody tr:hover {
+    background-color: rgba(26, 86, 60, 0.15) !important; /* 绿色微光，与标题头部协调 */
+}
+
+/* 简洁有效地修复背景色问题 */
+/* 修复卡片底板背景色 - 调整填充使其与标题无缝连接 */
+.dark-theme .card-body {
+    background-color: #1e1e1e !important;
+    color: var(--body-color) !important;
+    padding: 0 !important; /* 移除内边距让表格填满 */
+    margin-top: 0 !important; /* 移除上边距 */
+    border-top: none !important; /* 移除上边框 */
+}
+
+/* 表格容器背景修复 */
+.dark-theme .table-responsive {
+    background-color: #1e1e1e !important;
+    padding: 0 !important;
+    border-radius: 0 0 6px 6px !important;
+    margin-top: 0 !important;
+    border-top: none !important;
+}
+
+/* 定位特定元素的背景色问题 */
+.dark-theme table,
+.dark-theme .table,
+.dark-theme .card .table,
+.dark-theme .card-body .table,
+.dark-theme .table-responsive .table {
+    background-color: #1e1e1e !important;
+}
+
+/* 表格体背景修复 */
+.dark-theme tbody,
+.dark-theme .table tbody,
+.dark-theme table tbody {
+    background-color: #1e1e1e !important;
+}
+
+/* 表格行背景修复 */
+.dark-theme tr,
+.dark-theme .table tr,
+.dark-theme table tr {
+    background-color: #1e1e1e !important;
+}
+
+/* 表格单元格背景修复 */
+.dark-theme td,
+.dark-theme .table td,
+.dark-theme table td {
+    background-color: transparent !important;
+}
+
+/* 额外增加直接针对表格容器的强制暗色背景处理 */
+body.dark-theme .table-responsive,
+body.dark-theme .table,
+body.dark-theme .table-striped,
+body.dark-theme .card .card-body,
+body.dark-theme .card-body .table-responsive,
+body.dark-theme .card-body .table,
+body.dark-theme .card,
+body.dark-theme .card > div,
+body.dark-theme .card > *,
+body.dark-theme table,
+body.dark-theme tbody,
+body.dark-theme tr,
+body.dark-theme td {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+}
+
+/* 强制处理可能的内联样式 */
+body.dark-theme [style*="background-color"],
+body.dark-theme [style*="background:#fff"],
+body.dark-theme [style*="background: #fff"],
+body.dark-theme [style*="background: white"],
+body.dark-theme [style*="background:#ffffff"],
+body.dark-theme [style*="background: #ffffff"] {
+    background-color: #1e1e1e !important;
+}
+
+/* 特别处理Bootstrap白色背景类 */
+body.dark-theme .bg-white,
+body.dark-theme .bg-light,
+body.dark-theme .bg-body,
+body.dark-theme [class*="bg-white"],
+body.dark-theme [class*="bg-light"] {
+    background-color: #1e1e1e !important;
+}
+
+/* 最高优先级处理 */
+html body.dark-theme .card .card-body {
+    background-color: #1e1e1e !important;
+}
+
+html body.dark-theme .card .card-body .table-responsive {
+    background-color: #1e1e1e !important;
+}
+
+html body.dark-theme .card .card-body .table-responsive table {
+    background-color: #1e1e1e !important;
+}
+
+/* 确保所有可能嵌套的表格元素都使用暗背景 */
+html body.dark-theme * table,
+html body.dark-theme * .table,
+html body.dark-theme * tbody,
+html body.dark-theme * tr,
+html body.dark-theme * td {
+    background-color: #1e1e1e !important;
+}
+
+/* 直接针对页面上具体的HTML结构添加高优先级样式 */
+html body.dark-theme div.row div.col-md-12 div.card div.card-body,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table thead,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table thead tr,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table thead tr th,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table tbody,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table tbody tr,
+html body.dark-theme div.row div.col-md-12 div.card div.card-body div.table-responsive table tbody tr td {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+}
+
+/* 特别针对卡片主体 */
+html body.dark-theme div.card div.card-body {
+    background-color: #1e1e1e !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* 专门定位表格特定类名和ID */
+html body.dark-theme #recent-posts-table,
+html body.dark-theme .table.table-striped {
+    background-color: #1e1e1e !important;
+}
+
+/* 直接覆盖冲突的内联样式 */
+html body.dark-theme div.card-body {
+    background-color: #1e1e1e !important;
+}
+
+/* 极高优先级行背景修复 */
+html body.dark-theme table.table-striped > tbody > tr {
+    background-color: #1e1e1e !important;
+}
+
+html body.dark-theme table.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+html body.dark-theme table.table-striped > tbody > tr > td {
+    background-color: transparent !important;
+}
+
+/* 修复可能出现在style标签内的冲突样式 */
+html body.dark-theme .table-responsive {
+    background-color: #1e1e1e !important;
+}
+
+html body.dark-theme .card .card-body .p-0 {
+    background-color: #1e1e1e !important;
+}
+
+/* 防止Bootstrap表格样式覆盖 - 直接通过属性选择器精确匹配 */
+html body.dark-theme [class="table table-striped mb-0"],
+html body.dark-theme [class="table table-striped"],
+html body.dark-theme [class="table-responsive"],
+html body.dark-theme [class="card-body p-0"] {
+    background-color: #1e1e1e !important;
+}
+
+/* 全局重置背景色 - 最后的手段 */
+@media (prefers-color-scheme: dark), (class: dark-theme) {
+    body.dark-theme .card .card-body,
+    body.dark-theme .card-body,
+    body.dark-theme .table-responsive,
+    body.dark-theme table,
+    body.dark-theme .table,
+    body.dark-theme tr,
+    body.dark-theme td,
+    body.dark-theme th {
+        background-color: #1e1e1e !important;
+    }
+}
+
+/* 修复首页和文章详情页的暗黑模式问题 */
+.dark-theme .post-card .card-body {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .post-card .card-title a {
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .post-meta {
+    color: #adb5bd !important;
+}
+
+.dark-theme .card-body {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .card-header {
+    background-color: #252525 !important;
+    color: #e0e0e0 !important;
+    border-bottom-color: #333 !important;
+}
+
+.dark-theme .post-content {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .post-content a {
+    color: #6ea8fe !important;
+}
+
+.dark-theme .post-content a:hover {
+    color: #8bb9fe !important;
+}
+
+.dark-theme .post-content blockquote {
+    background-color: #252525 !important;
+    border-left-color: #375a7f !important;
+    color: #ccc !important;
+}
+
+.dark-theme .btn-primary {
+    background-color: #375a7f !important;
+    border-color: #375a7f !important;
+}
+
+.dark-theme .badge {
+    background-color: #375a7f !important;
+}
+
+.dark-theme .list-group-item {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .list-group-item a {
+    color: #6ea8fe !important;
+}
+
+.dark-theme .list-group-item a:hover {
+    color: #8bb9fe !important;
+}
+
+.dark-theme .pagination .page-link {
+    background-color: #1e1e1e;
+    border-color: #333;
+    color: #e0e0e0;
+}
+
+.dark-theme .pagination .page-item.active .page-link {
+    background-color: #375a7f;
+    border-color: #375a7f;
+    color: #fff;
+}
+
+.dark-theme .footer {
+    background-color: #1a1a1a !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .navbar-light .navbar-brand,
+.dark-theme .navbar-light .navbar-nav .nav-link {
+    color: #e0e0e0 !important;
+}
+
+.dark-theme .navbar-light {
+    background-color: #1a1a1a !important;
+}
+
+.dark-theme .btn-outline-success {
+    color: #00bc8c !important;
+    border-color: #00bc8c !important;
+}
+
+.dark-theme .btn-outline-success:hover {
+    background-color: #00bc8c !important;
+    color: #fff !important;
+} 

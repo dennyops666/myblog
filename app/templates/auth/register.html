@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "macros/csrf.html" import csrf_field %}
 
 {% block title %}注册 - MyBlog{% endblock %}
 
@@ -13,7 +12,6 @@
                 </div>
                 <div class="card-body">
                     <form method="post">
-                        {{ csrf_field() }}
                         <div class="mb-3">
                             {{ form.username.label(class="form-label") }}
                             {{ form.username(class="form-control") }}

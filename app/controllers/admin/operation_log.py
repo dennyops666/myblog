@@ -5,10 +5,10 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint, render_template, request, current_app
+from flask import Blueprint, render_template, request, current_app, abort
 from flask_login import login_required
 from app.decorators import admin_required
-from app.services.operation_log_service import OperationLogService
+from app.services.operation_log import operation_log_service
 
 operation_log_bp = Blueprint('operation_log', __name__)
 
@@ -21,7 +21,7 @@ def index():
     operation = request.args.get('operation')
     target_type = request.args.get('target_type')
     
-    logs = OperationLogService.get_operation_logs(
+    logs = operation_log_service.get_operation_logs(
         operation=operation,
         target_type=target_type,
         page=page,
@@ -38,7 +38,7 @@ def index():
 @admin_required
 def detail(log_id):
     """操作日志详情页面"""
-    log = OperationLogService.get_log_by_id(log_id)
+    log = operation_log_service.get_log_by_id(log_id)
     if not log:
         abort(404)
     return render_template('admin/operation_log/detail.html', log=log) 

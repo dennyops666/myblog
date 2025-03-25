@@ -110,32 +110,26 @@ class AuthService:
             user.last_login = datetime.now(UTC)
             user.last_seen = datetime.now(UTC)
             
-            # 初始化会话
-            session.clear()  # 清除现有会话
-            session['user_id'] = user.id
-            session['_fresh'] = True
-            session['_permanent'] = True
-            session.permanent = True
+            # 创建会话记录
+            session_id = secrets.token_urlsafe(32)
+            expiry = datetime.utcnow() + timedelta(days=7)
             
-            # 生成新的CSRF令牌
-            csrf_token = secrets.token_urlsafe(32)
-            session['csrf_token'] = csrf_token
-            
-            # 记录会话信息
-            session['last_active'] = datetime.now(UTC).isoformat()
-            session['user_agent'] = request.user_agent.string if request else None
-            session.modified = True
+            # 保存会话
+            user_session = UserSession(
+                session_id=session_id,
+                user_id=user.id,
+                expiry=expiry
+            )
+            db.session.add(user_session)
+            db.session.commit()
             
             # 登录用户
-            login_user(user, remember=remember, fresh=True)
-            
-            db.session.commit()
+            login_user(user, remember=remember)
             
             return {
                 'success': True,
                 'message': '登录成功',
-                'user': user,
-                'csrf_token': csrf_token
+                'session_id': session_id
             }
             
         except Exception as e:
@@ -344,3 +338,20 @@ class AuthService:
     def check_permission(self, user: User, permission: int) -> bool:
         """检查用户是否具有指定权限"""
         return bool(user.role and user.role.permissions & permission)
+
+def validate_session(session_id):
+    """验证会话"""
+    user_session = UserSession.query.filter_by(session_id=session_id).first()
+    
+    if not user_session:
+        return False
+        
+    if user_session.is_expired():
+        user_session.invalidate()
+        return False
+        
+    return True
+
+def cleanup_sessions():
+    """清理过期会话"""
+    UserSession.cleanup_expired()

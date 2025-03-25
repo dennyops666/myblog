@@ -1,0 +1,1 @@
+修改post_detail.py函数以使用simple_post.html模板

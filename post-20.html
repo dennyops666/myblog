@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <!-- 禁止浏览器缓存 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- 允许cdnjs.cloudflare.com加载资源 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:; form-action 'self';">
+    
+<!-- 添加检查代码 -->
+<script>
+    window.addEventListener('load', function() {
+        console.log('页面加载完成，检查highlight.js状态');
+        if (typeof hljs !== 'undefined') {
+            console.log('highlight.js已加载成功');
+        } else {
+            console.error('highlight.js未能加载，尝试手动加载');
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+            script.onload = function() {
+                console.log('手动加载highlight.js成功，开始高亮代码块');
+                hljs.highlightAll();
+            };
+            document.head.appendChild(script);
+        }
+    });
+</script>
+
+    <title>create-new-artile01 -  - MyBlog</title>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/blog.css" rel="stylesheet">
+    <link href="/static/css/toast.css" rel="stylesheet">
+    <!-- 暗黑模式样式表 -->
+    <link href="/static/css/themes/dark.css" rel="stylesheet">
+    
+    <!-- 使用本地的highlight.js库 -->
+    <link rel="stylesheet" href="/static/css/highlight-default.min.css">
+    <script src="/static/js/lib/highlight.min.js"></script>
+    
+    
+<style>
+    .post-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    .post-content {
+        line-height: 1.8;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .post-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 15px 0;
+    }
+    .post-tags {
+        margin: 20px 0;
+    }
+    .post-tags a {
+        display: inline-block;
+        margin-right: 5px;
+        padding: 3px 8px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        font-size: 0.9rem;
+        color: #495057;
+        text-decoration: none;
+    }
+    .post-tags a:hover {
+        background-color: #e9ecef;
+    }
+    .post-navigation {
+        margin: 30px 0;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+    .comment-form {
+        margin-bottom: 30px;
+    }
+    .comment-list {
+        margin-bottom: 30px;
+    }
+    .comment-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    /* 文章视图计数器样式 */
+    .view-count {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .view-count i {
+        margin-right: 5px;
+    }
+    
+    /* 文章卡片样式 */
+    .post {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    .sidebar-card {
+        margin-bottom: 20px;
+    }
+    .related-posts {
+        margin-top: 30px;
+    }
+    
+    /* 暗黑模式样式覆盖 */
+    html.dark-theme .post-content {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .post {
+        background-color: #252525;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    html.dark-theme .post-tags a {
+        background-color: #333;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .post-tags a:hover {
+        background-color: #444;
+    }
+    
+    html.dark-theme .post-navigation {
+        border-top-color: #333;
+    }
+    
+    html.dark-theme .comment-item {
+        border-bottom-color: #333;
+    }
+    
+    html.dark-theme .card {
+        background-color: #252525;
+    }
+</style>
+
+</head>
+<body>
+    <!-- 消息容器 -->
+    <div id="messages" class="toast-container position-fixed top-0 end-0 p-3"></div>
+    
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" href="/blog/">MyBlog</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <!-- 左侧菜单 -->
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link " href="/blog/">首页</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/blog/archive">归档</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/blog/about">关于</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 右侧菜单 -->
+                    <div class="d-flex align-items-center">
+                        <!-- 搜索表单 -->
+                        <form class="d-flex search-form me-2" action="/blog/" method="get">
+                            <input class="form-control me-2" type="search" placeholder="搜索文章..." aria-label="Search" name="q" value="">
+                            <button class="btn btn-outline-success" type="submit">搜索</button>
+                        </form>
+                        
+                        <!-- 主题切换按钮 -->
+                        <button class="btn btn-link nav-link theme-toggle ms-2" title="切换主题">
+                            <i class="bi bi-moon-fill theme-toggle-icon"></i>
+                        </button>
+                        
+                        <!-- 用户菜单 -->
+                        
+                            <a class="nav-link" href="/auth/login">登录</a>
+                        
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- 消息提示 -->
+
+    
+ 
+            
+<div class="container">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <article class="post">
+                <div class="article-header">
+                    <!-- 文章标题 -->
+                    <h1 class="post-title">create-new-artile01</h1>
+                    
+                    <!-- 文章元信息 -->
+                    <div class="post-meta">
+                        <span><i class="bi bi-calendar"></i> 2025-03-24</span>
+                        
+                        <span class="ms-3"><i class="bi bi-folder"></i> <a href="/blog/category/1">test01</a></span>
+                        
+                        <span class="ms-3"><i class="bi bi-chat"></i> 0 条评论</span>
+                        <span class="ms-3 view-count"><i class="bi bi-eye"></i> <span class="fw-bold">10</span> 次浏览</span>
+                        
+                        <span class="ms-3"><i class="bi bi-person"></i> admin</span>
+                        
+                    </div>
+                </div>
+                
+                <!-- 文章封面图 -->
+                
+                
+                <!-- 文章内容 -->
+                <div class="post-content">
+                    <p>create-new-artile01</p>
+                </div>
+                
+                <!-- 文章标签 -->
+                
+        
+                <!-- 上一篇/下一篇导航 -->
+                <div class="post-navigation">
+                    <div class="row">
+                        <div class="col-6">
+                            
+                            <a href="/blog/post/17" class="text-decoration-none">
+                                <div class="text-muted small">上一篇</div>
+                                <div class="fw-bold">测试已发布文章01</div>
+                            </a>
+                            
+                        </div>
+                        <div class="col-6 text-end">
+                            
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- 评论区 -->
+            <div class="comments mt-5">
+                <h3>评论 (0)</h3>
+
+<!-- 评论表单 -->
+                 
+                
+                <!-- 评论列表 -->
+                
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">评论列表</h5>
+        <p class="text-muted mb-0">暂无评论</p>
+    </div>
+</div>
+ 
+            </div>
+            
+            <!-- 相关文章 -->
+            
+            <div class="related-posts mt-5">
+                <h3 class="mb-4">相关文章</h3>
+                <div class="row">
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            
+    <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="/blog/post/17" class="text-dark">测试已发布文章01</a>
+                                </h5>
+                                <p class="card-text small">这是一篇测试文章内容, test,hello</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            
+    <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="/blog/post/5" class="text-dark">小型博客系统开发文档</a>
+                                </h5>
+                                <p class="card-text small">## 项目概述 **本项目是一个小型博客系统，使用前后端分离架构，前端采用 Vue.js，后端使用 Node.js 和 Express，数据库使用...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+
+            
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            <!-- 侧边栏 -->
+<div class="sidebar">
+    <!-- 分类列表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-folder me-2"></i>分类
+        </div>
+        <div class="card-body">
+            
+            <ul class="list-unstyled mb-0">
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=1" 
+                       class="text-decoration-none ">
+                        test01 
+                        <span class="badge bg-secondary">3</span>
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=2" 
+                       class="text-decoration-none ">
+                        test02 
+                        <span class="badge bg-secondary">1</span>
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/?category_id=3" 
+                       class="text-decoration-none ">
+                        test03 
+                        <span class="badge bg-secondary">1</span>
+                    </a>
+                </li>
+                
+            </ul>
+            
+        </div>
+    </div>
+
+    <!-- 标签云 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-tags me-2"></i>标签
+        </div>
+        <div class="card-body">
+            
+            <div class="tag-cloud">
+                
+                
+                <a href="/blog/?tag_id=5" 
+                   class="btn btn-outline-secondary btn-sm me-2 mb-2 ">
+                    tag-test03
+                    <span class="badge bg-secondary">2</span>
+                </a>
+                
+                
+                <a href="/blog/?tag_id=6" 
+                   class="btn btn-outline-secondary btn-sm me-2 mb-2 ">
+                    tag-test01
+                    <span class="badge bg-secondary">0</span>
+                </a>
+                
+                
+                <a href="/blog/?tag_id=7" 
+                   class="btn btn-outline-secondary btn-sm me-2 mb-2 ">
+                    tag-test02
+                    <span class="badge bg-secondary">0</span>
+                </a>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 最新文章 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="bi bi-clock-history me-2"></i>最新文章
+        </div>
+        <div class="card-body">
+            
+            <ul class="list-unstyled mb-0">
+                
+                <li class="mb-2">
+                    <a href="/blog/post/20" class="text-decoration-none">
+                        create-new-artile01
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/post/17" class="text-decoration-none">
+                        测试已发布文章01
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/post/6" class="text-decoration-none">
+                        test01
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/post/3" class="text-decoration-none">
+                        test03
+                    </a>
+                </li>
+                
+                <li class="mb-2">
+                    <a href="/blog/post/5" class="text-decoration-none">
+                        小型博客系统开发文档
+                    </a>
+                </li>
+                
+            </ul>
+            
+        </div>
+    </div>
+</div> 
+        </div>
+    </div>
+</div> 
+
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer bg-light mt-auto">
+        <div class="container">
+            <div class="text-center">
+                <span class="text-muted">© 2024 MyBlog - 由 Flask 强力驱动</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <!-- 主题切换脚本 -->
+    <script src="/static/js/theme-switcher.js"></script>
+    
+    <!-- highlight.js初始化 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 先检查hljs是否可用
+            if (typeof hljs !== 'undefined') {
+                console.log('highlight.js已加载，开始高亮代码块');
+                try {
+                    hljs.highlightAll();
+                } catch (e) {
+                    console.error('highlight.js高亮代码失败:', e);
+                }
+            } else {
+                console.error('highlight.js未加载，代码块将不会被高亮显示');
+                // 尝试重新加载highlight.js
+                var script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+                script.onload = function() {
+                    console.log('highlight.js已重新加载，开始高亮代码块');
+                    hljs.highlightAll();
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    
+    <!-- 自定义弹窗函数 -->
+    <script>
+        function showAlert(message, type = 'info', duration = 3000) {
+            // 创建弹窗元素
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `custom-alert ${type}`;
+            alertDiv.textContent = message;
+            
+            // 添加到页面
+            document.body.appendChild(alertDiv);
+            
+            // 显示弹窗
+            setTimeout(() => {
+                alertDiv.classList.add('show');
+            }, 10);
+            
+            // 自动关闭
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(alertDiv);
+                }, 300);
+            }, duration);
+        }
+    </script>
+    
+    <!-- 全局 Toast 函数 -->
+    <script>
+    window.showToast = function(type, message) {
+        // 确定背景样式类：成功用绿色，错误用红色，其他使用蓝色
+        let bgClass = 'bg-info';
+        if (type === 'success') bgClass = 'bg-success';
+        if (type === 'error') bgClass = 'bg-danger';
+        
+        // 创建 toast 元素
+        const toast = $(`
+            <div class="toast align-items-center text-white ${bgClass} border-0" 
+                 role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `);
+        
+        // 添加到容器
+        $('.toast-container').append(toast);
+        
+        // 初始化并显示 toast
+        const bsToast = new bootstrap.Toast(toast, {
+            delay: 3000,
+            animation: true
+        });
+        bsToast.show();
+        
+        // 监听隐藏事件，移除元素
+        toast.on('hidden.bs.toast', function() {
+            $(this).remove();
+        });
+    };
+    </script>
+
+    <!-- 自定义JavaScript -->
+    <script src="/static/js/blog.js"></script>
+    
+    <!-- 页面特定的JavaScript -->
+    
+<script src="/static/js/blog-comment.js"></script>
+<script>
+// 初始化POST_DATA，确保正确传递用户登录状态
+window.POST_DATA = {
+    postId: 20,
+    currentUser: {
+        
+        isAuthenticated: false
+        
+    }
+};
+console.log('POST_DATA初始化完成:', JSON.stringify(window.POST_DATA));
+
+$(document).ready(function() {
+    // 基本初始化代码...
+});
+
+// 初始化代码块复制按钮
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化代码块复制功能，不再手动触发DOMContentLoaded事件
+    console.log('文章详情页面加载完成，初始化代码块复制按钮');
+    
+    // 这里可以添加其他初始化代码
+    
+    // 确保highlight.js初始化
+    if (typeof hljs !== 'undefined') {
+        console.log('在scripts块中初始化highlight.js');
+        hljs.highlightAll();
+    } else {
+        console.error('highlight.js在scripts块中不可用');
+        // 动态加载highlight.js
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+        script.onload = function() {
+            console.log('动态加载highlight.js成功，开始高亮代码块');
+            hljs.highlightAll();
+        };
+        document.head.appendChild(script);
+    }
+});
+</script>
+
+    
+    <!-- 代码块复制功能 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // 初始化highlight.js
+                if (typeof hljs !== 'undefined') {
+                    console.log('highlight.js已加载，开始高亮代码块');
+                    hljs.highlightAll();
+                } else {
+                    console.error('highlight.js未加载，尝试从本地加载');
+                    var script = document.createElement('script');
+                    script.src = "/static/js/lib/highlight.min.js";
+                    script.onload = function() {
+                        console.log('本地加载highlight.js成功，开始高亮代码块');
+                        hljs.highlightAll();
+                    };
+                    document.head.appendChild(script);
+                }
+                
+                // 为所有代码块添加复制按钮
+                var codeBlocks = document.querySelectorAll('.code-block, .highlight, pre');
+                console.log('找到代码块数量:', codeBlocks.length);
+                
+                // 检查是否找到代码块，如果没有找到则不执行后续代码
+                if (codeBlocks.length === 0) {
+                    console.log('未找到代码块，跳过处理');
+                    return;
+                }
+                
+                codeBlocks.forEach(function(codeBlock) {
+                    try {
+                        // 检查是否已经有复制按钮
+                        if (codeBlock.querySelector('.code-copy-btn')) {
+                            return;
+                        }
+                        
+                        // 创建复制按钮
+                        const copyButton = document.createElement('button');
+                        copyButton.className = 'code-copy-btn';
+                        copyButton.textContent = '复制';
+                        
+                        // 添加点击事件
+                        copyButton.addEventListener('click', function() {
+                            try {
+                                // 找到代码块内的代码内容
+                                const pre = codeBlock.querySelector('pre') || codeBlock;
+                                if (!pre) return;
+                                
+                                // 提取文本内容
+                                let code = pre.textContent || pre.innerText;
+                                
+                                // 创建临时textarea元素
+                                const textarea = document.createElement('textarea');
+                                textarea.value = code;
+                                textarea.style.position = 'fixed';  // 避免滚动到页面底部
+                                textarea.style.opacity = '0';
+                                document.body.appendChild(textarea);
+                                
+                                try {
+                                    // 选择文本并复制
+                                    textarea.select();
+                                    const successful = document.execCommand('copy');
+                                    
+                                    if (successful) {
+                                        // 修改按钮状态
+                                        copyButton.textContent = '已复制';
+                                        copyButton.classList.add('copied');
+                                        
+                                        // 2秒后恢复按钮状态
+                                        setTimeout(function() {
+                                            copyButton.textContent = '复制';
+                                            copyButton.classList.remove('copied');
+                                        }, 2000);
+                                    } else {
+                                        console.error('复制失败');
+                                        alert('复制失败，请手动复制');
+                                    }
+                                } catch (err) {
+                                    console.error('复制出错:', err);
+                                    alert('复制失败，请手动复制');
+                                } finally {
+                                    // 移除临时元素
+                                    document.body.removeChild(textarea);
+                                }
+                            } catch(clickError) {
+                                console.error('按钮点击处理出错:', clickError);
+                            }
+                        });
+                        
+                        // 如果不是相对定位，设置为相对定位
+                        if (window.getComputedStyle(codeBlock).position === 'static') {
+                            codeBlock.style.position = 'relative';
+                        }
+                        
+                        // 添加按钮到代码块
+                        codeBlock.appendChild(copyButton);
+                    } catch(blockError) {
+                        console.error('处理单个代码块时出错:', blockError);
+                        // 继续处理下一个代码块
+                    }
+                });
+            } catch (error) {
+                // 添加错误处理，防止JavaScript错误导致整个页面崩溃
+                console.error('代码块处理主函数出错:', error);
+            }
+        });
+    </script>
+</body>
+</html> 

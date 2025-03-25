@@ -1,0 +1,65 @@
+{% extends "admin/base.html" %}
+
+{% block title %}系统设置 - 管理后台{% endblock %}
+
+{% block page_title %}系统设置{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            
+            <div class="mb-3">
+                {{ form.blog_name.label(class="form-label") }}
+                {{ form.blog_name(class="form-control" + (" is-invalid" if form.blog_name.errors else "")) }}
+                {% if form.blog_name.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.blog_name.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.blog_description.label(class="form-label") }}
+                {{ form.blog_description(class="form-control" + (" is-invalid" if form.blog_description.errors else ""), rows=5) }}
+                {% if form.blog_description.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.blog_description.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.posts_per_page.label(class="form-label") }}
+                {{ form.posts_per_page(class="form-control" + (" is-invalid" if form.posts_per_page.errors else ""), type="number", min=1, max=50) }}
+                {% if form.posts_per_page.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.posts_per_page.errors %}
+                    {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.allow_registration(class="form-check-input") }}
+                {{ form.allow_registration.label(class="form-check-label") }}
+            </div>
+            
+            <div class="mb-3 form-check">
+                {{ form.allow_comments(class="form-check-input") }}
+                {{ form.allow_comments.label(class="form-check-label") }}
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin_dashboard.index') }}" class="btn btn-secondary">返回</a>
+                <button type="submit" class="btn btn-primary">保存设置</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

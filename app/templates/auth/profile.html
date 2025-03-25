@@ -12,9 +12,6 @@
                 </div>
                 <div class="card-body">
                     <form method="post" action="{{ url_for('auth.profile') }}">
-                        {% from "macros/csrf.html" import csrf_field %}
-                        {{ csrf_field() }}
-                        
                         <div class="mb-3">
                             <label for="username" class="form-label">用户名</label>
                             <input type="text" class="form-control" id="username" name="username" 
@@ -49,9 +46,6 @@
                 </div>
                 <div class="card-body">
                     <form method="post" action="{{ url_for('auth.change_password') }}">
-                        {% from "macros/csrf.html" import csrf_field %}
-                        {{ csrf_field() }}
-                        
                         <div class="mb-3">
                             <label for="current_password" class="form-label">当前密码</label>
                             <input type="password" class="form-control" id="current_password" 

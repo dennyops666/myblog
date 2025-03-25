@@ -1,0 +1,251 @@
+/* SimpleMDE 编辑器暗黑模式样式 */
+
+/* 编辑器容器 */
+.dark-theme .CodeMirror {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 编辑器工具栏 */
+.dark-theme .editor-toolbar {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+}
+
+.dark-theme .editor-toolbar button {
+    color: #ddd !important;
+}
+
+.dark-theme .editor-toolbar button:hover, 
+.dark-theme .editor-toolbar button.active {
+    background: #333 !important;
+    border-color: #444 !important;
+}
+
+.dark-theme .editor-toolbar.disabled-for-preview button:not(.no-disable) {
+    background: #2a2a2a !important;
+}
+
+.dark-theme .editor-preview,
+.dark-theme .editor-preview-side {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+
+/* 编辑器预览区 */
+.dark-theme .editor-preview pre, 
+.dark-theme .editor-preview-side pre {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+    border-color: #444 !important;
+}
+
+.dark-theme .editor-preview table td, 
+.dark-theme .editor-preview table th,
+.dark-theme .editor-preview-side table td, 
+.dark-theme .editor-preview-side table th {
+    border-color: #444 !important;
+}
+
+/* 编辑器选中文本 */
+.dark-theme .CodeMirror-selected {
+    background-color: rgba(100, 100, 100, 0.5) !important;
+}
+
+.dark-theme .CodeMirror-cursor {
+    border-left-color: #ffffff !important;
+}
+
+/* 编辑器代码行 */
+.dark-theme .CodeMirror-line {
+    color: #f8f8f8 !important;
+}
+
+/* 编辑器代码高亮 */
+.dark-theme .cm-s-easymde .cm-header {
+    color: #6ea8fe !important;
+}
+
+.dark-theme .cm-s-easymde .cm-quote {
+    color: #9fa8da !important;
+}
+
+.dark-theme .cm-s-easymde .cm-comment {
+    color: #9e9e9e !important;
+}
+
+.dark-theme .cm-s-easymde .cm-link {
+    color: #8bc34a !important;
+}
+
+.dark-theme .cm-s-easymde .cm-url {
+    color: #ff9800 !important;
+}
+
+.dark-theme .cm-s-easymde .cm-variable-2 {
+    color: #80deea !important;
+}
+
+.dark-theme .cm-s-easymde .cm-variable-3 {
+    color: #a5d6a7 !important;
+}
+
+.dark-theme .cm-s-easymde .cm-keyword {
+    color: #f48fb1 !important;
+}
+
+.dark-theme .cm-s-easymde .cm-tag {
+    color: #ff9e80 !important;
+}
+
+.dark-theme .cm-s-easymde .cm-string {
+    color: #ffcc80 !important;
+}
+
+.dark-theme .CodeMirror-gutter {
+    background-color: #1a1a1a !important;
+    border-right: 1px solid #333 !important;
+}
+
+.dark-theme .CodeMirror-linenumber {
+    color: #777 !important;
+}
+
+/* Select2 下拉框暗黑模式修复 */
+.dark-theme .select2-container--bootstrap-5 .select2-selection {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered .select2-selection__choice {
+    background-color: #333 !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option {
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option--highlighted {
+    background-color: #333 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option[aria-selected=true] {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+/* 模态框暗黑模式修复 */
+.dark-theme .modal-content {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+}
+
+.dark-theme .modal-header,
+.dark-theme .modal-footer {
+    border-color: #444 !important;
+}
+
+.dark-theme .modal-content .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+/* 预览模态框内容 */
+.dark-theme #preview-content {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+.dark-theme #preview-content h1,
+.dark-theme #preview-content h2,
+.dark-theme #preview-content h3,
+.dark-theme #preview-content h4,
+.dark-theme #preview-content h5,
+.dark-theme #preview-content h6 {
+    color: #ffffff !important;
+}
+
+.dark-theme #preview-content pre,
+.dark-theme #preview-content code {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+}
+
+.dark-theme #preview-content blockquote {
+    border-left-color: #444 !important;
+    background-color: #2a2a2a !important;
+}
+
+.dark-theme #preview-content table {
+    border-color: #444 !important;
+}
+
+.dark-theme #preview-content table th,
+.dark-theme #preview-content table td {
+    border-color: #444 !important;
+}
+
+.dark-theme #preview-content a {
+    color: #6ea8fe !important;
+}
+
+/* 表单控件暗黑模式修复 */
+.dark-theme input[type="text"],
+.dark-theme input[type="email"],
+.dark-theme input[type="password"],
+.dark-theme input[type="number"],
+.dark-theme textarea,
+.dark-theme select {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+.dark-theme .form-check-input {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+}
+
+.dark-theme .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+.dark-theme .form-text {
+    color: #adb5bd !important;
+}
+
+/* 修复表单验证提示 */
+.dark-theme .invalid-feedback,
+.dark-theme .text-danger {
+    color: #ff6b6b !important;
+}
+
+/* 按钮组 */
+.dark-theme .btn-group .btn {
+    border-color: #444 !important;
+}
+
+/* 卡片内部内容 */
+.dark-theme .card .card-body {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+} 

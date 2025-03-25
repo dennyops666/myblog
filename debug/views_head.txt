@@ -1,0 +1,50 @@
+"""
+文件名：views.py
+描述：博客前台视图
+作者：denny
+创建日期：2025-02-16
+"""
+
+from flask import (
+    render_template, request, redirect, url_for, flash, 
+    abort, current_app, jsonify, session
+)
+from flask_login import current_user, login_user, logout_user, login_required
+from app.services.post import PostService
+from app.services.comment import CommentService
+from app.services.tag import TagService
+from app.services.user import UserService
+from app.forms import CommentForm
+from app.forms.auth import LoginForm
+from sqlalchemy import or_
+from datetime import datetime, UTC
+from app.extensions import db
+import markdown2
+from app.models.role import Permission
+from app.models.comment import Comment, CommentStatus
+from app.models.tag import Tag
+from app.models.category import Category
+from . import blog_bp
+
+# 延迟导入以避免循环导入
+from app.services.category import CategoryService
+from app.models.post import Post, PostStatus
+
+# 创建服务实例
+post_service = PostService()
+comment_service = CommentService()
+category_service = CategoryService()
+tag_service = TagService()
+user_service = UserService()
+
+@blog_bp.route('/')
+def index():
+    """博客首页"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = current_app.config['POSTS_PER_PAGE']
+        
+        # 获取文章列表
+        pagination = post_service.get_post_list(page=page, per_page=per_page)
+        posts = pagination.items if pagination else []
+        

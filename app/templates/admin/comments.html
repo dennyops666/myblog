@@ -1,0 +1,557 @@
+{% extends "admin/layout.html" %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">评论管理</h1>
+    
+    <!-- 操作栏 -->
+    <div class="mb-4">
+        <button id="batch-delete" class="btn btn-danger" disabled>
+            <i class="fas fa-trash"></i> 批量删除
+        </button>
+    </div>
+    
+    <!-- 评论列表 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            评论列表
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="select-all">
+                        </th>
+                        <th>ID</th>
+                        <th>评论内容</th>
+                        <th>文章</th>
+                        <th>作者</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comment in comments.items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="comment-checkbox" value="{{ comment.id }}">
+                        </td>
+                        <td>{{ comment.id }}</td>
+                        <td>{{ comment.content[:50] }}...</td>
+                        <td>
+                            <a href="{{ url_for('blog.post_detail', post_id=comment.post_id) }}" target="_blank">
+                                {{ comment.post.title }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if comment.author %}
+                                {{ comment.author.username }}
+                            {% else %}
+                                {{ comment.nickname }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if comment.status == 0 %}
+                                <span class="badge bg-warning">待审核</span>
+                            {% elif comment.status == 1 %}
+                                <span class="badge bg-success">已通过</span>
+                            {% elif comment.status == 2 %}
+                                <span class="badge bg-danger">已拒绝</span>
+                            {% else %}
+                                <span class="badge bg-secondary">未知状态</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ comment.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if comment.status == 0 %}
+                            <button class="btn btn-sm btn-success approve-btn" data-id="{{ comment.id }}">
+                                <i class="fas fa-check"></i> 通过
+                            </button>
+                            <button class="btn btn-sm btn-warning reject-btn" data-id="{{ comment.id }}">
+                                <i class="fas fa-ban"></i> 拒绝
+                            </button>
+                            {% elif comment.status == 1 %}
+                            <button class="btn btn-sm btn-warning reject-btn" data-id="{{ comment.id }}">
+                                <i class="fas fa-ban"></i> 拒绝
+                            </button>
+                            {% elif comment.status == 2 %}
+                            <button class="btn btn-sm btn-success approve-btn" data-id="{{ comment.id }}">
+                                <i class="fas fa-check"></i> 通过
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="{{ comment.id }}">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if comments.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_dashboard.comment_list', page=comments.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in comments.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == comments.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin_dashboard.comment_list', page=page) }}">{{ page }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if comments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_dashboard.comment_list', page=comments.next_num) }}">下一页</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- 确认删除模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除选中的评论吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toast通知函数
+function showToast(type, message) {
+    console.log('调用showToast，类型:', type, '消息:', message);
+    
+    // 清除所有现有的toast
+    $('.toast-container').remove();
+    
+    // 创建toast容器
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+    
+    // 创建toast元素
+    const toastEl = document.createElement('div');
+    // 明确设置背景颜色类
+    console.log('设置toast背景颜色，类型:', type);
+    toastEl.className = `toast align-items-center text-white border-0`;
+    if (type === 'success') {
+        console.log('设置绿色背景');
+        toastEl.classList.add('bg-success');
+    } else if (type === 'error') {
+        console.log('设置红色背景');
+        toastEl.classList.add('bg-danger');
+    }
+    
+    toastEl.setAttribute('role', 'alert');
+    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-atomic', 'true');
+    
+    const toastBody = document.createElement('div');
+    toastBody.className = 'toast-body d-flex';
+    
+    const icon = document.createElement('i');
+    icon.className = `bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2`;
+    
+    const messageText = document.createElement('span');
+    messageText.textContent = message;
+    
+    toastBody.appendChild(icon);
+    toastBody.appendChild(messageText);
+    
+    toastEl.appendChild(toastBody);
+    toastContainer.appendChild(toastEl);
+    document.body.appendChild(toastContainer);
+    
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        if (document.body.contains(toastContainer)) {
+            document.body.removeChild(toastContainer);
+        }
+    }, 3500);
+}
+
+$(document).ready(function() {
+    // 全选/取消全选
+    $('#select-all').change(function() {
+        $('.comment-checkbox').prop('checked', $(this).prop('checked'));
+        updateBatchDeleteButton();
+    });
+    
+    // 单个复选框变化时更新全选框和批量删除按钮状态
+    $('.comment-checkbox').change(function() {
+        updateSelectAllCheckbox();
+        updateBatchDeleteButton();
+    });
+    
+    // 更新批量删除按钮状态
+    function updateBatchDeleteButton() {
+        const checkedCount = $('.comment-checkbox:checked').length;
+        $('#batch-delete').prop('disabled', checkedCount === 0);
+    }
+    
+    // 更新全选框状态
+    function updateSelectAllCheckbox() {
+        const totalCheckboxes = $('.comment-checkbox').length;
+        const checkedCheckboxes = $('.comment-checkbox:checked').length;
+        $('#select-all').prop('checked', totalCheckboxes === checkedCheckboxes);
+    }
+    
+    // 初始化模态框
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    
+    // 储存触发模态框的元素，用于模态框关闭后恢复焦点
+    let triggerElement = null;
+    
+    // 批量删除按钮点击事件
+    $('#batch-delete').click(function(e) {
+        e.preventDefault();
+        triggerElement = this;
+        deleteModal.show();
+        // 显示后设置焦点到确认删除按钮
+        $('#deleteModal').on('shown.bs.modal', function() {
+            $('#confirm-delete').focus();
+        });
+        return false;
+    });
+    
+    // 模态框关闭时恢复焦点
+    $('#deleteModal').on('hidden.bs.modal', function() {
+        if (triggerElement) {
+            triggerElement.focus();
+        }
+    });
+    
+    // 确认删除按钮点击事件
+    $('#confirm-delete').click(function(e) {
+        e.preventDefault();
+        const selectedIds = $('.comment-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        // 发送删除请求
+        $.ajax({
+            url: '/admin/comments/batch-delete',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ comment_ids: selectedIds }),
+            success: function(response) {
+                // 检查响应类型
+                if (typeof response === 'string') {
+                    console.log('收到字符串响应，可能是HTML');
+                    // 隐藏模态框
+                    deleteModal.hide();
+                    // 操作很可能已成功，刷新页面查看结果
+                    showToast('success', '操作可能已成功，正在刷新页面...');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                    return;
+                }
+                
+                if (response.success === true || response.status === 'success') {
+                    // 隐藏模态框
+                    deleteModal.hide();
+                    showToast('success', response.message || '删除成功');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    // 隐藏模态框
+                    deleteModal.hide();
+                    showToast('error', response.message || '操作失败');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error, 'Status:', status);
+                // 隐藏模态框
+                deleteModal.hide();
+                
+                // 简化错误处理，直接刷新页面
+                showToast('warning', '正在刷新页面查看结果...');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        });
+        return false;
+    });
+    
+    // 单个删除按钮点击事件
+    $('.delete-btn').click(function(e) {
+        e.preventDefault();
+        const commentId = $(this).data('id');
+        // 创建单个删除的模态框
+        const modalHtml = `
+            <div class="modal fade" id="deleteSingleModal${commentId}" tabindex="-1" aria-labelledby="deleteSingleModalLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteSingleModalLabel">确认删除</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>确定要删除这条评论吗？此操作不可恢复。</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-danger confirm-single-delete" data-id="${commentId}">确认删除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 添加到页面
+        $('body').append(modalHtml);
+        
+        // 保存触发按钮，用于恢复焦点
+        const triggerBtn = this;
+        
+        // 初始化并显示模态框
+        const modal = new bootstrap.Modal(document.getElementById(`deleteSingleModal${commentId}`));
+        modal.show();
+        
+        // 模态框显示后设置焦点
+        $(`#deleteSingleModal${commentId}`).on('shown.bs.modal', function() {
+            $(this).find('.confirm-single-delete').focus();
+        });
+        
+        // 确认删除按钮点击事件
+        $(document).on('click', `.confirm-single-delete[data-id="${commentId}"]`, function(e) {
+            e.preventDefault(); // 防止默认行为
+            // 删除评论的AJAX请求
+            $.ajax({
+                url: `/admin/comments/${commentId}/delete`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({}),
+                success: function(response) {
+                    // 隐藏并销毁模态框
+                    modal.hide();
+                    
+                    // 检查响应类型
+                    if (typeof response === 'string') {
+                        console.log('收到字符串响应，可能是HTML');
+                        // 操作很可能已成功，刷新页面查看结果
+                        showToast('success', '操作可能已成功，正在刷新页面...');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                        return;
+                    }
+                    
+                    if (response.success === true || response.status === 'success') {
+                        showToast('success', '删除成功');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showToast('error', response.message || '删除失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error, 'Status:', status);
+                    // 隐藏并销毁模态框
+                    modal.hide();
+                    
+                    // 简化错误处理，直接刷新页面
+                    showToast('warning', '正在刷新页面查看结果...');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+            return false; // 明确返回false，不暗示异步响应
+        });
+        
+        // 模态框关闭时恢复焦点并移除模态框
+        $(`#deleteSingleModal${commentId}`).on('hidden.bs.modal', function() {
+            $(triggerBtn).focus();
+            $(this).remove();
+        });
+    });
+    
+    // 通过按钮点击事件
+    $('.approve-btn').click(function(e) {
+        e.preventDefault(); // 防止默认行为
+        const commentId = $(this).data('id');
+        $.ajax({
+            url: `/admin/comments/${commentId}/approve`,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                approve_replies: false
+            }),
+            success: function(response) {
+                console.log('收到评论通过响应:', response);
+                console.log('response类型:', typeof response);
+                
+                // 检查响应类型
+                if (typeof response === 'string') {
+                    console.log('收到字符串响应，可能是HTML');
+                    // 操作很可能已成功，刷新页面查看结果
+                    showToast('success', '操作可能已成功，正在刷新页面...');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                    return;
+                }
+                
+                console.log('response.success值:', response.success, '类型:', typeof response.success);
+                console.log('response.status值:', response.status, '类型:', typeof response.status);
+                
+                if (response.success === true || response.status === 'success') {
+                    showToast('success', '审核通过');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', response.message || '操作失败');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error, 'Status:', status);
+                
+                // 检查是否能刷新页面查看结果
+                showToast('warning', '正在刷新页面查看结果...');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        });
+        return false; // 明确返回false，不暗示异步响应
+    });
+    
+    // 拒绝按钮点击事件
+    $('.reject-btn').click(function(e) {
+        e.preventDefault(); // 防止默认行为
+        const commentId = $(this).data('id');
+        
+        // 创建拒绝确认模态框
+        const modalHtml = `
+            <div class="modal fade" id="rejectModal${commentId}" tabindex="-1" aria-labelledby="rejectModalLabel">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rejectModalLabel">确认拒绝</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>确定要拒绝这条评论吗？</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-warning confirm-reject" data-id="${commentId}">确认拒绝</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 添加到页面
+        $('body').append(modalHtml);
+        
+        // 保存触发按钮，用于恢复焦点
+        const triggerBtn = this;
+        
+        // 初始化并显示模态框
+        const modal = new bootstrap.Modal(document.getElementById(`rejectModal${commentId}`));
+        modal.show();
+        
+        // 模态框显示后设置焦点
+        $(`#rejectModal${commentId}`).on('shown.bs.modal', function() {
+            $(this).find('.confirm-reject').focus();
+        });
+        
+        // 确认拒绝按钮点击事件
+        $(document).on('click', `.confirm-reject[data-id="${commentId}"]`, function(e) {
+            e.preventDefault(); // 防止默认行为
+            // 发送AJAX请求
+            $.ajax({
+                url: `/admin/comments/${commentId}/reject`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    reject_replies: false
+                }),
+                success: function(response) {
+                    // 隐藏模态框
+                    modal.hide();
+                    
+                    // 检查响应类型
+                    if (typeof response === 'string') {
+                        console.log('收到字符串响应，可能是HTML');
+                        // 操作很可能已成功，刷新页面查看结果
+                        showToast('success', '操作可能已成功，正在刷新页面...');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                        return;
+                    }
+                    
+                    if (response.success === true || response.status === 'success') {
+                        showToast('success', '评论已拒绝');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showToast('error', response.message || '操作失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error, 'Status:', status);
+                    // 隐藏模态框
+                    modal.hide();
+                    
+                    // 简化错误处理，直接刷新页面
+                    showToast('warning', '正在刷新页面查看结果...');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+            return false; // 明确返回false，不暗示异步响应
+        });
+        
+        // 模态框关闭时恢复焦点并移除模态框
+        $(`#rejectModal${commentId}`).on('hidden.bs.modal', function() {
+            $(triggerBtn).focus();
+            $(this).remove();
+        });
+    });
+});
+
+</script>
+{% endblock %} 

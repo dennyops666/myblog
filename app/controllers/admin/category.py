@@ -7,7 +7,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required
-from app.services import CategoryService
+from app.services import get_category_service
 from app.extensions import db
 from app.forms.category_form import CategoryForm
 from app.models.category import Category
@@ -15,9 +15,13 @@ from sqlalchemy.exc import IntegrityError
 import logging
 from app.utils.slug import generate_slug
 from app.models.post import Post
+import traceback
 
-category_bp = Blueprint('admin_categories', __name__)
-category_service = CategoryService()
+# 创建Blueprint
+category_bp = Blueprint('category', __name__)
+
+# 获取服务实例
+category_service = get_category_service()
 
 def is_ajax():
     """检查是否是 AJAX 请求"""
@@ -27,11 +31,30 @@ def is_ajax():
 @login_required
 def index():
     """分类列表页面"""
-    page = request.args.get('page', 1, type=int)
-    pagination = Category.query.order_by(Category.id.desc()).paginate(
-        page=page, per_page=10, error_out=False)
-    categories = pagination.items
-    return render_template('admin/category/list.html', categories=categories, pagination=pagination)
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # 获取分类列表
+        pagination = Category.query.order_by(Category.id.desc()).paginate(
+            page=page, per_page=per_page, error_out=False)
+        categories = pagination.items
+        
+        # 记录日志
+        current_app.logger.info(f"获取到{len(categories)}个分类")
+        
+        # Category模型已经有post_count属性，不需要手动计算
+        
+        return render_template('admin/category/list.html', 
+                             categories=categories, 
+                             pagination=pagination)
+    except Exception as e:
+        current_app.logger.error(f"获取分类列表失败: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
+        flash('获取分类列表失败，请稍后重试', 'error')
+        return render_template('admin/category/list.html', 
+                             categories=[], 
+                             pagination=None)
 
 @category_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -94,7 +117,7 @@ def create():
         return jsonify({
             'success': True,
             'message': '分类创建成功！',
-            'redirect_url': url_for('admin.admin_categories.index')
+            'redirect_url': url_for('admin_dashboard.category.index')
         })
         
     except Exception as e:
@@ -105,14 +128,15 @@ def create():
             'message': '服务器错误，请稍后重试'
         })
 
-@category_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@category_bp.route('/<int:category_id>/edit', methods=['GET', 'POST'])
 @login_required
-def edit(id):
+def edit(category_id):
     """编辑分类"""
-    category = Category.query.get_or_404(id)
+    category = Category.query.get_or_404(category_id)
     
     if request.method == 'GET':
-        return render_template('admin/category/edit.html', category=category)
+        form = CategoryForm(obj=category)
+        return render_template('admin/category/edit.html', category=category, form=form, is_edit=True)
     
     try:
         # 获取并验证数据
@@ -130,7 +154,7 @@ def edit(id):
         # 检查名称是否已存在（排除当前分类）
         existing_name = Category.query.filter(
             Category.name == name,
-            Category.id != id
+            Category.id != category_id
         ).first()
         if existing_name:
             return jsonify({
@@ -143,7 +167,7 @@ def edit(id):
             # 检查 slug 是否已存在（排除当前分类）
             existing_slug = Category.query.filter(
                 Category.slug == slug,
-                Category.id != id
+                Category.id != category_id
             ).first()
             if existing_slug:
                 return jsonify({
@@ -158,7 +182,7 @@ def edit(id):
             counter = 1
             while Category.query.filter(
                 Category.slug == slug,
-                Category.id != id
+                Category.id != category_id
             ).first():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
@@ -177,7 +201,7 @@ def edit(id):
         return jsonify({
             'success': True,
             'message': '分类更新成功！',
-            'redirect_url': url_for('admin.admin_categories.index')
+            'redirect_url': url_for('admin_dashboard.category.index')
         })
         
     except Exception as e:
@@ -188,14 +212,14 @@ def edit(id):
             'message': '服务器错误，请稍后重试'
         })
 
-@category_bp.route('/<int:id>/delete', methods=['POST'])
+@category_bp.route('/<int:category_id>/delete', methods=['POST'])
 @login_required
-def delete(id):
+def delete(category_id):
     """删除分类"""
-    category = Category.query.get_or_404(id)
+    category = Category.query.get_or_404(category_id)
     
     # 检查是否有关联的文章
-    post_count = db.session.query(Post).filter_by(category_id=id).count()
+    post_count = db.session.query(Post).filter_by(category_id=category_id).count()
     if post_count > 0:
         return jsonify({
             'success': False,
@@ -208,7 +232,7 @@ def delete(id):
         return jsonify({
             'success': True,
             'message': '分类删除成功',
-            'redirect_url': url_for('admin.admin_categories.index')
+            'redirect_url': url_for('admin_dashboard.category.index')
         })
     except Exception as e:
         db.session.rollback()

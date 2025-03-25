@@ -1,0 +1,129 @@
+/**
+ * 亮色主题样式表
+ * 定义亮色模式下的变量和样式
+ */
+
+:root {
+    --body-bg: #f8f9fa;
+    --body-color: #212529;
+    --card-bg: #ffffff;
+    --card-header-bg: #f8f9fa;
+    --border-color: #dee2e6;
+    --table-header-bg: #f2f2f2;
+    --link-color: #007bff;
+    --link-hover-color: #0056b3;
+    --sidebar-bg: #ffffff;
+    --sidebar-color: #343a40;
+    --sidebar-active-bg: #007bff;
+    --sidebar-active-color: #ffffff;
+    --sidebar-hover-bg: #e9ecef;
+}
+
+/* 明亮模式下的正文样式 */
+body {
+    background-color: var(--body-bg);
+    color: var(--body-color);
+}
+
+/* 卡片样式 */
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+.card-header {
+    background-color: var(--card-header-bg);
+    border-color: var(--border-color);
+}
+
+/* 表格样式 */
+.table {
+    color: var(--body-color);
+}
+
+.table th {
+    background-color: var(--table-header-bg);
+}
+
+.table td, .table th {
+    border-color: var(--border-color);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-color);
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-color);
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--sidebar-hover-bg);
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-color);
+}
+
+/* 明亮模式下的快速链接卡片 */
+.quick-actions .card {
+    background-color: var(--card-bg);
+    color: var(--body-color);
+}
+
+/* 表单元素 */
+.form-control {
+    background-color: #fff;
+    color: #212529;
+    border-color: #ced4da;
+}
+
+/* 按钮样式 */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-light {
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+    color: #212529;
+}
+
+/* 状态标签 */
+.badge-success, .bg-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+.badge-warning, .bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge-secondary, .bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+} 

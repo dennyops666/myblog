@@ -1,0 +1,422 @@
+/* 管理后台暗黑模式修复 - 2024 */
+
+/* 1. 修复表格样式 */
+html.dark-theme .table,
+body.dark-theme .table {
+    color: #ffffff !important;
+    background-color: #121212 !important;
+    border-color: #444 !important;
+}
+
+/* 表头样式增强 */
+html.dark-theme thead,
+html.dark-theme .table thead,
+html.dark-theme .table-dark,
+body.dark-theme thead,
+body.dark-theme .table thead,
+body.dark-theme .table-dark {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+
+html.dark-theme th,
+html.dark-theme .table th,
+body.dark-theme th,
+body.dark-theme .table th {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+    font-weight: 600 !important;
+}
+
+/* 修复表格单元格样式 */
+html.dark-theme td,
+html.dark-theme .table td,
+body.dark-theme td,
+body.dark-theme .table td {
+    color: #ffffff !important;
+    background-color: #121212 !important;
+    border-color: #333333 !important;
+}
+
+/* 文章管理页面表格 */
+html.dark-theme .card,
+html.dark-theme .card-body,
+body.dark-theme .card,
+body.dark-theme .card-body {
+    background-color: #121212 !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+/* 确保表格体可见 */
+html.dark-theme tbody,
+html.dark-theme .table tbody,
+body.dark-theme tbody,
+body.dark-theme .table tbody {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+/* 奇偶行样式 */
+html.dark-theme .table-striped > tbody > tr:nth-of-type(odd),
+body.dark-theme .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .table-striped > tbody > tr:nth-of-type(odd) > *,
+body.dark-theme .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: #1a1a1a !important;
+    color: #ffffff !important;
+    background-color: #1a1a1a !important;
+}
+
+html.dark-theme .table-striped > tbody > tr:nth-of-type(even),
+body.dark-theme .table-striped > tbody > tr:nth-of-type(even) {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .table-striped > tbody > tr:nth-of-type(even) > *,
+body.dark-theme .table-striped > tbody > tr:nth-of-type(even) > * {
+    --bs-table-accent-bg: #121212 !important;
+    color: #ffffff !important;
+    background-color: #121212 !important;
+}
+
+/* 悬停样式 */
+html.dark-theme .table-hover > tbody > tr:hover,
+body.dark-theme .table-hover > tbody > tr:hover {
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .table-hover > tbody > tr:hover > *,
+body.dark-theme .table-hover > tbody > tr:hover > * {
+    --bs-table-accent-bg: #2a2a2a !important;
+    color: #ffffff !important;
+    background-color: #2a2a2a !important;
+}
+
+/* 分页控件 */
+html.dark-theme .pagination .page-link,
+body.dark-theme .pagination .page-link {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .pagination .page-item.active .page-link,
+body.dark-theme .pagination .page-item.active .page-link {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .pagination .page-item.disabled .page-link,
+body.dark-theme .pagination .page-item.disabled .page-link {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #6c757d !important;
+}
+
+/* 2. 修复表单样式 */
+html.dark-theme .form-control,
+html.dark-theme .form-select,
+body.dark-theme .form-control,
+body.dark-theme .form-select {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .form-control:focus,
+html.dark-theme .form-select:focus,
+body.dark-theme .form-control:focus,
+body.dark-theme .form-select:focus {
+    background-color: #1a1a1a !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+/* 表单控件禁用状态 */
+html.dark-theme .form-control:disabled,
+html.dark-theme .form-select:disabled,
+body.dark-theme .form-control:disabled,
+body.dark-theme .form-select:disabled {
+    background-color: #333333 !important;
+    color: #adb5bd !important;
+}
+
+/* 表单标签 */
+html.dark-theme .form-label,
+body.dark-theme .form-label,
+html.dark-theme .col-form-label,
+body.dark-theme .col-form-label {
+    color: #ffffff !important;
+}
+
+/* 帮助文本 */
+html.dark-theme .form-text,
+body.dark-theme .form-text {
+    color: #adb5bd !important;
+}
+
+/* 3. 修复按钮样式 */
+html.dark-theme .btn-outline-secondary,
+body.dark-theme .btn-outline-secondary {
+    color: #ffffff !important;
+    border-color: #6c757d !important;
+}
+
+html.dark-theme .btn-outline-secondary:hover,
+body.dark-theme .btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: #fff !important;
+}
+
+/* 按钮状态 */
+html.dark-theme .btn-secondary,
+body.dark-theme .btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+html.dark-theme .btn-primary,
+body.dark-theme .btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+html.dark-theme .btn-success,
+body.dark-theme .btn-success {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+html.dark-theme .btn-danger,
+body.dark-theme .btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+/* 4. 修复模态框样式 */
+html.dark-theme .modal-content,
+body.dark-theme .modal-content {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .modal-header,
+html.dark-theme .modal-footer,
+body.dark-theme .modal-header,
+body.dark-theme .modal-footer {
+    border-color: #444 !important;
+    background-color: #1a1a1a !important;
+}
+
+html.dark-theme .modal-body,
+body.dark-theme .modal-body {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+html.dark-theme .btn-close,
+body.dark-theme .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+/* 针对表格中的徽章改进对比度 */
+html.dark-theme .badge,
+body.dark-theme .badge {
+    font-weight: 500 !important;
+}
+
+html.dark-theme .badge.bg-secondary,
+body.dark-theme .badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+html.dark-theme .badge.bg-success,
+body.dark-theme .badge.bg-success {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+html.dark-theme .badge.bg-danger,
+body.dark-theme .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+html.dark-theme .badge.bg-warning,
+body.dark-theme .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+html.dark-theme .badge.bg-info,
+body.dark-theme .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+html.dark-theme .badge.bg-primary,
+body.dark-theme .badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+/* 修复链接文本颜色 */
+html.dark-theme a:not(.btn):not(.page-link):not(.nav-link),
+body.dark-theme a:not(.btn):not(.page-link):not(.nav-link) {
+    color: #6ea8fe !important;
+}
+
+html.dark-theme a:not(.btn):not(.page-link):not(.nav-link):hover,
+body.dark-theme a:not(.btn):not(.page-link):not(.nav-link):hover {
+    color: #8bb9fe !important;
+}
+
+/* 修复卡片样式 */
+html.dark-theme .card,
+body.dark-theme .card {
+    background-color: #121212 !important;
+    border-color: #444 !important;
+}
+
+html.dark-theme .card-header,
+body.dark-theme .card-header {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #fff !important;
+}
+
+/* 表格内操作按钮 */
+html.dark-theme .table .btn-sm,
+body.dark-theme .table .btn-sm {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* 确保表格相关容器背景正确 */
+html.dark-theme .table-responsive,
+body.dark-theme .table-responsive {
+    background-color: #121212 !important;
+}
+
+/* 显示文本增强 */
+html.dark-theme .text-muted,
+body.dark-theme .text-muted {
+    color: #adb5bd !important;
+}
+
+/* 直接处理表格内的所有可见文本 */
+html.dark-theme table *,
+body.dark-theme table * {
+    color: #ffffff !important;
+}
+
+/* 确保表格行内容可见 */
+html.dark-theme tbody tr,
+body.dark-theme tbody tr {
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+/* 表单控件：checkboxes & radios */
+html.dark-theme .form-check-input,
+body.dark-theme .form-check-input {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+}
+
+html.dark-theme .form-check-input:checked,
+body.dark-theme .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+html.dark-theme .form-check-label,
+body.dark-theme .form-check-label {
+    color: #ffffff !important;
+}
+
+/* 覆盖Bootstrap原生样式变量 */
+:root.dark-theme,
+html.dark-theme,
+body.dark-theme {
+    --bs-body-bg: #121212;
+    --bs-body-color: #ffffff;
+    --bs-dark: #121212;
+    --bs-light: #1a1a1a;
+    --bs-table-hover-color: #ffffff;
+    --bs-table-hover-bg: #2a2a2a;
+    --bs-table-color: #ffffff;
+    --bs-table-bg: #121212;
+    --bs-table-striped-color: #ffffff;
+    --bs-table-striped-bg: #1a1a1a;
+    --bs-table-border-color: #444;
+}
+
+/* 强制设置文本颜色 */
+html.dark-theme [role="cell"], 
+body.dark-theme [role="cell"],
+html.dark-theme [role="columnheader"],
+body.dark-theme [role="columnheader"] {
+    color: #ffffff !important;
+}
+
+/* 修复个人资料页面表单 */
+html.dark-theme .col-form-label,
+body.dark-theme .col-form-label {
+    color: #ffffff !important;
+}
+
+html.dark-theme .row.mb-3,
+body.dark-theme .row.mb-3 {
+    color: #ffffff !important;
+}
+
+/* 表单组内嵌元素 */
+html.dark-theme .input-group,
+body.dark-theme .input-group {
+    background-color: #1a1a1a !important;
+    border-color: #444 !important;
+}
+
+html.dark-theme .input-group-text,
+body.dark-theme .input-group-text {
+    background-color: #333 !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+/* 特殊处理编辑页面布局 */
+html.dark-theme .container-fluid,
+body.dark-theme .container-fluid,
+html.dark-theme .container,
+body.dark-theme .container {
+    color: #ffffff !important;
+}
+
+html.dark-theme h1, html.dark-theme h2, html.dark-theme h3, 
+html.dark-theme h4, html.dark-theme h5, html.dark-theme h6,
+body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, 
+body.dark-theme h4, body.dark-theme h5, body.dark-theme h6 {
+    color: #ffffff !important;
+}
+
+/* 覆盖可能的Bootstrap表格样式 */
+.table {
+    --bs-table-color: inherit;
+}
+
+html.dark-theme .table,
+body.dark-theme .table {
+    --bs-table-color: #ffffff !important;
+} 

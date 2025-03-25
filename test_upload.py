@@ -16,37 +16,22 @@ def main():
     s = requests.Session()
     s.headers.update({'Accept': 'application/json'})
 
-    # 获取登录页面的 CSRF token
-    r = s.get("http://localhost:5000/auth/login")
-    print(f"Login page response: {r.text}")
-    print(f"Status code: {r.status_code}")
-    print(f"Headers: {dict(r.headers)}")
-
     try:
-        csrf_token = r.json()["csrf_token"]
-        print(f"CSRF Token: {csrf_token}")
-
         # 登录
         data = {
             "username": "test",
-            "password": "test",
-            "csrf_token": csrf_token
+            "password": "test"
         }
         r = s.post("http://localhost:5000/auth/login", data=data)
         print(f"Login response: {r.text}")
 
         if r.status_code == 200 and r.json()['success']:
-            # 获取新的 CSRF token
-            r = s.get("http://localhost:5000/admin/upload/")
-            csrf_token = r.json()["csrf_token"]
-
             # 测试文件上传
             img_io = create_test_image()
             files = {
                 "file": ("test_image.jpg", img_io, "image/jpeg")
             }
-            data = {"csrf_token": csrf_token}
-            r = s.post("http://localhost:5000/admin/upload/", files=files, data=data)
+            r = s.post("http://localhost:5000/admin/upload/", files=files)
             print(f"Upload response: {r.text}")
 
             # 如果上传成功，测试获取图片列表
@@ -59,4 +44,4 @@ def main():
         print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
-    main() 
+    main()

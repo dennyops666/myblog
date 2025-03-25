@@ -1,0 +1,32 @@
+{% if comments %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">评论列表</h5>
+        <div id="comment-list">
+            {% for comment in comments %}
+            <div class="comment-item mb-3 pb-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="fw-bold">{{ comment.nickname }}</span>
+                        {% if comment.email %}
+                        <small class="text-muted ms-2">{{ comment.email }}</small>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                </div>
+                <div class="comment-content">
+                    {{ comment.html_content|safe }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">评论列表</h5>
+        <p class="text-muted mb-0">暂无评论</p>
+    </div>
+</div>
+{% endif %} 

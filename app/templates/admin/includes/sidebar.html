@@ -1,62 +1,70 @@
-<!-- 侧边栏 -->
-<div class="sidebar bg-light border-end">
-    <div class="position-sticky pt-3">
-        <!-- 折叠按钮 -->
-        <div class="px-3 mb-3 d-flex justify-content-end">
-            <button type="button" id="sidebarToggle" class="btn btn-link text-decoration-none p-0">
-                <i class="fas fa-chevron-left"></i>
-            </button>
+<!-- 侧边栏导航 -->
+<nav class="sidebar" id="sidenavAccordion">
+    <div class="sb-sidenav-menu">
+        <div class="nav">
+            <div class="sidebar-heading">博客管理系统</div>
+            <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard.index' }}" href="{{ url_for('admin_dashboard.index') }}">
+                <i class="bi bi-speedometer2"></i>
+                <span>首页</span>
+                {% if notifications_count %}
+                <span class="badge bg-danger ms-2">{{ notifications_count }}</span>
+                {% endif %}
+            </a>
+            
+            <div class="sidebar-heading">内容管理</div>
+            <a class="nav-link {{ 'active' if request.endpoint.startswith('admin_dashboard.post.') }}" href="{{ url_for('admin_dashboard.post.index') }}">
+                <i class="bi bi-file-text"></i>
+                <span>文章管理</span>
+                {% if post_count %}
+                <span class="badge bg-primary ms-2">{{ post_count }}</span>
+                {% endif %}
+            </a>
+            <a class="nav-link {{ 'active' if request.endpoint.startswith('admin_dashboard.comment.') }}" href="{{ url_for('admin_dashboard.comment.index') }}">
+                <i class="bi bi-chat-dots"></i>
+                <span>评论管理</span>
+                {% if pending_comments_count %}
+                <span class="badge bg-warning ms-2">{{ pending_comments_count }}</span>
+                {% endif %}
+            </a>
+            <a class="nav-link {{ 'active' if request.endpoint.startswith('admin_dashboard.category.') }}" href="{{ url_for('admin_dashboard.category.index') }}">
+                <i class="bi bi-tags"></i>
+                <span>分类管理</span>
+                {% if category_count %}
+                <span class="badge bg-info ms-2">{{ category_count }}</span>
+                {% endif %}
+            </a>
+            <a class="nav-link {{ 'active' if request.endpoint.startswith('admin_dashboard.tag.') }}" href="{{ url_for('admin_dashboard.tag.index') }}">
+                <i class="bi bi-tag"></i>
+                <span>标签管理</span>
+                {% if tag_count %}
+                <span class="badge bg-secondary ms-2">{{ tag_count }}</span>
+                {% endif %}
+            </a>
+            
+            <div class="sidebar-heading">系统管理</div>
+            <a class="nav-link {{ 'active' if request.endpoint.startswith('admin_dashboard.user.') }}" href="{{ url_for('admin_dashboard.user.index') }}">
+                <i class="bi bi-people"></i>
+                <span>用户管理</span>
+                {% if user_count %}
+                <span class="badge bg-success ms-2">{{ user_count }}</span>
+                {% endif %}
+            </a>
+            <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard.profile' }}" href="{{ url_for('admin_dashboard.profile') }}">
+                <i class="bi bi-person-circle"></i>
+                <span>个人资料</span>
+            </a>
+            <a class="nav-link" href="{{ url_for('blog.index') }}" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>查看网站</span>
+            </a>
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>退出</span>
+            </a>
         </div>
-
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.index' }}" href="{{ url_for('admin.index') }}">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>仪表盘</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.posts.index' }}" href="{{ url_for('admin.posts.index') }}">
-                    <i class="fas fa-file-alt"></i>
-                    <span>文章管理</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.admin_categories.index' }}" href="{{ url_for('admin.admin_categories.index') }}">
-                    <i class="fas fa-folder"></i>
-                    <span>分类管理</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.tag.index' }}" href="{{ url_for('admin.tag.index') }}">
-                    <i class="fas fa-tags"></i>
-                    <span>标签管理</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.comment.index' }}" href="{{ url_for('admin.comment.index') }}">
-                    <i class="fas fa-comments"></i>
-                    <span>评论管理</span>
-                </a>
-            </li>
-        </ul>
-
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
-            <span>系统管理</span>
-        </h6>
-        <ul class="nav flex-column mb-2">
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.user.index' }}" href="{{ url_for('admin.user.index') }}">
-                    <i class="fas fa-users"></i>
-                    <span>用户管理</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.profile' }}" href="{{ url_for('admin.profile') }}">
-                    <i class="fas fa-user-cog"></i>
-                    <span>个人设置</span>
-                </a>
-            </li>
-        </ul>
     </div>
-</div> 
+    <div class="mt-auto p-3">
+        <div class="small text-muted">当前用户：</div>
+        <div class="fw-bold">{{ current_user.username }}</div>
+    </div>
+</nav> 

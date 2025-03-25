@@ -1,0 +1,181 @@
+/* 暗黑模式表格背景强制覆盖样式 - 单独文件以确保最高优先级 */
+
+/* 最高级别覆盖 - 影响整个文档的表格元素 */
+html.dark-theme,
+html.dark-theme body,
+html.dark-theme body.dark-theme {
+    --bs-table-bg: #1e1e1e !important;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03) !important;
+    --bs-table-hover-bg: rgba(26, 86, 60, 0.15) !important;
+    --bs-table-color: #e0e0e0 !important;
+    --bs-table-border-color: #333 !important;
+}
+
+/* 强制重置Bootstrap表格变量 */
+html.dark-theme .table {
+    --bs-table-bg: #1e1e1e !important;
+    --bs-table-accent-bg: transparent !important;
+    --bs-table-striped-color: #e0e0e0 !important;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03) !important;
+    --bs-table-active-color: #e0e0e0 !important;
+    --bs-table-active-bg: rgba(26, 86, 60, 0.15) !important;
+    --bs-table-hover-color: #e0e0e0 !important;
+    --bs-table-hover-bg: rgba(26, 86, 60, 0.15) !important;
+    color: #e0e0e0 !important;
+    border-color: #333 !important;
+}
+
+/* 基础元素样式 */
+body.dark-theme table,
+body.dark-theme .table,
+body.dark-theme .table-striped,
+body.dark-theme .table-responsive,
+body.dark-theme .card-body {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: #e0e0e0 !important;
+}
+
+/* 表格单元格和行样式 */
+body.dark-theme tr,
+body.dark-theme td,
+body.dark-theme th,
+body.dark-theme thead,
+body.dark-theme tbody,
+body.dark-theme tfoot {
+    background-color: #1e1e1e !important;
+    border-color: #333 !important;
+    color: #e0e0e0 !important;
+}
+
+/* 特别处理表头 */
+body.dark-theme thead tr,
+body.dark-theme th {
+    background-color: #272727 !important;
+    color: #ffffff !important;
+}
+
+/* 覆盖Bootstrap条纹表格样式 */
+body.dark-theme .table-striped tbody tr:nth-of-type(odd),
+body.dark-theme .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+body.dark-theme .table-striped tbody tr:nth-of-type(even),
+body.dark-theme .table-striped > tbody > tr:nth-of-type(even) {
+    background-color: #1e1e1e !important;
+}
+
+/* 覆盖表格悬停效果 */
+body.dark-theme .table-hover tbody tr:hover,
+body.dark-theme .table tbody tr:hover {
+    background-color: rgba(26, 86, 60, 0.15) !important;
+}
+
+/* 最高优先级表格样式 - 使用!important确保覆盖任何冲突样式 */
+#recent-posts-table,
+#recent-posts-table * {
+    border-color: #333 !important;
+}
+
+body.dark-theme #recent-posts-table {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-theme #recent-posts-table thead,
+body.dark-theme #recent-posts-table thead tr,
+body.dark-theme #recent-posts-table th {
+    background-color: #272727 !important;
+    color: #ffffff !important;
+}
+
+body.dark-theme #recent-posts-table tbody,
+body.dark-theme #recent-posts-table tbody tr,
+body.dark-theme #recent-posts-table td {
+    background-color: #1e1e1e !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-theme #recent-posts-table tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* 强制覆盖卡片内部表格样式 */
+body.dark-theme .card .card-body .table-responsive,
+body.dark-theme .card .card-body .table,
+body.dark-theme .card .card-body table,
+body.dark-theme .card-body .table-responsive {
+    background-color: #1e1e1e !important;
+}
+
+/* 最后的兜底样式 - 通过属性选择器找到所有可能的背景色设置 */
+body.dark-theme [style*="background-color: white"],
+body.dark-theme [style*="background-color: #fff"],
+body.dark-theme [style*="background-color:#fff"],
+body.dark-theme [style*="background: white"],
+body.dark-theme [style*="background: #fff"],
+body.dark-theme [style*="background:#fff"],
+body.dark-theme [class*="bg-white"],
+body.dark-theme [class*="bg-light"] {
+    background-color: #1e1e1e !important;
+}
+
+/* Bootstrap 5 表格变量的特别覆盖 */
+html.dark-theme .table-striped>tbody>tr:nth-of-type(odd)>* {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    --bs-table-accent-bg: rgba(255, 255, 255, 0.03) !important;
+}
+
+html.dark-theme .table-striped>tbody>tr:nth-of-type(even)>* {
+    background-color: #1e1e1e !important;
+    --bs-table-accent-bg: #1e1e1e !important;
+}
+
+/* 表格背景的强制覆盖 */
+html.dark-theme .card-body .table-responsive table,
+html.dark-theme .card-body .table-responsive table tbody,
+html.dark-theme .card-body .table-responsive table tr,
+html.dark-theme .card-body .table-responsive table td {
+    background-color: #1e1e1e !important;
+}
+
+/* 亮色模式下重置暗黑模式的样式 - 优先级较低 */
+html:not(.dark-theme) table,
+html:not(.dark-theme) .table,
+html:not(.dark-theme) tbody,
+html:not(.dark-theme) tr,
+html:not(.dark-theme) td,
+html:not(.dark-theme) th,
+html:not(.dark-theme) thead,
+html:not(.dark-theme) tfoot {
+    background-color: initial;
+    color: initial;
+    border-color: initial;
+}
+
+html:not(.dark-theme) .card,
+html:not(.dark-theme) .card-body,
+html:not(.dark-theme) .table-responsive {
+    background-color: #fff;
+    color: #212529;
+    border-color: rgba(0,0,0,.125);
+}
+
+html:not(.dark-theme) .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark-theme) .table thead th {
+    background-color: initial;
+    color: #212529;
+    border-color: #dee2e6;
+}
+
+html:not(.dark-theme) #recent-posts-table {
+    background-color: transparent;
+    color: #212529;
+}
+
+html:not(.dark-theme) #recent-posts-table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+} 

@@ -202,7 +202,6 @@
             </div>
             <div class="card-body">
                 <form id="commentForm" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="parent_id" id="parentId" value="">
                     
                     {% if not current_user.is_authenticated %}
@@ -290,8 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/blog/post/{{ post.id }}/comment`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(formData)
             });

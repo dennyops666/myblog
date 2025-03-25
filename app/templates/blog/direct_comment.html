@@ -1,0 +1,102 @@
+{% extends "blog/base.html" %}
+
+{% block title %}评论测试页面 - {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2>文章评论</h2>
+                </div>
+                <div class="card-body">
+                    <h3>{{ post.title }}</h3>
+                    <p class="text-muted">ID: {{ post.id }} | 发布于: {{ post.created_at.strftime('%Y-%m-%d') }}</p>
+                    
+                    <hr>
+                    
+                    <!-- 直接嵌入评论表单 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">发表评论</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="direct-comment-form" method="post" action="{{ url_for('blog.direct_comment', post_id=post.id) }}">
+                                {% if not current_user.is_authenticated %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="nickname" class="form-label">昵称 <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nickname" name="nickname" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        您已登录为 <strong>{{ current_user.username }}</strong>，评论将以您的用户名发布
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <div class="mb-3">
+                                    <label for="content" class="form-label">评论内容 <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">提交评论</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- 评论列表 -->
+                    <h4 class="mt-4">评论列表 ({{ comments|length }})</h4>
+                    {% if comments %}
+                        {% for comment in comments %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <h5 class="card-title">{{ comment.nickname or comment.author.username }}</h5>
+                                    <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                <p class="card-text">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-light">
+                            暂无评论，来发表第一条评论吧！
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="btn btn-secondary">返回文章页面</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('直接评论页面已加载');
+    
+    // 处理表单提交
+    const form = document.getElementById('direct-comment-form');
+    if (form) {
+        console.log('找到评论表单');
+        form.addEventListener('submit', function(e) {
+            // 正常提交表单，不阻止默认行为
+            console.log('评论表单已提交');
+        });
+    }
+});
+</script>
+{% endblock %} 

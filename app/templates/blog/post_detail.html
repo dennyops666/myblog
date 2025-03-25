@@ -1,0 +1,332 @@
+{% extends "blog/base.html" %}
+
+{% block title %}{{ post.title }} - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block styles %}
+<style>
+    .post-meta {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    .post-content {
+        line-height: 1.8;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .post-content img {
+        max-width: 100%;
+        height: auto;
+        margin: 15px 0;
+    }
+    .post-tags {
+        margin: 20px 0;
+    }
+    .post-tags a {
+        display: inline-block;
+        margin-right: 5px;
+        padding: 3px 8px;
+        background-color: #f8f9fa;
+        border-radius: 3px;
+        font-size: 0.9rem;
+        color: #495057;
+        text-decoration: none;
+    }
+    .post-tags a:hover {
+        background-color: #e9ecef;
+    }
+    .post-navigation {
+        margin: 30px 0;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+    .comment-form {
+        margin-bottom: 30px;
+    }
+    .comment-list {
+        margin-bottom: 30px;
+    }
+    .comment-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    /* 文章视图计数器样式 */
+    .view-count {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .view-count i {
+        margin-right: 5px;
+    }
+    
+    /* 文章卡片样式 */
+    .post {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    .sidebar-card {
+        margin-bottom: 20px;
+    }
+    .related-posts {
+        margin-top: 30px;
+    }
+    
+    /* 暗黑模式样式覆盖 */
+    html.dark-theme .post-content {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .post {
+        background-color: #252525;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    html.dark-theme .post-tags a {
+        background-color: #333;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .post-tags a:hover {
+        background-color: #444;
+    }
+    
+    html.dark-theme .post-navigation {
+        border-top-color: #333;
+    }
+    
+    html.dark-theme .comment-item {
+        border-bottom-color: #333;
+    }
+    
+    html.dark-theme .card {
+        background-color: #252525;
+    }
+</style>
+{% endblock %}
+
+{% block head %}
+<!-- 添加检查代码 -->
+<script>
+    window.addEventListener('load', function() {
+        console.log('页面加载完成，检查highlight.js状态');
+        if (typeof hljs !== 'undefined') {
+            console.log('highlight.js已加载成功');
+        } else {
+            console.error('highlight.js未能加载，尝试手动加载');
+            var script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+            script.onload = function() {
+                console.log('手动加载highlight.js成功，开始高亮代码块');
+                hljs.highlightAll();
+            };
+            document.head.appendChild(script);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- 主内容区 -->
+        <div class="col-md-8">
+            <article class="post">
+                <div class="article-header">
+                    <!-- 文章标题 -->
+                    <h1 class="post-title">{{ post.title }}</h1>
+                    
+                    <!-- 文章元信息 -->
+                    <div class="post-meta">
+                        <span><i class="bi bi-calendar"></i> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
+                        {% if post.category %}
+                        <span class="ms-3"><i class="bi bi-folder"></i> <a href="{{ url_for('blog.category_posts', category_id=post.category.id) }}">{{ post.category.name }}</a></span>
+                        {% endif %}
+                        <span class="ms-3"><i class="bi bi-chat"></i> {{ comments|length }} 条评论</span>
+                        <span class="ms-3 view-count"><i class="bi bi-eye"></i> <span class="fw-bold">{{ post.view_count }}</span> 次浏览</span>
+                        {% if post.author %}
+                        <span class="ms-3"><i class="bi bi-person"></i> {{ post.author.username }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- 文章封面图 -->
+                {% if post.cover_image %}
+                <div class="post-cover mb-4">
+                    <img src="{{ post.cover_image }}" class="img-fluid rounded" alt="{{ post.title }}">
+                </div>
+                {% endif %}
+                
+                <!-- 文章内容 -->
+                <div class="post-content">
+                    {{ post.html_content|safe }}
+                </div>
+                
+                <!-- 添加评论测试链接 -->
+                <div class="alert alert-info my-4">
+                    <h5><i class="bi bi-info-circle"></i> 评论功能测试</h5>
+                    <p>博客评论功能目前正在测试中。请点击下方按钮访问临时评论页面发表您的评论。</p>
+                    <a href="/static/test_comment.html" class="btn btn-primary">
+                        <i class="bi bi-chat-dots"></i> 去评论页面
+                    </a>
+                </div>
+                
+                <!-- 文章标签 -->
+                {% if post.tags %}
+                <div class="post-tags">
+                    <i class="bi bi-tags"></i> 
+                    {% for tag in post.tags %}
+                    <a href="{{ url_for('blog.tag_posts', tag_id=tag.id) }}">{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+        {% endif %}
+        
+                <!-- 上一篇/下一篇导航 -->
+                <div class="post-navigation">
+                    <div class="row">
+                        <div class="col-6">
+                            {% if prev_post %}
+                            <a href="{{ url_for('blog.post_detail', post_id=prev_post.id) }}" class="text-decoration-none">
+                                <div class="text-muted small">上一篇</div>
+                                <div class="fw-bold">{{ prev_post.title }}</div>
+                            </a>
+                            {% endif %}
+                        </div>
+                        <div class="col-6 text-end">
+                            {% if next_post %}
+                            <a href="{{ url_for('blog.post_detail', post_id=next_post.id) }}" class="text-decoration-none">
+                                <div class="text-muted small">下一篇</div>
+                                <div class="fw-bold">{{ next_post.title }}</div>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </article>
+            
+            <!-- 评论区 -->
+            <div class="comments mt-5">
+                <h3>评论 ({{ comments|length }})</h3>
+
+                <!-- 评论链接按钮 -->
+                <div class="alert alert-info my-3">
+                    <h5 class="mb-2">想要评论这篇文章？</h5>
+                    <p>由于评论表单显示问题，请点击下方按钮进入评论页面。</p>
+                    <a href="{{ url_for('blog.direct_comment', post_id=post.id) }}" class="btn btn-primary mt-2">
+                        <i class="bi bi-chat"></i> 去评论页面
+                    </a>
+                </div>
+
+<!-- 评论表单 -->
+                {% include 'blog/comment_form.html' %}
+                
+                <!-- 评论列表 -->
+                {% include 'blog/comment_list.html' %}
+            </div>
+            
+            <!-- 相关文章 -->
+            {% if related_posts %}
+            <div class="related-posts mt-5">
+                <h3 class="mb-4">相关文章</h3>
+                <div class="row">
+                    {% for related in related_posts %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            {% if related.cover_image %}
+                            <img src="{{ related.cover_image }}" class="card-img-top" alt="{{ related.title }}">
+                            {% endif %}
+    <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{{ url_for('blog.post_detail', post_id=related.id) }}" class="text-dark">{{ related.title }}</a>
+                                </h5>
+                                <p class="card-text small">{{ related.content|striptags|truncate(80) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <div class="card mt-4">
+                <div class="card-header bg-secondary text-white">
+                    调试信息（仅管理员可见）
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item">文章ID: {{ post.id }}</li>
+                        <li class="list-group-item">内容长度: {{ version_info.content_length }}</li>
+                        <li class="list-group-item">HTML长度: {{ version_info.html_length }}</li>
+                        <li class="list-group-item">更新时间: {{ version_info.updated_at }}</li>
+                        <li class="list-group-item">生成时间: {{ version_info.timestamp }}</li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- 侧边栏 -->
+        <div class="col-md-4">
+            {% include 'blog/includes/sidebar.html' %}
+        </div>
+    </div>
+</div> 
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/blog-comment.js') }}"></script>
+<script>
+// 初始化POST_DATA，确保正确传递用户登录状态
+window.POST_DATA = {
+    postId: {{ post.id }},
+    currentUser: {
+        {% if current_user.is_authenticated %}
+        isAuthenticated: true,
+        id: {{ current_user.id }},
+        username: "{{ current_user.username }}"
+        {% else %}
+        isAuthenticated: false
+        {% endif %}
+    }
+};
+console.log('POST_DATA初始化完成:', JSON.stringify(window.POST_DATA));
+
+$(document).ready(function() {
+    // 基本初始化代码...
+});
+
+// 初始化代码块复制按钮
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化代码块复制功能，不再手动触发DOMContentLoaded事件
+    console.log('文章详情页面加载完成，初始化代码块复制按钮');
+    
+    // 这里可以添加其他初始化代码
+    
+    // 确保highlight.js初始化
+    if (typeof hljs !== 'undefined') {
+        console.log('在scripts块中初始化highlight.js');
+        hljs.highlightAll();
+    } else {
+        console.error('highlight.js在scripts块中不可用');
+        // 动态加载highlight.js
+        var script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+        script.onload = function() {
+            console.log('动态加载highlight.js成功，开始高亮代码块');
+            hljs.highlightAll();
+        };
+        document.head.appendChild(script);
+    }
+});
+</script>
+{% endblock %} 

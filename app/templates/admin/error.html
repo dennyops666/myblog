@@ -1,0 +1,186 @@
+{% extends "admin/base.html" %}
+
+{% block title %}错误 {{ error_code }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.debug-info {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+.debug-info .accordion-button {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 500;
+}
+
+.debug-info .accordion-button:not(.collapsed) {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.debug-info dl {
+    margin-bottom: 0;
+}
+
+.debug-info dt {
+    font-weight: 600;
+    color: #495057;
+}
+
+.debug-info dd {
+    color: #6c757d;
+    word-break: break-all;
+}
+
+.error-badge {
+    font-size: 1.2rem;
+    padding: 0.5rem 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="text-center mt-4">
+                <h1 class="display-1">{{ error_code }}</h1>
+                <p class="lead">{{ error }}</p>
+                <a href="{{ url_for('admin_dashboard.index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    返回首页
+                </a>
+            </div>
+            
+            {% if show_debug_info and debug_info %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-bug me-1"></i>
+                    调试信息
+                </div>
+                <div class="card-body">
+                    <pre class="mb-0"><code>{{ debug_info }}</code></pre>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// 如果是在iframe中，调整父窗口大小
+if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+}
+
+// 复制错误信息
+function copyErrorInfo() {
+    const errorInfo = {
+        error: {
+            code: {{ error_code }},
+            message: `{{ error|replace("'", "\\'")|replace('"', '\\"') }}`,
+            {% if suggestion %}
+            suggestion: `{{ suggestion|replace("'", "\\'")|replace('"', '\\"') }}`,
+            {% endif %}
+            timestamp: '{{ now().strftime("%Y-%m-%d %H:%M:%S") }}'
+        },
+        request: {
+            endpoint: '{{ request.endpoint }}',
+            method: '{{ request.method }}',
+            path: '{{ request.path }}',
+            url: '{{ request.url }}',
+            ip: '{{ request.remote_addr }}',
+            userAgent: `{{ request.user_agent.string|replace("'", "\\'")|replace('"', '\\"') }}`
+        },
+        user: {
+            {% if current_user.is_authenticated %}
+            id: {{ current_user.id }},
+            username: '{{ current_user.username }}',
+            isAdmin: {{ current_user.is_admin|tojson }}
+            {% else %}
+            status: '未登录'
+            {% endif %}
+        },
+        environment: {
+            flaskEnv: '{{ config.ENV }}',
+            debugMode: {{ config.DEBUG|tojson }},
+            serverTime: '{{ now().strftime("%Y-%m-%d %H:%M:%S") }}'
+        }
+    };
+
+    // 格式化错误信息
+    const formattedInfo = JSON.stringify(errorInfo, null, 2);
+    
+    // 使用现代的Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(formattedInfo)
+            .then(() => showCopySuccess())
+            .catch(() => fallbackCopy(formattedInfo));
+    } else {
+        fallbackCopy(formattedInfo);
+    }
+}
+
+// 兼容模式复制功能
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    document.body.appendChild(textarea);
+    
+    try {
+        textarea.select();
+        const success = document.execCommand('copy');
+        if (success) {
+            showCopySuccess();
+        } else {
+            showCopyError();
+        }
+    } catch (err) {
+        console.error('复制错误信息失败:', err);
+        showCopyError();
+    } finally {
+        document.body.removeChild(textarea);
+    }
+}
+
+// 显示复制成功状态
+function showCopySuccess() {
+    const copyBtn = document.getElementById('copyBtn');
+    const originalText = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> 已复制';
+    copyBtn.classList.remove('btn-outline-secondary');
+    copyBtn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+        copyBtn.classList.remove('btn-success');
+        copyBtn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+// 显示复制失败状态
+function showCopyError() {
+    const copyBtn = document.getElementById('copyBtn');
+    const originalText = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fas fa-times"></i> 复制失败';
+    copyBtn.classList.remove('btn-outline-secondary');
+    copyBtn.classList.add('btn-danger');
+    
+    setTimeout(() => {
+        copyBtn.innerHTML = originalText;
+        copyBtn.classList.remove('btn-danger');
+        copyBtn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}

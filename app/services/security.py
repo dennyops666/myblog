@@ -15,15 +15,15 @@ from typing import Dict, Any, Union, Tuple, Optional, List
 from werkzeug.utils import secure_filename
 from app.extensions import cache, db
 from app.utils.markdown import markdown_to_html
-from flask_wtf.csrf import generate_csrf
+
 from bs4 import BeautifulSoup
 from markdown import markdown
-from flask import current_app, session, request
-from datetime import datetime, timedelta, UTC
+from flask import current_app, request
+from datetime import datetime
 import secrets
 import logging
 import ipaddress
-from app.models import User, Post, UserSession
+from app.models import User, Post
 
 logger = logging.getLogger('app')
 
@@ -91,106 +91,11 @@ class SecurityService:
             r"SLEEP\s*\("
         ]
 
-        self.session_timeout = 30  # 会话超时时间（分钟）
         self.password_pattern = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$'
 
-    def validate_csrf_token(self, token=None):
-        """验证CSRF令牌"""
-        # 在测试环境中，如果没有令牌，生成一个新的
-        if current_app.config.get('TESTING'):
-            # 从请求中获取令牌
-            if not token:
-                token = request.headers.get('X-CSRF-Token')
-                if not token and request.form:
-                    token = request.form.get('csrf_token')
-                
-            # 如果没有令牌，生成一个新的
-            if not token:
-                token = secrets.token_urlsafe(32)
-                session['csrf_token'] = token
-                session['_fresh'] = True
-                session['_permanent'] = True
-                session['user_agent'] = request.headers.get('User-Agent', '')
-                session['last_active'] = datetime.now(UTC).isoformat()
-                return True
-            
-            # 如果会话中没有令牌，设置当前令牌
-            if 'csrf_token' not in session:
-                session['csrf_token'] = token
-                session['_fresh'] = True
-                session['_permanent'] = True
-                session['user_agent'] = request.headers.get('User-Agent', '')
-                session['last_active'] = datetime.now(UTC).isoformat()
-                return True
-            
-            # 在测试环境中，只要令牌存在就返回True
-            return True
+
         
-        # 从请求中获取令牌
-        if not token:
-            token = request.headers.get('X-CSRF-Token')
-            if not token and request.form:
-                token = request.form.get('csrf_token')
-            
-        # 从会话中获取存储的令牌
-        stored_token = session.get('csrf_token')
-        
-        # 如果没有令牌或存储的令牌，生成一个新的
-        if not token or not stored_token:
-            token = secrets.token_urlsafe(32)
-            session['csrf_token'] = token
-            return False
-        
-        # 验证令牌
-        return secrets.compare_digest(token, stored_token)
-            
-    def generate_csrf_token(self) -> str:
-        """生成CSRF令牌
-        
-        Returns:
-            str: 生成的CSRF令牌
-        """
-        token = secrets.token_urlsafe(32)
-        if current_app.config.get('TESTING'):
-            session['csrf_token'] = token
-            session['_fresh'] = True
-            session['_permanent'] = True
-            session['user_agent'] = 'test_agent'
-            session['last_active'] = datetime.now(UTC).isoformat()
-        return token
-        
-    def validate_session(self) -> bool:
-        """验证会话状态"""
-        try:
-            # 在测试环境中完全跳过会话验证
-            if current_app.testing:
-                return True
-                
-            # 检查会话是否存在必要的属性
-            required_attrs = ['_fresh', 'user_agent', 'last_active']
-            if not all(attr in session for attr in required_attrs):
-                self.logger.warning("会话缺少必要属性")
-                return False
-            
-            # 生产环境中严格验证用户代理
-            current_ua = request.user_agent.string
-            session_ua = session['user_agent']
-            if current_ua != session_ua:
-                self.logger.warning("用户代理不匹配")
-                return False
-            
-            # 验证会话新鲜度
-            if not session.get('_fresh'):
-                self.logger.warning("会话不是新鲜的")
-                return False
-            
-            # 更新最后活动时间
-            session['last_active'] = self.get_current_timestamp()
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"会话验证失败: {str(e)}")
-            return False
+
         
     def get_current_timestamp(self) -> str:
         """获取当前时间戳
@@ -234,13 +139,61 @@ class SecurityService:
         Returns:
             str: 安全的评论内容
         """
-        # 移除所有HTML标签和JavaScript相关内容
-        clean_text = bleach.clean(content, tags=[], strip=True)
-        # 移除常见的JavaScript关键字
-        js_keywords = ['javascript', 'script', 'alert', 'onerror', 'onload', 'eval']
-        for keyword in js_keywords:
-            clean_text = clean_text.replace(keyword, '')
-        return clean_text
+        try:
+            current_app.logger.info('开始清理评论内容，长度: %d', len(content) if content else 0)
+            
+            if not content:
+                current_app.logger.warning('评论内容为空')
+                return ''
+            
+            # 检查内容长度
+            if len(content) > 1000:  # 限制评论长度为1000字符
+                current_app.logger.warning('评论内容超过长度限制: %d', len(content))
+                content = content[:1000]
+            
+            # 移除所有HTML标签和JavaScript相关内容
+            clean_text = bleach.clean(content, tags=[], strip=True)
+            
+            # 移除危险的JavaScript关键字和模式
+            dangerous_patterns = {
+                # JavaScript 相关
+                r'(?i)javascript\s*:', r'(?i)\bon\w+\s*=',
+                # 脚本标签
+                r'(?i)<\s*script\b[^>]*>', r'(?i)</\s*script\s*>',
+                # 危险的属性
+                r'(?i)\bdata-[\w\-]*\s*=',
+                # 危险的协议
+                r'(?i)\b(?:javascript|vbscript|expression|data)\s*:',
+                # 危险的函数
+                r'(?i)\b(?:eval|setTimeout|setInterval|Function)\s*\(',
+                # 危险的属性访问
+                r'(?i)\b(?:document\.cookie|window\.location)\b',
+                # iframe 相关
+                r'(?i)<\s*iframe\b[^>]*>', r'(?i)</\s*iframe\s*>'
+            }
+            
+            # 对每个危险模式进行替换
+            for pattern in dangerous_patterns:
+                try:
+                    clean_text = re.sub(pattern, '', clean_text)
+                except Exception as e:
+                    current_app.logger.error(f'清理评论内容时发生错误 (模式: {pattern}): {str(e)}')
+                    continue  # 继续处理下一个模式
+            
+            # 移除连续的空白字符
+            clean_text = ' '.join(clean_text.split())
+            
+            # 检查是否包含SQL注入威胁
+            if self.check_sql_injection(clean_text):
+                current_app.logger.warning('发现可能的SQL注入威胁: %s', clean_text)
+                return ''
+            
+            current_app.logger.info('评论内容清理完成，最终长度: %d', len(clean_text))
+            return clean_text
+            
+        except Exception as e:
+            current_app.logger.error('清理评论内容时发生错误: %s', str(e))
+            return ''
         
     def sanitize_html(self, content: str) -> str:
         """清理HTML内容中的XSS威胁
@@ -546,38 +499,7 @@ class SecurityService:
         return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in self.ALLOWED_EXTENSIONS
         
-    def validate_csrf(self, token):
-        """验证CSRF令牌"""
-        from flask_wtf.csrf import validate_csrf
-        try:
-            validate_csrf(token)
-            return True
-        except:
-            return False
         
-    def init_session(self, user_id: int) -> None:
-        """初始化用户会话
-        
-        Args:
-            user_id: 用户ID
-        """
-        try:
-            session.clear()
-            session['user_id'] = user_id
-            session['_fresh'] = True
-            session['_permanent'] = True
-            session['user_agent'] = request.user_agent.string
-            session['last_active'] = self.get_current_timestamp()
-            session['csrf_token'] = self.generate_csrf_token()
-            
-            # 在测试环境中添加额外的会话数据
-            if current_app.testing:
-                session['test_mode'] = True
-                
-        except Exception as e:
-            self.logger.error(f"初始化会话失败: {str(e)}")
-            raise 
-
     def check_file_security(self, filename, content):
         """检查文件安全性"""
         # 检查文件扩展名
@@ -617,25 +539,7 @@ class SecurityService:
         """验证密码强度"""
         return bool(re.match(self.password_pattern, password))
     
-    def is_session_valid(self, session: UserSession) -> bool:
-        """检查会话是否有效"""
-        if not session.is_active:
-            return False
-            
-        if session.last_active + timedelta(minutes=self.session_timeout) < datetime.now(UTC):
-            return False
-            
-        return True
-    
-    def update_session_activity(self, session: UserSession) -> None:
-        """更新会话活动时间"""
-        session.last_active = datetime.now(UTC)
-        db.session.commit()
-    
-    def invalidate_session(self, session: UserSession) -> None:
-        """使会话失效"""
-        session.is_active = False
-        db.session.commit()
+
     
     def validate_ip_address(self, ip: str) -> bool:
         """验证IP地址格式"""
@@ -644,18 +548,6 @@ class SecurityService:
             return True
         except ValueError:
             return False
-    
-    def is_safe_url(self, url: str) -> bool:
-        """检查URL是否安全"""
-        from urllib.parse import urlparse, urljoin
-        ref_url = urlparse(request.host_url)
-        test_url = urlparse(urljoin(request.host_url, url))
-        return test_url.scheme in ('http', 'https') and \
-            ref_url.netloc == test_url.netloc
-    
-    def sanitize_redirect_url(self, url: str, default: str = '/') -> str:
-        """清理重定向URL"""
-        return url if url and self.is_safe_url(url) else default
     
     def check_resource_access(self, user: User, resource: Any) -> bool:
         """检查用户是否有权限访问资源"""
@@ -666,14 +558,4 @@ class SecurityService:
             return True
         return False
     
-    def get_user_sessions(self, user: User) -> List[UserSession]:
-        """获取用户的所有会话"""
-        return UserSession.query.filter_by(user_id=user.id, is_active=True).all()
-    
-    def terminate_all_sessions(self, user: User, except_session_id: Optional[str] = None) -> None:
-        """终止用户的所有会话"""
-        query = UserSession.query.filter_by(user_id=user.id, is_active=True)
-        if except_session_id:
-            query = query.filter(UserSession.session_id != except_session_id)
-        query.update({'is_active': False})
-        db.session.commit() 
+ 

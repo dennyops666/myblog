@@ -5,16 +5,18 @@
 创建日期：2024-03-21
 """
 
-from flask import Blueprint, request, jsonify, session, render_template
-from app.services import SecurityService
+from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for, flash, current_app
+from flask_login import login_required
+from app.services import get_security_service
 from app.extensions import db
 from app.models import User
 from app.utils import sql_injection_protect, xss_protect
 from werkzeug.security import check_password_hash
-from flask_login import login_required
 
-test_bp = Blueprint('test', __name__)
-security_service = SecurityService()
+test_bp = Blueprint('test', __name__, url_prefix='/test')
+
+# 获取服务实例
+security_service = get_security_service()
 
 @test_bp.route('/login', methods=['GET', 'POST'])
 @sql_injection_protect()

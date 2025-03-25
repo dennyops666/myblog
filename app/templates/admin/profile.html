@@ -1,33 +1,87 @@
-{% extends "admin/layout.html" %}
+{% extends 'admin/base.html' %}
 
-{% block title %}个人资料 - MyBlog{% endblock %}
+{% block title %}个人资料 - 管理后台{% endblock %}
+
+{% block page_title %}个人资料{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">个人资料</h5>
-    </div>
-    <div class="card-body">
-        <form method="post" action="{{ url_for('admin.profile') }}">
-            {{ form.csrf_token }}
-            <div class="mb-3">
-                <label for="username" class="form-label">用户名</label>
-                <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" readonly>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">邮箱</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">新密码</label>
-                <input type="password" class="form-control" id="password" name="password" placeholder="留空表示不修改">
-            </div>
-            <div class="mb-3">
-                <label for="confirm_password" class="form-label">确认新密码</label>
-                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="留空表示不修改">
-            </div>
-            <button type="submit" class="btn btn-primary">保存修改</button>
-        </form>
+<div class="container">
+    <h2 class="mb-4">个人资料</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('admin_dashboard.profile') }}" novalidate>
+                <div class="row mb-3">
+                    <label for="username" class="col-sm-2 col-form-label">用户名</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                        <div class="form-text">用户名不能更改</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <label for="email" class="col-sm-2 col-form-label">邮箱</label>
+                    <div class="col-sm-10">
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <label for="password" class="col-sm-2 col-form-label">新密码</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="password" name="password">
+                        <div class="form-text">如果不修改密码，请留空</div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <label for="confirm_password" class="col-sm-2 col-form-label">确认新密码</label>
+                    <div class="col-sm-10">
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-10 offset-sm-2">
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                        <a href="{{ url_for('admin_dashboard.index') }}" class="btn btn-secondary">返回</a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    console.log('个人资料页面初始化完成');
+    
+    // 移除表单提交事件，让它直接执行默认的表单提交行为
+    // $('form').on('submit', function(e) {
+    //     e.preventDefault();
+    //     console.log('表单提交被触发');
+        
+    //     // 表单数据
+    //     const formData = {
+    //         email: $('#email').val(),
+    //         password: $('#password').val(),
+    //         confirm_password: $('#confirm_password').val()
+    //     };
+        
+    //     console.log('准备发送数据:', formData);
+        
+    //     // 使用标准表单提交代替AJAX请求
+    //     this.submit();
+    // });
+});
+
+// 添加全局错误捕获
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('全局错误捕获:', message, source, lineno, colno, error);
+    alert('发生JavaScript错误: ' + message);
+    return true;
+};
+</script>
+{% endblock %}

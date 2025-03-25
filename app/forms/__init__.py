@@ -8,13 +8,20 @@
 from flask_wtf import FlaskForm
 
 class BaseForm(FlaskForm):
-    """基础表单类，禁用 CSRF 保护"""
+    """基础表单类"""
     class Meta:
         csrf = False
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 from .auth import LoginForm, RegisterForm
-from .admin import PostForm, CategoryForm, TagForm, ProfileForm
+from .admin.post import PostForm
 from .comment import CommentForm
+# 从tag_form模块导入TagForm
+from .tag_form import TagForm
+# 从tag模块导入TagCreateForm和TagEditForm
+from .tag import TagCreateForm, TagEditForm
 
 # 导出所有表单类
 __all__ = [
@@ -22,8 +29,8 @@ __all__ = [
     'LoginForm',
     'RegisterForm',
     'PostForm',
-    'CategoryForm',
+    'CommentForm',
     'TagForm',
-    'ProfileForm',
-    'CommentForm'
+    'TagCreateForm',
+    'TagEditForm'
 ] 

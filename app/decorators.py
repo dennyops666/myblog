@@ -9,7 +9,6 @@ from functools import wraps
 from flask import jsonify, request, current_app, abort, flash, redirect, url_for
 from flask_login import current_user
 from app.models.permission import Permission
-from flask_wtf.csrf import generate_csrf
 
 def api_login_required(f):
     """API登录验证装饰器"""
@@ -40,8 +39,7 @@ def admin_required(f):
             if is_api_request:
                 return jsonify({
                     'success': False,
-                    'message': '请先登录后再访问',
-                    'csrf_token': generate_csrf()
+                    'message': '请先登录后再访问'
                 }), 401
             return abort(401, description='请先登录后再访问')
         
@@ -50,8 +48,7 @@ def admin_required(f):
             if is_api_request:
                 return jsonify({
                     'success': False,
-                    'message': '您没有管理员权限，无法访问此页面',
-                    'csrf_token': generate_csrf()
+                    'message': '您没有管理员权限，无法访问此页面'
                 }), 403
             return abort(403, description='您没有管理员权限，无法访问此页面')
             

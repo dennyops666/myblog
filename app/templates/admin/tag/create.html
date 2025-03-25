@@ -4,60 +4,73 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">创建标签</h1>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h2">创建标签</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('admin_dashboard.tag.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 返回标签列表
+            </a>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('admin.tag.create') }}" id="tagForm" data-ajax="false">
-                {{ form.csrf_token }}
-                
-                <div class="mb-3">
-                    <label for="name" class="form-label">名称 <span class="text-danger">*</span></label>
-                    {{ form.name(class="form-control") }}
-                    <div class="invalid-feedback" id="name-error" style="display: none;"></div>
-                    {% if form.name.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.name.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_dashboard.tag.create') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">标签名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+                                   id="name" name="name" value="{{ form.name.data or '' }}" required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="slug" class="form-label">别名</label>
+                            <input type="text" class="form-control {% if form.slug.errors %}is-invalid{% endif %}" 
+                                   id="slug" name="slug" value="{{ form.slug.data or '' }}">
+                            <div class="form-text">用于URL，留空将自动根据名称生成</div>
+                            {% if form.slug.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.slug.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 保存标签
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mb-3">
-                    <label for="slug" class="form-label">别名 <span class="text-danger">*</span></label>
-                    {{ form.slug(class="form-control") }}
-                    <div class="invalid-feedback" id="slug-error" style="display: none;"></div>
-                    <small class="form-text text-muted">用于URL的友好显示，只能包含小写字母、数字和连字符</small>
-                    {% if form.slug.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.slug.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">标签说明</h5>
                 </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label">描述</label>
-                    {{ form.description(class="form-control", rows=3) }}
-                    <div class="invalid-feedback" id="description-error" style="display: none;"></div>
-                    {% if form.description.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.description.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                <div class="card-body">
+                    <p>标签用于对文章进行分类和归档，一篇文章可以有多个标签。</p>
+                    <ul>
+                        <li>标签名称：显示给读者的名称，如"Python"、"Flask"等</li>
+                        <li>别名：用于URL中的标识符，如"python"、"flask"等</li>
+                    </ul>
+                    <p class="mb-0 text-muted">创建标签后，可以在编辑文章时将其关联到文章。</p>
                 </div>
-
-                <div class="text-end">
-                    <a href="{{ url_for('admin.tag.index') }}" class="btn btn-secondary me-2">返回</a>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">保存</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -66,93 +79,24 @@
 {% block scripts %}
 {{ super() }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('tagForm');
-    const submitBtn = document.getElementById('submitBtn');
-    let isSubmitting = false;
-    
-    // 清除所有错误提示
-    function clearErrors() {
-        const errorDivs = document.querySelectorAll('.invalid-feedback');
-        errorDivs.forEach(div => {
-            div.style.display = 'none';
-            div.textContent = '';
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const slugInput = document.getElementById('slug');
         
-        const inputs = form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-    }
-    
-    // 显示字段错误
-    function showFieldError(fieldName, errorMessage) {
-        const errorDiv = document.getElementById(`${fieldName}-error`);
-        const input = form.querySelector(`#${fieldName}`);
-        if (errorDiv && input) {
-            errorDiv.textContent = errorMessage;
-            errorDiv.style.display = 'block';
-            input.classList.add('is-invalid');
-        }
-    }
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();  // 阻止事件冒泡
-        
-        // 防止重复提交
-        if (isSubmitting) {
-            return;
-        }
-        
-        clearErrors();
-        isSubmitting = true;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 保存中...';
-        
-        const formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('success', data.message);
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 1000);
-            } else {
-                // 显示错误消息
-                if (data.errors) {
-                    // 显示字段级别的错误
-                    Object.entries(data.errors).forEach(([field, errors]) => {
-                        showFieldError(field, errors[0]);
-                    });
-                }
-                showToast('error', data.message);
+        // 当名称输入框值变化时，自动生成slug
+        nameInput.addEventListener('input', function() {
+            // 如果slug为空，则自动生成
+            if (!slugInput.value.trim()) {
+                // 转换为小写，替换空格为连字符，移除特殊字符
+                const slug = this.value.trim()
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\w\-]+/g, '')
+                    .replace(/\-\-+/g, '-');
                 
-                // 重置提交状态
-                isSubmitting = false;
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '保存';
+                slugInput.value = slug;
             }
-        })
-        .catch(error => {
-            console.error('请求错误:', error);
-            showToast('error', '保存失败，请稍后重试');
-            
-            // 重置提交状态
-            isSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '保存';
         });
     });
-});
 </script>
 {% endblock %} 

@@ -1,25 +1,36 @@
 import re
-from unidecode import unidecode
+import unicodedata
+from datetime import datetime
 
-def generate_slug(text):
+def generate_slug(text, max_length=50):
     """
-    生成 URL 友好的 slug
-    :param text: 原始文本
-    :return: URL 友好的 slug
-    """
-    # 移除中文字符，转换为拼音或空字符串
-    text = unidecode(text)
+    生成URL友好的slug
     
+    参数:
+        text (str): 要转换为slug的文本
+        max_length (int): slug的最大长度
+        
+    返回:
+        str: 生成的slug
+    """
     # 转换为小写
     text = text.lower()
     
-    # 将非字母数字字符替换为连字符
-    text = re.sub(r'[^a-z0-9]+', '-', text)
+    # 将Unicode字符转换为ASCII
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     
-    # 移除首尾的连字符
-    text = text.strip('-')
+    # 替换非字母数字字符为连字符
+    text = re.sub(r'[^a-z0-9\-]', '-', text)
     
-    # 将多个连字符替换为单个连字符
+    # 替换多个连续连字符为单个连字符
     text = re.sub(r'-+', '-', text)
     
-    return text 
+    # 移除开头和结尾的连字符
+    text = text.strip('-')
+    
+    # 如果slug为空，使用当前时间戳
+    if not text:
+        text = f"tag-{int(datetime.now().timestamp())}"
+    
+    # 截断到最大长度
+    return text[:max_length] 

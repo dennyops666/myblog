@@ -24,6 +24,8 @@ import secrets
 from flask import url_for, current_app
 import json
 from app.models.user import User
+from app.models.comment import Comment, CommentStatus
+import traceback
 
 class PostService:
     # 缓存配置
@@ -185,55 +187,47 @@ class PostService:
         Args:
             post_id: 文章ID
         """
+        current_app.logger.info(f"清除文章 {post_id} 相关的缓存")
+        
+        # 清除文章详情缓存
+        cache_key = self.CACHE_KEY_POST.format(post_id)
+        cache.delete(cache_key)
+        
+        # 清除置顶文章缓存
+        cache.delete(self.CACHE_KEY_STICKY)
+        
+        # 清除文章列表缓存
+        for page in range(1, self.MAX_CACHE_PAGES + 1):
+            cache_key = f'posts:page:{page}'
+            cache.delete(cache_key)
+            
+            # 清除分页大小变体
+            for per_page in [5, 10, 15, 20, 25, 30]:
+                cache_key = f'posts:page:{page}:{per_page}'
+                cache.delete(cache_key)
+        
+        # 清除搜索结果缓存 - 由于搜索内容多变，简单清除一些常见前缀
+        for prefix in ['search:', 'related:', 'category:', 'tag:', 'archive:']:
+            cache.delete_many(prefix)
+        
+        # 清除首页缓存
+        cache.delete('index_data')
+        
+        # 清除归档缓存
+        cache.delete('archives')
+        
+        # 清除相关文章缓存
+        cache.delete_many(f'related:{post_id}')
+        
+        # 强制清除所有与posts相关的缓存
         try:
-            # 获取文章对象
-            post = Post.query.get(post_id)
-            if not post:
-                return
+            cache.delete_many('posts:')
+        except:
+            pass
             
-            # 清除文章详情缓存
-            cache.delete(self.CACHE_KEY_POST.format(post_id))
-            
-            # 清除分类相关缓存
-            if post.category_id:
-                for page in range(1, self.MAX_CACHE_PAGES + 1):
-                    cache.delete(self.CACHE_KEY_CATEGORY.format(post.category_id, page, 10))
-            
-            # 清除标签相关缓存
-            for tag in post.tags:
-                for page in range(1, self.MAX_CACHE_PAGES + 1):
-                    cache.delete(self.CACHE_KEY_TAG.format(tag.id, page, 10))
-            
-            # 清除时间归档缓存
-            year = post.created_at.year
-            month = post.created_at.month
-            for page in range(1, self.MAX_CACHE_PAGES + 1):
-                cache.delete(self.CACHE_KEY_TIME.format(year, month, page, 10))
-            
-            # 清除相关文章缓存
-            cache.delete(self.CACHE_KEY_RELATED.format(post_id, 5))
-            
-            # 清除搜索缓存
-            for page in range(1, self.MAX_CACHE_PAGES + 1):
-                cache.delete(self.CACHE_KEY_SEARCH.format('', page, 10))
-            
-            # 清除置顶文章缓存
-            if post.is_sticky:
-                cache.delete(self.CACHE_KEY_STICKY)
-            
-            # 强制刷新数据库会话中的对象
-            db.session.refresh(post)
-            if post.category:
-                db.session.refresh(post.category)
-            for tag in post.tags:
-                db.session.refresh(tag)
-            
-        except Exception as e:
-            current_app.logger.error(f"清除缓存失败: {str(e)}")
-            current_app.logger.exception(e)
+        current_app.logger.info(f"缓存清除完成")
 
-    @staticmethod
-    def _build_search_query(search_text: str) -> Any:
+    def _build_search_query(self, search_text):
         """构建搜索查询
         
         Args:
@@ -242,6 +236,8 @@ class PostService:
         Returns:
             查询条件
         """
+        # 确保search_text是字符串类型
+        search_text = str(search_text) if search_text is not None else ""
         search_terms = search_text.split()
         conditions = []
         
@@ -253,6 +249,10 @@ class PostService:
                 Post.summary.ilike(pattern)
             )
             conditions.append(term_condition)
+            
+        # 如果没有搜索条件，返回始终为真的条件
+        if not conditions:
+            return True
             
         return and_(*conditions)
     
@@ -305,6 +305,11 @@ class PostService:
                 if not author:
                     raise ValueError('作者不存在')
             
+            # 检查标题是否已存在
+            existing_post = Post.query.filter_by(title=title).first()
+            if existing_post:
+                raise ValueError('标题已存在，请使用不同的标题')
+            
             # 创建文章
             post = Post(
                 title=title,
@@ -333,11 +338,16 @@ class PostService:
             
             return post
             
+        except ValueError as e:
+            # 直接向上传递ValueError，保留原始错误信息
+            db.session.rollback()
+            current_app.logger.error(f"创建文章失败: {str(e)}")
+            raise
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"创建文章失败: {str(e)}")
             current_app.logger.exception(e)
-            raise ValueError('创建文章失败')
+            raise ValueError(f'创建文章失败: {str(e)}')
 
     def update_post(self, post_id, title=None, content=None, summary=None, category_id=None, tags=None, status=None):
         """更新文章
@@ -373,8 +383,13 @@ class PostService:
                 post.category_id = category_id
             
             # 更新基本信息
-            if title is not None:
+            if title is not None and title != post.title:
+                # 检查标题是否已存在
+                existing_post = Post.query.filter(Post.title == title, Post.id != post_id).first()
+                if existing_post:
+                    raise ValueError('标题已存在，请使用不同的标题')
                 post.title = title
+                
             if content is not None:
                 post.content = content
                 post.update_html_content()  # 更新HTML内容
@@ -536,47 +551,35 @@ class PostService:
             current_app.logger.error(f"获取文章列表失败: {str(e)}")
             return {'status': 'error', 'message': '获取文章列表失败，请稍后重试'}
 
-    def get_post_list(self, page=1, per_page=10, category=None, tag=None, author=None, include_private=False):
+    def get_post_list(self, page=1, per_page=10):
         """获取文章列表
         
         Args:
             page: 页码
             per_page: 每页数量
-            category: 分类ID
-            tag: 标签ID
-            author: 作者ID
-            include_private: 是否包含私密文章
             
         Returns:
             Pagination: 分页对象
         """
-        # 使用 joinedload 预加载关联数据
-        query = Post.query.options(
-            db.joinedload(Post.category),
-            db.joinedload(Post.author),
-            db.joinedload(Post.tags)  # 预加载标签关系
-        )
-        
-        if not include_private:
-            query = query.filter_by(is_private=False)
-        
-        if category:
-            query = query.filter_by(category_id=category)
-        
-        if tag:
-            query = query.join(Post.tags).filter(Tag.id == tag)
-        
-        if author:
-            query = query.filter_by(author_id=author)
-        
-        # 过滤已发布的文章
-        query = query.filter_by(status=PostStatus.PUBLISHED)
-        
-        return query.order_by(Post.created_at.desc()).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+        try:
+            # 获取已发布的文章
+            query = Post.query.filter_by(status=PostStatus.PUBLISHED)
+            
+            # 按创建时间倒序排序
+            query = query.order_by(Post.created_at.desc())
+            
+            # 分页
+            pagination = query.paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            
+            return pagination
+            
+        except Exception as e:
+            current_app.logger.error(f"获取文章列表失败: {str(e)}")
+            raise e
 
     def search_posts(self, keyword, page=1, per_page=10, include_private=False):
         """搜索文章"""
@@ -619,17 +622,49 @@ class PostService:
 
     def get_post_stats(self):
         """获取文章统计信息"""
-        total_posts = Post.query.count()
-        published_posts = Post.query.filter_by(is_private=False).count()
-        private_posts = Post.query.filter_by(is_private=True).count()
-        total_views = db.session.query(db.func.sum(Post.view_count)).scalar() or 0
-        
-        return {
-            'total_posts': total_posts,
-            'published_posts': published_posts,
-            'private_posts': private_posts,
-            'total_views': total_views
-        }
+        try:
+            # 获取文章总数
+            total = Post.query.count()
+            
+            # 获取已发布文章数量
+            published = Post.query.filter_by(
+                status=PostStatus.PUBLISHED,
+                is_private=False
+            ).count()
+            
+            # 获取草稿数量
+            draft = Post.query.filter_by(
+                status=PostStatus.DRAFT
+            ).count()
+            
+            # 获取总浏览量
+            total_views = db.session.query(db.func.sum(Post.view_count)).scalar() or 0
+            
+            current_app.logger.info('成功获取文章统计信息', extra={
+                'data': {
+                    'total': total,
+                    'published': published,
+                    'draft': draft,
+                    'total_views': total_views
+                }
+            })
+            
+            return {
+                'total': total,
+                'published': published,
+                'draft': draft,
+                'total_views': total_views
+            }
+            
+        except Exception as e:
+            current_app.logger.error(f'获取文章统计信息失败: {str(e)}')
+            current_app.logger.exception(e)
+            return {
+                'total': 0,
+                'published': 0,
+                'draft': 0,
+                'total_views': 0
+            }
 
     @staticmethod
     def get_sticky_posts() -> List[Post]:
@@ -656,196 +691,200 @@ class PostService:
         ).order_by(desc(Post.created_at))
         return Pagination(query, page, per_page)
     
+    @classmethod
+    def get_archives(cls, archived=True):
+        """
+        获取文章归档信息
+        :param archived: 是否包含归档状态的文章
+        :return: 归档字典，按年月组织
+        """
+        # 直接调用下面的静态方法
+        return cls.get_archives_static()
+        
     @staticmethod
-    def get_archives() -> Dict[str, Dict[str, List[Post]]]:
+    def get_archives_static() -> Dict[str, Dict[str, List[Post]]]:
         """获取文章归档信息"""
-        posts = Post.query.filter_by(status=1).order_by(desc(Post.created_at)).all()
-        archives: Dict[str, Dict[str, List[Post]]] = {}
+        from flask import current_app
+        from app.models.post import PostStatus
+        
+        # 直接打印调试信息
+        print("======= 开始获取归档信息 =======")
+        
+        # 检查缓存
+        from app.extensions import cache
+        cache_key = 'archives'
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            print("从缓存获取归档数据")
+            print("缓存中的归档月份数量: {}".format(len(cached_data)))
+            for key, posts in cached_data.items():
+                print("缓存月份: {}, 文章数: {}".format(key, len(posts)))
+                for post in posts:
+                    print("  - ID: {}, 标题: {}, 状态: {}, 创建时间: {}".format(
+                        post.id, post.title, post.status, post.created_at))
+            return cached_data
+        
+        print("从数据库重新生成归档数据")
+        
+        # 修改为: 获取已发布和已归档的文章
+        posts = Post.query.filter(
+            (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
+        ).order_by(desc(Post.created_at)).all()
+        
+        print("查询到的文章总数: {}".format(len(posts)))
+        for post in posts:
+            print("查询到文章: ID={}, 标题={}, 状态={}, 创建时间={}".format(
+                post.id, post.title, post.status, post.created_at))
+        
+        # 记录查询到的文章状态以便调试
+        status_counts = {}
+        for post in posts:
+            status_str = str(post.status)
+            if status_str not in status_counts:
+                status_counts[status_str] = 0
+            status_counts[status_str] += 1
+            
+        print(f"归档查询结果: 共 {len(posts)} 篇文章, 状态统计: {status_counts}")
+        
+        # 按年月组织文章
+        archives = {}
         
         for post in posts:
             if not post.created_at:
+                print(f"跳过文章 {post.id}，创建时间为空")
                 continue
-            year = post.created_at.strftime('%Y')
-            month = post.created_at.strftime('%m')
-            if year not in archives:
-                archives[year] = {}
-            if month not in archives[year]:
-                archives[year][month] = []
-            archives[year][month].append(post)
+                
+            # 生成键格式为 "2024-03" 的字符串
+            key = f"{post.created_at.year}-{post.created_at.month:02d}"
+            
+            if key not in archives:
+                archives[key] = []
+            archives[key].append(post)
+            print(f"添加文章到归档: {post.title} -> {key}")
+        
+        # 保存到缓存
+        cache.set(cache_key, archives, timeout=300)  # 5分钟过期
+        
+        print(f"归档数据生成完成，共 {len(archives)} 个月份")
+        for key, posts in archives.items():
+            print(f"月份 {key}: {len(posts)} 篇文章")
+            
+        print("======= 归档信息获取完成 =======")
         
         return archives
     
     @staticmethod
     def get_posts_by_time():
         """按时间线获取文章列表"""
-        return Post.query.filter_by(status=1).order_by(desc(Post.created_at)).all()
+        # 修改为使用枚举值
+        return Post.query.filter(
+            (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
+        ).order_by(desc(Post.created_at)).all()
     
-    @staticmethod
-    def get_related_posts(post, limit=5):
-        """获取相关文章"""
-        cache_key = f'related_posts_{post.id}_{limit}'
-        posts = cache.get(cache_key)
-        if posts is not None:
-            return posts
-            
-        # 根据标签获取相关文章
-        tag_ids = [tag.id for tag in post.tags]
-        if tag_ids:
-            posts = Post.query.filter(
-                Post.id != post.id,
-                Post.status == 1,
-                Post.tags.any(id=tag_ids)
-            ).order_by(desc(Post.created_at)).limit(limit).all()
-            
-            cache.set(cache_key, posts, timeout=300)
-            return posts
-        return []
-    
-    @staticmethod
-    def get_prev_next_post(post: Post) -> Tuple[Optional[Post], Optional[Post]]:
-        """获取上一篇和下一篇文章
+    def get_recent_posts(self, search=None, limit=5):
+        """获取最近文章
         
         Args:
-            post: 当前文章
+            search: 搜索关键词
+            limit: 返回的文章数量
             
         Returns:
-            Tuple[Optional[Post], Optional[Post]]: 上一篇和下一篇文章的元组
+            list: 文章列表
         """
         try:
-            # 获取上一篇文章（创建时间较早的最新一篇）
-            prev_post = Post.query.filter(
-                Post.status == PostStatus.PUBLISHED,
-                Post.created_at < post.created_at
-            ).order_by(Post.created_at.desc()).first()
+            current_app.logger.info(f"开始获取最近文章，搜索条件: {search}, 限制数量: {limit}")
             
-            # 获取下一篇文章（创建时间较晚的最早一篇）
-            next_post = Post.query.filter(
-                Post.status == PostStatus.PUBLISHED,
-                Post.created_at > post.created_at
-            ).order_by(Post.created_at.asc()).first()
+            # 强制同步数据库会话，避免缓存问题
+            db.session.commit()
             
-            return prev_post, next_post
+            # 构建基础查询 - 明确获取所有状态的文章，不做过滤
+            query = Post.query
             
+            # 记录查询条件
+            current_app.logger.info("查询所有状态的文章，不进行状态过滤")
+            
+            # 如果有搜索关键词，添加搜索条件
+            if search:
+                search_query = self._build_search_query(search)
+                query = query.filter(search_query)
+            
+            # 预加载关联数据以提高性能
+            query = query.options(
+                db.joinedload(Post.category),
+                db.joinedload(Post.author),
+                db.joinedload(Post.tags)
+            )
+            
+            # 打印SQL语句
+            current_app.logger.info(f"即将执行的SQL查询: {str(query)}")
+            
+            # 获取最新的文章，按创建时间倒序排序
+            posts = query.order_by(Post.created_at.desc()).limit(limit).all()
+            
+            if posts is None:
+                current_app.logger.warning("查询返回了None，将返回空列表")
+                return []
+            
+            current_app.logger.info(f"查询到 {len(posts)} 篇最近文章")
+            for post in posts:
+                current_app.logger.info(f"文章ID: {post.id}, 标题: {post.title}, 状态: {post.status}")
+            
+            # 确保所有对象都已从数据库加载完整数据
+            for post in posts:
+                db.session.refresh(post)
+                
+            # 确保关联数据被加载
+            for post in posts:
+                try:
+                    if post.category:
+                        db.session.refresh(post.category)
+                    if post.author:
+                        db.session.refresh(post.author)
+                    if post.tags:
+                        for tag in post.tags:
+                            db.session.refresh(tag)
+                except Exception as e:
+                    current_app.logger.error(f"加载文章 {post.id} 的关联数据时出错: {str(e)}")
+            
+            current_app.logger.info(f'成功获取最近文章，共 {len(posts)} 篇')
+            
+            # 最后检查一下是否所有文章都有标题
+            for i, post in enumerate(posts):
+                if not post.title:
+                    current_app.logger.warning(f"文章 {post.id} 没有标题，将设置默认标题")
+                    post.title = f"未命名文章 {post.id}"
+            
+            return posts
         except Exception as e:
-            current_app.logger.error(f"获取上一篇和下一篇文章失败: {str(e)}")
-            return None, None
-    
-    @staticmethod
-    def get_posts_by_category(category_id: int, page: int = 1, 
-                            per_page: int = 10) -> Pagination:
-        """获取分类下的文章列表"""
-        cache_key = PostService.CACHE_KEY_CATEGORY.format(
-            category_id, page, per_page
-        )
-        result = cache.get(cache_key)
-        if result is not None:
-            return result
-            
-        result = Post.query.filter_by(
-            category_id=category_id,
-            status=1
-        ).order_by(desc(Post.created_at)).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
-        
-        cache.set(cache_key, result, timeout=PostService.CACHE_TIMEOUT)
-        return result
-    
-    @staticmethod
-    def get_posts_by_tag(tag_id: int, page: int = 1, 
-                        per_page: int = 10) -> Pagination:
-        """获取标签下的文章列表"""
-        cache_key = PostService.CACHE_KEY_TAG.format(
-            tag_id, page, per_page
-        )
-        result = cache.get(cache_key)
-        if result is not None:
-            return result
-            
-        result = Post.query.filter(
-            Post.status == 1,
-            Post.tags.any(id=tag_id)
-        ).order_by(desc(Post.created_at)).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
-        
-        cache.set(cache_key, result, timeout=PostService.CACHE_TIMEOUT)
-        return result
-    
-    @staticmethod
-    def get_posts_by_time(year: Optional[int] = None, 
-                         month: Optional[int] = None,
-                         page: int = 1, 
-                         per_page: int = 10) -> Pagination:
-        """按时间线获取文章列表"""
-        cache_key = PostService.CACHE_KEY_TIME.format(
-            year or 0, month or 0, page, per_page
-        )
-        result = cache.get(cache_key)
-        if result is not None:
-            return result
-            
-        query = Post.query.filter_by(status=1)
-        
-        if year:
-            query = query.filter(extract('year', Post.created_at) == year)
-        if month:
-            query = query.filter(extract('month', Post.created_at) == month)
-            
-        result = query.order_by(desc(Post.created_at)).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
-        
-        cache.set(cache_key, result, timeout=PostService.CACHE_TIMEOUT)
-        return result
-
-    @staticmethod
-    def get_total_posts():
-        """获取文章总数"""
-        return Post.query.filter_by(status=1).count()
-
-    @staticmethod
-    def get_recent_posts(limit=5):
-        """获取最近文章"""
-        return Post.query.filter_by(status=1)\
-            .order_by(Post.created_at.desc())\
-            .limit(limit).all()
+            current_app.logger.error(f"获取最近文章时出错: {str(e)}")
+            current_app.logger.exception(e)
+            return []
 
     @staticmethod
     def get_related_posts(post, limit=5):
         """获取相关文章"""
-        # 根据相同标签获取相关文章
-        tag_ids = [tag.id for tag in post.tags]
-        if tag_ids:
-            return Post.query.filter(
-                Post.id != post.id,
-                Post.status == 1,
-                Post.tags.any(Tag.id.in_(tag_ids))
-            ).limit(limit).all()
-        return []
-
-    @staticmethod
-    def get_archives():
-        """获取文章归档"""
-        posts = Post.query.filter_by(status=1).order_by(desc(Post.created_at)).all()
-        archives = {}
-        
-        for post in posts:
-            year = post.created_at.year
-            month = post.created_at.month
-            key = f"{year}-{month:02d}"
+        try:
+            # 导入Tag模型
+            from app.models.tag import Tag
+            from sqlalchemy import desc
             
-            if key not in archives:
-                archives[key] = []
-            archives[key].append(post)
-            
-        return archives
+            # 根据标签获取相关文章
+            if not post or not hasattr(post, 'tags'):
+                current_app.logger.error(f"获取相关文章失败: 文章不存在或没有tags属性")
+                return []
+                
+            tag_ids = [tag.id for tag in post.tags]
+            if tag_ids:
+                return Post.query.filter(
+                    Post.id != post.id,
+                    (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED),
+                    Post.tags.any(Tag.id.in_(tag_ids))
+                ).order_by(desc(Post.created_at)).limit(limit).all()
+            return []
+        except Exception as e:
+            current_app.logger.error(f"获取相关文章失败: {str(e)}")
+            traceback.print_exc()
+            return []
 
     @staticmethod
     def get_post_by_id(post_id):
@@ -938,3 +977,122 @@ class PostService:
             current_app.logger.exception(e)
             db.session.rollback()
             raise
+
+    def get_prev_post(self, post: Post) -> Optional[Post]:
+        """获取上一篇文章
+        
+        Args:
+            post: 当前文章对象
+            
+        Returns:
+            Post: 上一篇文章对象，如果不存在则返回None
+        """
+        try:
+            return Post.query.filter(
+                Post.id < post.id,
+                (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED),
+                Post.is_private == False
+            ).order_by(Post.id.desc()).first()
+        except Exception as e:
+            current_app.logger.error(f"获取上一篇文章失败: {str(e)}")
+            return None
+            
+    def get_next_post(self, post: Post) -> Optional[Post]:
+        """获取下一篇文章
+        
+        Args:
+            post: 当前文章对象
+            
+        Returns:
+            Post: 下一篇文章对象，如果不存在则返回None
+        """
+        try:
+            return Post.query.filter(
+                Post.id > post.id,
+                (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED),
+                Post.is_private == False
+            ).order_by(Post.id.asc()).first()
+        except Exception as e:
+            current_app.logger.error(f"获取下一篇文章失败: {str(e)}")
+            return None
+
+    def get_post_count(self):
+        """获取文章总数"""
+        try:
+            return Post.query.count()
+        except Exception as e:
+            current_app.logger.error(f"获取文章总数失败: {str(e)}")
+            return 0
+
+    def count_posts_since(self, start_time: datetime) -> int:
+        """统计指定时间之后的文章数量
+        
+        Args:
+            start_time: 开始时间
+            
+        Returns:
+            int: 文章数量
+        """
+        try:
+            count = Post.query.filter(Post.created_at >= start_time).count()
+            return count
+        except Exception as e:
+            current_app.logger.error(f"统计文章数量失败: {str(e)}")
+            return 0
+
+    def get_all_tags(self):
+        """获取所有标签
+        
+        Returns:
+            list: 标签列表
+        """
+        try:
+            # 导入Tag模型，避免循环导入
+            from app.models.tag import Tag
+            
+            # 获取所有标签
+            tags = Tag.query.all()
+            
+            return tags
+            
+        except Exception as e:
+            current_app.logger.error(f'获取所有标签失败: {str(e)}')
+            current_app.logger.exception(e)
+            return []
+    
+    def get_posts_count_by_status(self, status):
+        """获取指定状态的文章数量
+        
+        Args:
+            status: 文章状态
+            
+        Returns:
+            int: 文章数量
+        """
+        try:
+            # 查询指定状态的文章数量
+            count = Post.query.filter(Post.status == status).count()
+            
+            return count
+            
+        except Exception as e:
+            current_app.logger.error(f'获取状态为{status}的文章数量失败: {str(e)}')
+            current_app.logger.exception(e)
+            return 0
+            
+    def get_total_posts(self):
+        """获取文章总数
+        
+        Returns:
+            int: 文章总数
+        """
+        try:
+            # 查询文章总数
+            count = Post.query.count()
+            
+            return count
+            
+        except Exception as e:
+            current_app.logger.error(f'获取文章总数失败: {str(e)}')
+            current_app.logger.exception(e)
+            return 0

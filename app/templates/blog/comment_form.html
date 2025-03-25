@@ -1,0 +1,30 @@
+{% if allow_comments and post.can_comment %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">发表评论</h5>
+        <form id="comment-form" class="comment-form" data-post-id="{{ post.id }}">
+            {% if not current_user.is_authenticated %}
+            <div class="mb-3">
+                <label for="nickname" class="form-label">昵称</label>
+                <input type="text" class="form-control" id="nickname" name="nickname" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">邮箱</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+            {% else %}
+            <div class="mb-3">
+                <div class="alert alert-info">
+                    您已登录为 <strong>{{ current_user.username }}</strong>，评论将以您的用户名发布
+                </div>
+            </div>
+            {% endif %}
+            <div class="mb-3">
+                <label for="content" class="form-label">评论内容</label>
+                <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">提交评论</button>
+        </form>
+    </div>
+</div>
+{% endif %} 

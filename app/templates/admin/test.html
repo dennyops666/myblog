@@ -1,0 +1,124 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}测试页面 - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>测试页面 - 最近文章</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="p-4">
+                        <h2>这是一个测试页面</h2>
+                        <p>此页面使用硬编码数据测试最近文章的显示功能。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近文章 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-file-text me-1"></i>
+                        最近文章 (测试数据)
+                    </div>
+                    <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-sm btn-primary">查看全部</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table recent-posts-table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>标题</th>
+                                    <th>发布日期</th>
+                                    <th>状态</th>
+                                    <th>阅读次数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_posts is defined and recent_posts %}
+                                    {% for post in recent_posts %}
+                                    <tr>
+                                        <td>
+                                            {% if post.title is defined %}
+                                                {{ post.title }}
+                                            {% else %}
+                                                未知标题
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if post.created_at is defined and post.created_at %}
+                                                {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if post.status is defined and post.status %}
+                                                {% if post.status.name is defined %}
+                                                    {% if post.status.name == 'PUBLISHED' %}
+                                                    <span class="badge bg-success">已发布</span>
+                                                    {% elif post.status.name == 'DRAFT' %}
+                                                    <span class="badge bg-warning">草稿</span>
+                                                    {% elif post.status.name == 'ARCHIVED' %}
+                                                    <span class="badge bg-secondary">已归档</span>
+                                                    {% else %}
+                                                    <span class="badge bg-secondary">{{ post.status.name }}</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary">未知状态</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">未知状态</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if post.view_count is defined %}
+                                                {{ post.view_count or 0 }}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="bi bi-pencil"></i> 编辑
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3">暂无文章</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面信息 -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>传递到模板的数据</h5>
+                </div>
+                <div class="card-body">
+                    <pre>{{ recent_posts|tojson(indent=2) }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

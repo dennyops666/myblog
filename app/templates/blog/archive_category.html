@@ -28,7 +28,7 @@
                         {% if posts.items %}
                         <div class="list-group">
                             {% for post in posts.items %}
-                            <a href="{{ url_for('blog.post', post_id=post.id) }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" class="list-group-item list-group-item-action">
                                 <div class="d-flex w-100 justify-content-between">
                                     <h5 class="mb-1">{{ post.title }}</h5>
                                     <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
@@ -100,7 +100,7 @@
                                         {% if category.posts %}
                                         <div class="list-group list-group-flush mt-3">
                                             {% for post in category.posts[:3] %}
-                                            <a href="{{ url_for('blog.post', post_id=post.id) }}" 
+                                            <a href="{{ url_for('blog.post_detail', post_id=post.id) }}" 
                                                class="list-group-item list-group-item-action px-0">
                                                 <div class="d-flex w-100 justify-content-between">
                                                     <h6 class="mb-1">{{ post.title }}</h6>

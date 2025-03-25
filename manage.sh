@@ -77,9 +77,9 @@ start() {
     activate_venv
     set_env
     
-    echo "启动命令: gunicorn app:create_app() --bind $HOST:$PORT --workers $WORKERS --timeout 120 --reload --pid $PID_FILE --log-file $LOG_FILE --error-logfile $ERROR_LOG --log-level debug --capture-output --enable-stdio-inheritance"
+    echo "启动命令: gunicorn wsgi:application --bind $HOST:$PORT --workers $WORKERS --timeout 120 --reload --pid $PID_FILE --log-file $LOG_FILE --error-logfile $ERROR_LOG --log-level debug --capture-output --enable-stdio-inheritance"
     
-    nohup gunicorn "app:create_app()" \
+    nohup gunicorn "wsgi:application" \
         --bind "$HOST:$PORT" \
         --workers $WORKERS \
         --timeout 120 \
@@ -123,7 +123,7 @@ stop() {
         echo "$APP_NAME 已停止"
     else
         # 尝试查找并停止所有相关进程
-        pids=$(pgrep -f "gunicorn.*app:create_app()")
+        pids=$(pgrep -f "gunicorn.*wsgi:application")
         if [ -n "$pids" ]; then
             echo "找到运行中的进程，正在停止..."
             for pid in $pids; do

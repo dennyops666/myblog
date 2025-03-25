@@ -5,17 +5,21 @@
 创建日期：2024-03-21
 """
 
+from datetime import datetime
 from flask import current_app
-from app.models import Tag, db, Post, PostStatus
 from app.extensions import db
-from app.services import SecurityService
+from app.models.tag import Tag
+from app.models.post import Post, PostStatus
+from app.services import get_security_service
 from typing import List, Optional, Dict
 from sqlalchemy import func
 from datetime import datetime, UTC
 
 class TagService:
+    """标签服务类"""
+    
     def __init__(self):
-        self.security = SecurityService()
+        self.security_service = get_security_service()
     
     def create_tag(self, name, slug, description=None):
         """创建标签
@@ -85,7 +89,6 @@ class TagService:
         
         # 为每个标签计算已发布文章的数量
         for tag in tags:
-            from app.models import Post, PostStatus
             tag.post_count = Post.query.filter(
                 Post.tags.any(id=tag.id),
                 Post.status == PostStatus.PUBLISHED
@@ -183,7 +186,6 @@ class TagService:
         
         # 为分页后的标签计算文章数量
         for tag in pagination.items:
-            from app.models import Post, PostStatus
             tag.post_count = Post.query.filter(
                 Post.tags.any(id=tag.id),
                 Post.status == PostStatus.PUBLISHED
@@ -192,14 +194,57 @@ class TagService:
         return pagination
     
     def search_tags(self, keyword, page=1, per_page=10):
-        """搜索标签"""
-        return Tag.query.filter(
-            Tag.name.ilike(f'%{keyword}%')
-        ).paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
+        """搜索标签
+        
+        Args:
+            keyword: 搜索关键词
+            page: 页码
+            per_page: 每页数量
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        try:
+            query = Tag.query.filter(Tag.name.ilike(f'%{keyword}%'))
+            
+            # 执行分页查询
+            pagination = query.paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            
+            current_app.logger.info('成功搜索标签', extra={
+                'data': {
+                    'keyword': keyword,
+                    'page': page,
+                    'per_page': per_page,
+                    'total': pagination.total
+                }
+            })
+            
+            return pagination
+            
+        except Exception as e:
+            current_app.logger.error(f'搜索标签失败: {str(e)}')
+            current_app.logger.exception(e)
+            return None
+    
+    def get_total_tags(self):
+        """获取标签总数
+        
+        Returns:
+            int: 标签总数
+        """
+        try:
+            total = Tag.query.count()
+            current_app.logger.info(f'成功获取标签总数: {total}')
+            return total
+            
+        except Exception as e:
+            current_app.logger.error(f'获取标签总数失败: {str(e)}')
+            current_app.logger.exception(e)
+            return 0
     
     def get_tag_stats(self):
         """获取标签统计信息"""

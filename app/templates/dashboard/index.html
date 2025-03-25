@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表板{% endblock %}
+
+{% block styles %}
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .card-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    .quick-actions a {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>欢迎回来，{{ current_user.username }}</h1>
+            <p class="text-muted">这是您的个人仪表板，您可以在这里管理您的博客内容。</p>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📝</div>
+                    <h5 class="card-title">文章总数</h5>
+                    <h2>{{ stats.posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📢</div>
+                    <h5 class="card-title">已发布</h5>
+                    <h2>{{ stats.published_posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-warning text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">📋</div>
+                    <h5 class="card-title">草稿</h5>
+                    <h2>{{ stats.draft_posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body text-center">
+                    <div class="card-icon">💬</div>
+                    <h5 class="card-title">评论</h5>
+                    <h2>{{ stats.comments }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">快速操作</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row quick-actions">
+                        <div class="col-md-3 text-center mb-3">
+                            <a href="{{ url_for('admin_view.post_create') }}" class="btn btn-outline-primary btn-lg btn-block">
+                                <i class="fa fa-plus-circle"></i> 写文章
+                            </a>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <a href="{{ url_for('admin_view.category_create') }}" class="btn btn-outline-success btn-lg btn-block">
+                                <i class="fa fa-folder"></i> 添加分类
+                            </a>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <a href="{{ url_for('admin_view.tag_create') }}" class="btn btn-outline-info btn-lg btn-block">
+                                <i class="fa fa-tag"></i> 添加标签
+                            </a>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <a href="{{ url_for('admin_view.user_profile') }}" class="btn btn-outline-secondary btn-lg btn-block">
+                                <i class="fa fa-user"></i> 个人资料
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近文章 -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">最近文章</h5>
+                    <a href="{{ url_for('admin_view.post_index') }}" class="btn btn-sm btn-primary">查看全部</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_posts %}
+                    <div class="list-group">
+                        {% for post in recent_posts %}
+                        <a href="{{ url_for('admin_view.post_edit', post_id=post.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ post.title }}</h5>
+                                <small>{{ post.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ post.content|striptags|truncate(100) }}</p>
+                            <small>状态: 
+                                {% if post.status.name == 'PUBLISHED' %}
+                                <span class="badge badge-success">已发布</span>
+                                {% elif post.status.name == 'DRAFT' %}
+                                <span class="badge badge-warning">草稿</span>
+                                {% else %}
+                                <span class="badge badge-secondary">{{ post.status.name }}</span>
+                                {% endif %}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">暂无文章</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近评论 -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">最近评论</h5>
+                    <a href="#" class="btn btn-sm btn-primary">查看全部</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_comments %}
+                    <div class="list-group">
+                        {% for comment in recent_comments %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ comment.nickname }}</h5>
+                                <small>{{ comment.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-1">{{ comment.content|striptags|truncate(100) }}</p>
+                            <small>文章: <a href="{{ url_for('blog.post_detail', post_id=comment.post_id) }}">{{ comment.post.title }}</a></small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">暂无评论</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 可以添加一些交互效果
+    $(document).ready(function() {
+        // 示例：添加卡片点击效果
+        $('.stats-card').click(function() {
+            // 可以添加点击后的行为
+        });
+    });
+</script>
+{% endblock %} 
