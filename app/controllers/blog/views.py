@@ -523,21 +523,39 @@ def tag_posts(tag_id):
         page = request.args.get('page', 1, type=int)
         per_page = 10
         
-        # 获取标签下的文章
-        pagination = post_service.get_posts_by_tag(tag_id, page, per_page)
-        posts = pagination.items
-        
         # 获取标签信息
         tag = tag_service.get_tag_by_id(tag_id)
         if not tag:
             abort(404)
         
-        return render_template('blog/tag.html',
+        # 直接使用SQLAlchemy查询标签下的文章，而不使用get_posts_by_tag方法
+        query = Post.query.filter(
+            Post.tags.any(id=tag_id),
+            (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
+        ).order_by(Post.created_at.desc())
+        
+        # 执行分页查询
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        posts = pagination.items
+        
+        # 获取所有分类和标签用于侧边栏显示
+        categories = category_service.get_all_categories()
+        tags = tag_service.get_all_tags()
+        
+        # 日志记录
+        current_app.logger.info(f"获取标签 '{tag.name}' (ID: {tag_id}) 的文章，共 {pagination.total} 篇")
+        
+        return render_template('blog/tag_posts.html',
                             tag=tag,
                             posts=posts,
-                            pagination=pagination)
+                            pagination=pagination,
+                            title=f'标签: {tag.name}',
+                            categories=categories,
+                            tags=tags)
     except Exception as e:
         current_app.logger.error(f"获取标签页面失败: {str(e)}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
         return render_template('blog/error.html', error_message='服务器内部错误'), 500
 
 @blog_bp.route('/search')
