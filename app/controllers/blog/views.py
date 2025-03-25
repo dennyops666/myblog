@@ -499,8 +499,8 @@ def category_posts(category_id):
         page = request.args.get('page', 1, type=int)
         per_page = 10
         
-        # 获取分类下的文章
-        pagination = post_service.get_posts_by_category(category_id, page, per_page)
+        # 获取分类下的文章 - 使用category_service而不是post_service
+        pagination = category_service.get_posts_by_category(category_id, page, per_page)
         posts = pagination.items
         
         # 获取分类信息
@@ -508,12 +508,24 @@ def category_posts(category_id):
         if not category:
             abort(404)
         
-        return render_template('blog/category.html',
+        # 获取所有分类和标签用于侧边栏显示
+        categories = category_service.get_all_categories()
+        tags = tag_service.get_all_tags()
+        
+        # 日志记录
+        current_app.logger.info(f"获取分类 '{category.name}' (ID: {category_id}) 的文章，共 {pagination.total} 篇")
+        
+        return render_template('blog/category_posts.html',
                             category=category,
                             posts=posts,
-                            pagination=pagination)
+                            pagination=pagination,
+                            title=f'分类: {category.name}',
+                            categories=categories,
+                            tags=tags)
     except Exception as e:
         current_app.logger.error(f"获取分类页面失败: {str(e)}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
         return render_template('blog/error.html', error_message='服务器内部错误'), 500
 
 @blog_bp.route('/tag/<int:tag_id>')

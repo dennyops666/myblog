@@ -156,10 +156,10 @@ class CategoryService:
         result = []
         
         for category in categories:
-            from app.models.post import Post
-            post_count = Post.query.filter_by(
-                category_id=category.id, 
-                status=1
+            from app.models.post import Post, PostStatus
+            post_count = Post.query.filter(
+                Post.category_id == category.id,
+                (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
             ).count()
             result.append({
                 'id': category.id,
@@ -191,10 +191,10 @@ class CategoryService:
             
             categories = []
             for category in pagination.items:
-                from app.models.post import Post
-                post_count = Post.query.filter_by(
-                    category_id=category.id,
-                    status=1
+                from app.models.post import Post, PostStatus
+                post_count = Post.query.filter(
+                    Post.category_id == category.id,
+                    (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
                 ).count()
                 categories.append({
                     'id': category.id,
@@ -301,7 +301,7 @@ class CategoryService:
             total_categories = Category.query.count()
             
             # 获取有文章的分类数量
-            from app.models.post import Post
+            from app.models.post import Post, PostStatus
             categories_with_posts = Category.query.join(
                 Post, Category.id == Post.category_id
             ).distinct().count()
@@ -309,9 +309,9 @@ class CategoryService:
             # 获取每个分类的文章数量
             category_post_counts = []
             for category in Category.query.all():
-                post_count = Post.query.filter_by(
-                    category_id=category.id,
-                    status=1
+                post_count = Post.query.filter(
+                    Post.category_id == category.id,
+                    (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
                 ).count()
                 category_post_counts.append({
                     'id': category.id,
@@ -360,10 +360,10 @@ class CategoryService:
             if not category:
                 raise ValueError('分类不存在')
             
-            from app.models.post import Post
-            pagination = Post.query.filter_by(
-                category_id=category.id,
-                status=1
+            from app.models.post import Post, PostStatus
+            pagination = Post.query.filter(
+                Post.category_id == category.id,
+                (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
             ).order_by(
                 Post.created_at.desc()
             ).paginate(
