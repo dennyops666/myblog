@@ -7,7 +7,7 @@
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from app.models import User, db, Category, Tag, Post, PostStatus
+from app.models import User, db, Category, Tag, Post, PostStatus, Role, Comment
 from datetime import datetime, UTC
 import os
 from werkzeug.utils import secure_filename
@@ -15,8 +15,9 @@ from PIL import Image
 import uuid
 from flask import current_app
 from app.forms.admin.post import PostForm
+from app.forms.admin.user import RegisterForm
 
-bp = Blueprint('admin_view', __name__, url_prefix='/admin')
+bp = Blueprint('admin_dashboard', __name__, url_prefix='/admin')
 
 @bp.route('/')
 @login_required
@@ -102,7 +103,7 @@ def post_create():
         db.session.commit()
         
         flash('文章创建成功', 'success')
-        return redirect(url_for('admin.post_list'))
+        return redirect(url_for('admin_dashboard.post_list'))
     
     return render_template('admin/post/create.html', title='创建文章', form=form)
 
@@ -128,7 +129,7 @@ def post_delete(post_id):
                 'message': '您没有权限删除此文章'
             })
         flash('您没有权限删除此文章', 'error')
-        return redirect(url_for('admin.post_list'))
+        return redirect(url_for('admin_dashboard.post_list'))
     
     try:
         db.session.delete(post)
@@ -140,7 +141,7 @@ def post_delete(post_id):
                 'message': '文章删除成功'
             })
         flash('文章删除成功', 'success')
-        return redirect(url_for('admin.post_list'))
+        return redirect(url_for('admin_dashboard.post_list'))
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"删除文章失败: {str(e)}")
@@ -150,7 +151,7 @@ def post_delete(post_id):
                 'message': f'删除失败: {str(e)}'
             })
         flash(f'删除失败: {str(e)}', 'error')
-        return redirect(url_for('admin.post_list'))
+        return redirect(url_for('admin_dashboard.post_list'))
 
 @bp.route('/category/create', methods=['GET', 'POST'])
 @login_required
@@ -177,7 +178,7 @@ def category_create():
         db.session.commit()
         
         flash('分类创建成功', 'success')
-        return redirect(url_for('admin.category_list'))
+        return redirect(url_for('admin_dashboard.category_list'))
     
     return render_template('admin/category/create.html', title='创建分类')
 
@@ -236,7 +237,7 @@ def category_edit(category_id):
         db.session.commit()
         
         flash('分类更新成功', 'success')
-        return redirect(url_for('admin.category_list'))
+        return redirect(url_for('admin_dashboard.category_list'))
     
     return render_template('admin/category/edit.html', title='编辑分类', category=category)
 
@@ -249,13 +250,13 @@ def category_delete(category_id):
     # 检查分类下是否有文章
     if category.posts.count() > 0:
         flash(f'无法删除分类 "{category.name}"，该分类下有 {category.posts.count()} 篇文章', 'danger')
-        return redirect(url_for('admin.category_list'))
+        return redirect(url_for('admin_dashboard.category_list'))
     
     db.session.delete(category)
     db.session.commit()
     
     flash(f'分类 "{category.name}" 已成功删除', 'success')
-    return redirect(url_for('admin.category_list'))
+    return redirect(url_for('admin_dashboard.category_list'))
 
 @bp.route('/tag/create', methods=['GET', 'POST'])
 @login_required
@@ -280,7 +281,7 @@ def tag_create():
         db.session.commit()
         
         flash('标签创建成功', 'success')
-        return redirect(url_for('admin.tag_list'))
+        return redirect(url_for('admin_dashboard.tag_list'))
     
     return render_template('admin/tag/create.html', title='创建标签')
 
@@ -318,13 +319,13 @@ def tag_delete(tag_id):
     # 检查标签下是否有文章
     if tag.posts.count() > 0:
         flash(f'无法删除标签 "{tag.name}"，该标签下有 {tag.posts.count()} 篇文章', 'danger')
-        return redirect(url_for('admin.tag_list'))
+        return redirect(url_for('admin_dashboard.tag_list'))
     
     db.session.delete(tag)
     db.session.commit()
     
     flash(f'标签 "{tag.name}" 已成功删除', 'success')
-    return redirect(url_for('admin.tag_list'))
+    return redirect(url_for('admin_dashboard.tag_list'))
 
 @bp.route('/users/profile', methods=['GET', 'POST'])
 @login_required
@@ -336,12 +337,12 @@ def user_profile():
         if not user:
             # 如果找不到用户，重定向到首页
             flash('用户不存在', 'error')
-            return redirect(url_for('admin.index'))
+            return redirect(url_for('admin_dashboard.index'))
     except Exception as e:
         # 处理可能的异常
         current_app.logger.error(f"获取用户信息失败: {str(e)}")
         flash('获取用户信息失败', 'error')
-        return redirect(url_for('admin.index'))
+        return redirect(url_for('admin_dashboard.index'))
     
     if request.method == 'POST':
         # 获取表单数据
@@ -363,7 +364,7 @@ def user_profile():
                     'message': '个人资料更新成功'
                 })
             flash('个人资料更新成功', 'success')
-            return redirect(url_for('admin.user_profile'))
+            return redirect(url_for('admin_dashboard.user_profile'))
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"更新用户信息失败: {str(e)}")
@@ -374,7 +375,7 @@ def user_profile():
                     'errors': {'email': ['更新失败，请重试']}
                 })
             flash('更新失败，请重试', 'error')
-            return redirect(url_for('admin.user_profile'))
+            return redirect(url_for('admin_dashboard.user_profile'))
     
     return render_template('admin/user/profile.html', title='个人资料', user=user)
 
@@ -392,7 +393,7 @@ def profile():
         # 验证当前密码
         if not current_user.check_password(current_password):
             flash('当前密码错误', 'error')
-            return redirect(url_for('admin.profile'))
+            return redirect(url_for('admin_dashboard.profile'))
         
         # 更新用户名和邮箱
         current_user.username = username
@@ -402,12 +403,12 @@ def profile():
         if new_password:
             if new_password != confirm_password:
                 flash('两次输入的密码不一致', 'error')
-                return redirect(url_for('admin.profile'))
+                return redirect(url_for('admin_dashboard.profile'))
             current_user.set_password(new_password)
         
         db.session.commit()
         flash('个人资料更新成功', 'success')
-        return redirect(url_for('admin.profile'))
+        return redirect(url_for('admin_dashboard.profile'))
     
     return render_template('admin/profile.html', title='个人资料')
 
@@ -656,7 +657,7 @@ def comment_delete(comment_id):
         db.session.rollback()
         flash(f'删除失败: {str(e)}', 'error')
     
-    return redirect(url_for('admin.comment_list'))
+    return redirect(url_for('admin_dashboard.comment_list'))
 
 @bp.route('/comment/<int:comment_id>/approve', methods=['POST'])
 @login_required
@@ -672,7 +673,7 @@ def comment_approve(comment_id):
         db.session.rollback()
         flash(f'审核失败: {str(e)}', 'error')
     
-    return redirect(url_for('admin.comment_list'))
+    return redirect(url_for('admin_dashboard.comment_list'))
 
 @bp.route('/comment/<int:comment_id>/reject', methods=['POST'])
 @login_required
@@ -688,127 +689,7 @@ def comment_reject(comment_id):
         db.session.rollback()
         flash(f'操作失败: {str(e)}', 'error')
     
-    return redirect(url_for('admin.comment_list'))
-
-@bp.route('/users/')
-@login_required
-def user_list():
-    """用户列表"""
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-    
-    # 获取用户列表
-    pagination = User.query.order_by(User.username).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    
-    users = pagination.items
-    
-    return render_template('admin/user/list.html', 
-                          title='用户管理',
-                          users=users,
-                          pagination=pagination)
-
-@bp.route('/user/create', methods=['GET', 'POST'])
-@login_required
-def user_create():
-    """创建用户"""
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        is_admin = request.form.get('is_admin') == 'on'
-        
-        if not username or not email or not password:
-            flash('用户名、邮箱和密码不能为空', 'error')
-            return render_template('admin/user/create.html', title='创建用户')
-        
-        # 检查用户名是否已存在
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            flash('用户名已存在', 'error')
-            return render_template('admin/user/create.html', title='创建用户')
-        
-        # 检查邮箱是否已存在
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash('邮箱已存在', 'error')
-            return render_template('admin/user/create.html', title='创建用户')
-        
-        # 创建新用户
-        user = User(username=username, email=email, is_admin=is_admin)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('用户创建成功', 'success')
-        return redirect(url_for('admin.user_list'))
-    
-    return render_template('admin/user/create.html', title='创建用户')
-
-@bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
-def user_edit(user_id):
-    """编辑用户"""
-    user = User.query.get_or_404(user_id)
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        is_admin = request.form.get('is_admin') == 'on'
-        new_password = request.form.get('new_password')
-        
-        if not username or not email:
-            flash('用户名和邮箱不能为空', 'error')
-            return render_template('admin/user/edit.html', title='编辑用户', user=user)
-        
-        # 检查用户名是否已存在（排除当前用户）
-        existing_user = User.query.filter(User.username == username, User.id != user_id).first()
-        if existing_user:
-            flash('用户名已存在', 'error')
-            return render_template('admin/user/edit.html', title='编辑用户', user=user)
-        
-        # 检查邮箱是否已存在（排除当前用户）
-        existing_user = User.query.filter(User.email == email, User.id != user_id).first()
-        if existing_user:
-            flash('邮箱已存在', 'error')
-            return render_template('admin/user/edit.html', title='编辑用户', user=user)
-        
-        # 更新用户信息
-        user.username = username
-        user.email = email
-        user.is_admin = is_admin
-        
-        # 如果提供了新密码，则更新密码
-        if new_password:
-            user.set_password(new_password)
-        
-        db.session.commit()
-        flash('用户信息更新成功', 'success')
-        return redirect(url_for('admin.user_list'))
-    
-    return render_template('admin/user/edit.html', title='编辑用户', user=user)
-
-@bp.route('/user/<int:user_id>/delete', methods=['POST'])
-@login_required
-def user_delete(user_id):
-    """删除用户"""
-    user = User.query.get_or_404(user_id)
-    
-    # 不允许删除自己
-    if user.id == current_user.id:
-        flash('不能删除当前登录的用户', 'error')
-        return redirect(url_for('admin.user_list'))
-    
-    try:
-        db.session.delete(user)
-        db.session.commit()
-        flash('用户删除成功', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'删除失败: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.user_list'))
+    return redirect(url_for('admin_dashboard.comment_list'))
 
 @bp.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -841,7 +722,7 @@ def settings():
         # 这里可以添加将设置保存到数据库的代码
         
         flash('系统设置已更新', 'success')
-        return redirect(url_for('admin.settings'))
+        return redirect(url_for('admin_dashboard.settings'))
     
     # 获取当前设置
     settings = {

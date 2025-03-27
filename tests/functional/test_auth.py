@@ -33,7 +33,7 @@ def test_login_json_success(client, app):
     # 准备请求数据
     data = {
         'username': 'admin',
-        'password': 'password123',
+        'password': 'admin123',
         'remember_me': True
     }
     

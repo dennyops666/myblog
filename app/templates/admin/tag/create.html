@@ -1,4 +1,4 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}创建标签{% endblock %}
 
@@ -41,6 +41,20 @@
                             {% if form.slug.errors %}
                             <div class="invalid-feedback">
                                 {% for error in form.slug.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">描述</label>
+                            <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                      id="description" name="description" rows="3">{{ form.description.data or '' }}</textarea>
+                            <div class="form-text">对标签的简要描述，可选</div>
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
                                 {{ error }}
                                 {% endfor %}
                             </div>

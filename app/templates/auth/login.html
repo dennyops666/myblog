@@ -139,6 +139,15 @@ $(document).ready(function() {
         submitBtn.prop('disabled', true)
             .html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 登录中...');
         
+        // 获取来源页面信息
+        const referer = document.referrer;
+        const isFromAdmin = referer && referer.includes('/admin/');
+        
+        debugLog('登录来源', {
+            referer: referer,
+            isFromAdmin: isFromAdmin
+        });
+        
         // 发送AJAX请求
         $.ajax({
             url: form.attr('action'),
@@ -146,7 +155,8 @@ $(document).ready(function() {
             data: JSON.stringify({
                 username: username,
                 password: password,
-                remember_me: rememberMe
+                remember_me: rememberMe,
+                from_admin: isFromAdmin
             }),
             contentType: 'application/json',
             headers: {

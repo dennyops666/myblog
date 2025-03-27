@@ -12,7 +12,8 @@ from datetime import datetime, UTC
 from app.models.permission import Permission
 from sqlalchemy import desc
 
-from app.models.role import user_roles
+# 从role模块导入user_roles表
+from app.models.role import user_roles, Role
 
 class User(UserMixin, db.Model):
     """用户模型"""
@@ -163,8 +164,6 @@ class User(UserMixin, db.Model):
             ValueError: 当角色实例为 None 时抛出
             TypeError: 当角色不是 Role 类型时抛出
         """
-        from app.models.role import Role  # 避免循环导入
-        
         if role is None:
             raise ValueError('角色不能为 None')
         if not isinstance(role, Role):
@@ -183,8 +182,6 @@ class User(UserMixin, db.Model):
             ValueError: 当角色实例为 None 时抛出
             TypeError: 当角色不是 Role 类型时抛出
         """
-        from app.models.role import Role  # 避免循环导入
-        
         if role is None:
             raise ValueError('角色不能为 None')
         if not isinstance(role, Role):
@@ -431,7 +428,6 @@ class User(UserMixin, db.Model):
         Returns:
             list[User]: 具有指定角色的用户列表
         """
-        from app.models.role import Role  # 避免循环导入
         role = Role.query.filter_by(name=role_name).first()
         return role.users if role else []
         

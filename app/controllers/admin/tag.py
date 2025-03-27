@@ -251,14 +251,26 @@ def edit(tag_id):
 def delete(tag_id):
     """删除标签"""
     try:
-        tag_service.delete_tag(tag_id)
-        if is_xhr():
-            return jsonify({
-                'success': True,
-                'message': '标签删除成功'
-            })
-        flash('标签删除成功', 'success')
-        return redirect(url_for('.index'))
+        result = tag_service.delete_tag(tag_id)
+        
+        # 检查删除操作是否成功
+        if result['status'] == 'success':
+            if is_xhr():
+                return jsonify({
+                    'success': True,
+                    'message': result['message']
+                })
+            flash(result['message'], 'success')
+            return redirect(url_for('.index'))
+        else:
+            # 如果删除失败，但不是因为异常
+            if is_xhr():
+                return jsonify({
+                    'success': False,
+                    'message': result['message']
+                }), 400
+            flash(result['message'], 'error')
+            return redirect(url_for('.index'))
     except ValueError as e:
         if is_xhr():
             return jsonify({
@@ -268,6 +280,7 @@ def delete(tag_id):
         flash(str(e), 'error')
         return redirect(url_for('.index'))
     except Exception as e:
+        current_app.logger.error(f"删除标签出错: {str(e)}")
         if is_xhr():
             return jsonify({
                 'success': False,

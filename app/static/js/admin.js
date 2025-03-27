@@ -12,6 +12,9 @@ function waitForJQuery(callback) {
 // 等待 jQuery 加载完成后初始化管理功能
 waitForJQuery(function() {
     $(document).ready(function() {
+        // 初始化编辑器
+        initializeEditor();
+        
         // 创建遮罩层
         if (!$('.sidebar-overlay').length) {
             $('body').append('<div class="sidebar-overlay"></div>');
@@ -406,4 +409,115 @@ function refreshStats() {
         // 显示错误提示
         $('#post-count, #category-count, #tag-count').text('--');
     });
+}
+
+/**
+ * 初始化简单文本编辑器
+ */
+function initializeEditor() {
+    const editor = document.getElementById('content-editor');
+    if (!editor) return;
+    
+    // 创建工具栏
+    const toolbar = document.createElement('div');
+    toolbar.className = 'editor-toolbar btn-toolbar';
+    toolbar.setAttribute('role', 'toolbar');
+    toolbar.setAttribute('aria-label', '编辑器工具栏');
+    editor.parentNode.insertBefore(toolbar, editor);
+    
+    // 添加工具栏按钮组
+    const buttonGroups = [
+        [
+            { name: '加粗', icon: '<i class="fas fa-bold"></i>', action: 'bold' },
+            { name: '斜体', icon: '<i class="fas fa-italic"></i>', action: 'italic' }
+        ],
+        [
+            { name: '标题1', icon: 'H1', action: 'h1' },
+            { name: '标题2', icon: 'H2', action: 'h2' },
+            { name: '标题3', icon: 'H3', action: 'h3' }
+        ],
+        [
+            { name: '链接', icon: '<i class="fas fa-link"></i>', action: 'link' },
+            { name: '图片', icon: '<i class="fas fa-image"></i>', action: 'image' }
+        ]
+    ];
+    
+    buttonGroups.forEach(function(group) {
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'btn-group me-2';
+        buttonGroup.setAttribute('role', 'group');
+        
+        group.forEach(function(btn) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn btn-sm btn-outline-secondary';
+            button.title = btn.name;
+            button.innerHTML = btn.icon;
+            button.dataset.action = btn.action;
+            button.onclick = function() {
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                handleEditorAction(editor, btn.action, start, end);
+            };
+            buttonGroup.appendChild(button);
+        });
+        
+        toolbar.appendChild(buttonGroup);
+    });
+    
+    // 防止tab键跳出编辑器
+    editor.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 1;
+        }
+    });
+}
+
+// 处理编辑器操作
+function handleEditorAction(editor, action, start, end) {
+    const selectedText = editor.value.substring(start, end);
+    let replacement = '';
+
+    switch (action) {
+        case 'bold':
+            replacement = `<strong>${selectedText}</strong>`;
+            break;
+        case 'italic':
+            replacement = `<em>${selectedText}</em>`;
+            break;
+        case 'h1':
+            replacement = `<h1>${selectedText}</h1>`;
+            break;
+        case 'h2':
+            replacement = `<h2>${selectedText}</h2>`;
+            break;
+        case 'h3':
+            replacement = `<h3>${selectedText}</h3>`;
+            break;
+        case 'link':
+            const url = prompt('请输入链接地址:', 'http://');
+            if (url) {
+                replacement = `<a href="${url}">${selectedText || url}</a>`;
+            }
+            break;
+        case 'image':
+            const imgUrl = prompt('请输入图片链接:', 'http://');
+            if (imgUrl) {
+                replacement = `<img src="${imgUrl}" alt="" style="max-width:100%;" />`;
+            }
+            break;
+    }
+    
+    if (replacement) {
+        editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + replacement.length;
+        
+        // 触发 change 事件
+        const event = new Event('change', { bubbles: true });
+        editor.dispatchEvent(event);
+    }
 } 

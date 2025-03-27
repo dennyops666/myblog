@@ -82,7 +82,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     
     const formData = new FormData(form);
     
-    fetch('/admin/dashboard/upload', {
+    fetch('/admin/post/upload', {
         method: 'POST',
         body: formData
     })
@@ -95,13 +95,15 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         } else {
             showToast('success', '上传成功');
             // 将图片URL插入到编辑器
-            window.parent.postMessage({
+            window.opener.postMessage({
                 type: 'imageUploaded',
                 url: data.url
             }, '*');
             // 清空表单
             form.reset();
             document.getElementById('preview').classList.add('d-none');
+            // 关闭窗口
+            setTimeout(() => window.close(), 1000);
         }
     })
     .catch(error => {

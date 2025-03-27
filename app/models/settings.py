@@ -11,6 +11,7 @@ from datetime import datetime, UTC
 class Settings(db.Model):
     """系统设置模型"""
     __tablename__ = 'settings'
+    __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
     blog_name = db.Column(db.String(100), default='MyBlog')

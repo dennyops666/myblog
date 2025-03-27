@@ -1096,3 +1096,58 @@ class PostService:
             current_app.logger.error(f'获取文章总数失败: {str(e)}')
             current_app.logger.exception(e)
             return 0
+
+    def get_posts_by_tag(self, tag_id, page=1, per_page=10):
+        """获取标签下的文章列表
+        
+        Args:
+            tag_id: 标签ID
+            page: 页码
+            per_page: 每页条数
+            
+        Returns:
+            Pagination: 分页对象
+        """
+        try:
+            # 检查标签是否存在
+            from app.models.tag import Tag
+            tag = Tag.query.get(tag_id)
+            if not tag:
+                current_app.logger.warning(f"标签不存在: {tag_id}")
+                # 使用空查询
+                from sqlalchemy.sql.expression import select
+                from sqlalchemy.sql import text
+                empty_query = db.session.query(Post).filter(text('1=0'))
+                return Pagination(empty_query, page, per_page)
+            
+            # 从缓存获取
+            cache_key = self.CACHE_KEY_TAG.format(tag_id, page, per_page)
+            result = cache.get(cache_key)
+            if result and not current_app.config.get('TESTING'):
+                current_app.logger.info(f"从缓存获取标签 {tag_id} 的文章列表，页码 {page}")
+                return result
+            
+            # 查询标签下的已发布或已归档文章
+            query = Post.query.filter(
+                Post.tags.any(id=tag_id),
+                (Post.status == PostStatus.PUBLISHED) | (Post.status == PostStatus.ARCHIVED)
+            ).order_by(Post.created_at.desc())
+            
+            # 创建分页对象
+            pagination = Pagination(query, page, per_page)
+            
+            # 缓存查询结果
+            if not current_app.config.get('TESTING'):
+                cache.set(cache_key, pagination, timeout=self.CACHE_TIMEOUT)
+            
+            current_app.logger.info(f"查询标签 {tag_id} 的文章列表成功，共 {pagination.total} 篇")
+            return pagination
+            
+        except Exception as e:
+            current_app.logger.error(f"获取标签 {tag_id} 的文章列表失败: {str(e)}")
+            current_app.logger.exception(e)
+            # 发生异常时返回空的查询结果
+            from sqlalchemy.sql.expression import select
+            from sqlalchemy.sql import text
+            empty_query = db.session.query(Post).filter(text('1=0'))
+            return Pagination(empty_query, page, per_page)

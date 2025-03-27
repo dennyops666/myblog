@@ -60,3 +60,6 @@ coverage.xml
 # System Files
 .DS_Store
 Thumbs.db
+
+# Cursor rules
+.cursor/rules/

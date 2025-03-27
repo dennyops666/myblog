@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const elementsToClean = document.querySelectorAll(`
             table, .table, .table-striped, .table-responsive, 
             thead, tbody, tr, th, td, 
-            .card, .card-body, .card-header
+            .card, .card-body, .card-header,
+            .green-header, .recent-posts-section
         `);
         
         elementsToClean.forEach(el => {
@@ -52,6 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (el && el.style) {
                 el.style.cssText = '';
             }
+        });
+        
+        // 移除可能已添加的内联样式表
+        const inlineStyles = document.querySelectorAll('style[data-theme-style]');
+        inlineStyles.forEach(style => {
+            style.remove();
         });
         
         // 特殊处理最近文章表格
@@ -67,6 +74,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // 清除表格所有后代元素的内联样式
             const tableElements = recentPostsTable.querySelectorAll('*');
             tableElements.forEach(el => {
+                if (el && el.style) {
+                    el.style.cssText = '';
+                }
+            });
+        }
+        
+        // 特殊处理首页底部最近文章区域
+        const recentArticlesSection = document.querySelector('.recent-articles');
+        if (recentArticlesSection) {
+            // 重置该区域及其所有子元素的样式
+            recentArticlesSection.style.cssText = '';
+            const allElements = recentArticlesSection.querySelectorAll('*');
+            allElements.forEach(el => {
                 if (el && el.style) {
                     el.style.cssText = '';
                 }

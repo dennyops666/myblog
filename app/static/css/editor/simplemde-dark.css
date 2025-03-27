@@ -1,251 +1,425 @@
 /* SimpleMDE 编辑器暗黑模式样式 */
-
-/* 编辑器容器 */
-.dark-theme .CodeMirror {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-    border-color: #444 !important;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+html.dark-theme .CodeMirror {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
 }
 
-/* 编辑器工具栏 */
-.dark-theme .editor-toolbar {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
+html.dark-theme .CodeMirror-cursor {
+    border-left: 1px solid #fff;
 }
 
-.dark-theme .editor-toolbar button {
-    color: #ddd !important;
+html.dark-theme .CodeMirror-selected {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .editor-toolbar button:hover, 
-.dark-theme .editor-toolbar button.active {
+html.dark-theme .CodeMirror-line {
+    color: #e0e0e0;
+}
+
+html.dark-theme .editor-toolbar {
+    background-color: #272727;
+    border-color: #333;
+}
+
+html.dark-theme .editor-toolbar button {
+    color: #e0e0e0 !important;
+}
+
+html.dark-theme .editor-toolbar button:hover,
+html.dark-theme .editor-toolbar button.active {
+    background: #333;
+    border-color: #444;
+}
+
+html.dark-theme .editor-toolbar i.separator {
+    border-left: 1px solid #444;
+    border-right: 1px solid #444;
+}
+
+html.dark-theme .editor-preview {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+html.dark-theme .editor-preview pre {
+    background: #272727;
+    border-color: #333;
+}
+
+html.dark-theme .editor-preview code {
+    background-color: #272727;
+    color: #e0e0e0;
+}
+
+html.dark-theme .editor-preview table td,
+html.dark-theme .editor-preview table th {
+    border-color: #333;
+}
+
+html.dark-theme .editor-preview blockquote {
+    color: #ccc;
+    border-left-color: #444;
+}
+
+html.dark-theme .editor-preview hr {
+    background-color: #333;
+}
+
+html.dark-theme .CodeMirror-linenumber {
+    color: #888;
+}
+
+html.dark-theme .CodeMirror-gutters {
+    background-color: #272727;
+    border-right: 1px solid #333;
+}
+
+html.dark-theme .CodeMirror-foldgutter-open,
+html.dark-theme .CodeMirror-foldgutter-folded {
+    color: #888;
+}
+
+html.dark-theme .CodeMirror-scroll {
+    background-color: #1e1e1e;
+}
+
+/* 修复编辑器工具栏按钮在暗黑模式下的显示问题 */
+html.dark-theme .editor-toolbar a {
+    color: #e0e0e0 !important;
+}
+
+html.dark-theme .editor-toolbar a:hover,
+html.dark-theme .editor-toolbar a.active {
     background: #333 !important;
     border-color: #444 !important;
 }
 
-.dark-theme .editor-toolbar.disabled-for-preview button:not(.no-disable) {
-    background: #2a2a2a !important;
+/* 修复预览模式下的样式 */
+html.dark-theme .editor-preview-side {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
 }
 
-.dark-theme .editor-preview,
-.dark-theme .editor-preview-side {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-    border-color: #444 !important;
+html.dark-theme .editor-preview-active-side {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
 }
 
-/* 编辑器预览区 */
-.dark-theme .editor-preview pre, 
-.dark-theme .editor-preview-side pre {
-    background-color: #2a2a2a !important;
-    color: #e0e0e0 !important;
-    border-color: #444 !important;
+/* 修复状态栏样式 */
+html.dark-theme .editor-statusbar {
+    color: #888;
+    background: #272727;
+    border-top-color: #333;
 }
 
-.dark-theme .editor-preview table td, 
-.dark-theme .editor-preview table th,
-.dark-theme .editor-preview-side table td, 
-.dark-theme .editor-preview-side table th {
-    border-color: #444 !important;
+/* 修复工具提示样式 */
+html.dark-theme .CodeMirror-hints {
+    background: #272727;
+    border-color: #333;
 }
 
-/* 编辑器选中文本 */
-.dark-theme .CodeMirror-selected {
-    background-color: rgba(100, 100, 100, 0.5) !important;
+html.dark-theme .CodeMirror-hint {
+    color: #e0e0e0;
 }
 
-.dark-theme .CodeMirror-cursor {
-    border-left-color: #ffffff !important;
+html.dark-theme .CodeMirror-hint-active {
+    background: #333;
+    color: #fff;
 }
 
-/* 编辑器代码行 */
-.dark-theme .CodeMirror-line {
-    color: #f8f8f8 !important;
+/* 修复搜索对话框样式 */
+html.dark-theme .CodeMirror-dialog {
+    background: #272727;
+    color: #e0e0e0;
+    border-color: #333;
 }
 
-/* 编辑器代码高亮 */
-.dark-theme .cm-s-easymde .cm-header {
-    color: #6ea8fe !important;
+html.dark-theme .CodeMirror-dialog-top {
+    border-bottom-color: #333;
 }
 
-.dark-theme .cm-s-easymde .cm-quote {
-    color: #9fa8da !important;
+html.dark-theme .CodeMirror-dialog input {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #444;
 }
 
-.dark-theme .cm-s-easymde .cm-comment {
-    color: #9e9e9e !important;
+/* 修复滚动条样式 */
+html.dark-theme .CodeMirror-simplescroll-horizontal,
+html.dark-theme .CodeMirror-simplescroll-vertical {
+    background: #272727;
+    border-color: #333;
 }
 
-.dark-theme .cm-s-easymde .cm-link {
-    color: #8bc34a !important;
+html.dark-theme .CodeMirror-simplescroll-horizontal div,
+html.dark-theme .CodeMirror-simplescroll-vertical div {
+    background: #444;
+    border-color: #555;
 }
 
-.dark-theme .cm-s-easymde .cm-url {
-    color: #ff9800 !important;
+/* 修复文本选择样式 */
+html.dark-theme .CodeMirror-focused .CodeMirror-selected {
+    background: rgba(255, 255, 255, 0.15);
 }
 
-.dark-theme .cm-s-easymde .cm-variable-2 {
-    color: #80deea !important;
+html.dark-theme .CodeMirror-line::selection,
+html.dark-theme .CodeMirror-line > span::selection,
+html.dark-theme .CodeMirror-line > span > span::selection {
+    background: rgba(255, 255, 255, 0.15);
 }
 
-.dark-theme .cm-s-easymde .cm-variable-3 {
-    color: #a5d6a7 !important;
+/* 修复标记语法高亮 */
+html.dark-theme .cm-header {
+    color: #569cd6;
 }
 
-.dark-theme .cm-s-easymde .cm-keyword {
-    color: #f48fb1 !important;
+html.dark-theme .cm-quote {
+    color: #608b4e;
 }
 
-.dark-theme .cm-s-easymde .cm-tag {
-    color: #ff9e80 !important;
+html.dark-theme .cm-keyword {
+    color: #569cd6;
 }
 
-.dark-theme .cm-s-easymde .cm-string {
-    color: #ffcc80 !important;
+html.dark-theme .cm-atom {
+    color: #9cdcfe;
 }
 
-.dark-theme .CodeMirror-gutter {
-    background-color: #1a1a1a !important;
-    border-right: 1px solid #333 !important;
+html.dark-theme .cm-number {
+    color: #b5cea8;
 }
 
-.dark-theme .CodeMirror-linenumber {
-    color: #777 !important;
+html.dark-theme .cm-def {
+    color: #9cdcfe;
 }
 
-/* Select2 下拉框暗黑模式修复 */
-.dark-theme .select2-container--bootstrap-5 .select2-selection {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
+html.dark-theme .cm-variable {
+    color: #9cdcfe;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered .select2-selection__choice {
-    background-color: #333 !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
+html.dark-theme .cm-variable-2 {
+    color: #9cdcfe;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-dropdown {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
+html.dark-theme .cm-variable-3 {
+    color: #9cdcfe;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option {
-    color: #ffffff !important;
+html.dark-theme .cm-property {
+    color: #9cdcfe;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option--highlighted {
-    background-color: #333 !important;
-    color: #ffffff !important;
+html.dark-theme .cm-operator {
+    color: #d4d4d4;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-dropdown .select2-results__option[aria-selected=true] {
-    background-color: #0d6efd !important;
-    color: #ffffff !important;
+html.dark-theme .cm-comment {
+    color: #608b4e;
 }
 
-.dark-theme .select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
+html.dark-theme .cm-string {
+    color: #ce9178;
 }
 
-/* 模态框暗黑模式修复 */
-.dark-theme .modal-content {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
+html.dark-theme .cm-string-2 {
+    color: #ce9178;
 }
 
-.dark-theme .modal-header,
-.dark-theme .modal-footer {
-    border-color: #444 !important;
+html.dark-theme .cm-meta {
+    color: #569cd6;
 }
 
-.dark-theme .modal-content .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%) !important;
+html.dark-theme .cm-qualifier {
+    color: #d7ba7d;
 }
 
-/* 预览模态框内容 */
-.dark-theme #preview-content {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
+html.dark-theme .cm-builtin {
+    color: #569cd6;
 }
 
-.dark-theme #preview-content h1,
-.dark-theme #preview-content h2,
-.dark-theme #preview-content h3,
-.dark-theme #preview-content h4,
-.dark-theme #preview-content h5,
-.dark-theme #preview-content h6 {
-    color: #ffffff !important;
+html.dark-theme .cm-bracket {
+    color: #808080;
 }
 
-.dark-theme #preview-content pre,
-.dark-theme #preview-content code {
-    background-color: #2a2a2a !important;
-    color: #e0e0e0 !important;
+html.dark-theme .cm-tag {
+    color: #569cd6;
 }
 
-.dark-theme #preview-content blockquote {
-    border-left-color: #444 !important;
-    background-color: #2a2a2a !important;
+html.dark-theme .cm-attribute {
+    color: #9cdcfe;
 }
 
-.dark-theme #preview-content table {
-    border-color: #444 !important;
+html.dark-theme .cm-hr {
+    color: #808080;
 }
 
-.dark-theme #preview-content table th,
-.dark-theme #preview-content table td {
-    border-color: #444 !important;
+html.dark-theme .cm-link {
+    color: #569cd6;
 }
 
-.dark-theme #preview-content a {
-    color: #6ea8fe !important;
+html.dark-theme .cm-error {
+    color: #f44747;
 }
 
-/* 表单控件暗黑模式修复 */
-.dark-theme input[type="text"],
-.dark-theme input[type="email"],
-.dark-theme input[type="password"],
-.dark-theme input[type="number"],
-.dark-theme textarea,
-.dark-theme select {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
+/* 修复编辑器底部区域样式 */
+html.dark-theme .editor-toolbar.fullscreen {
+    background: #1e1e1e;
+    border-top-color: #333;
 }
 
-.dark-theme .form-check-input {
-    background-color: #1a1a1a !important;
-    border-color: #444 !important;
+html.dark-theme .editor-preview-side.editor-preview-active-side {
+    border-color: #333;
 }
 
-.dark-theme .form-check-input:checked {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
+/* 修复全屏模式样式 */
+html.dark-theme .CodeMirror-fullscreen {
+    background: #1e1e1e;
 }
 
-.dark-theme .form-text {
-    color: #adb5bd !important;
+html.dark-theme .editor-toolbar.fullscreen {
+    background: #272727;
+    border-color: #333;
 }
 
-/* 修复表单验证提示 */
-.dark-theme .invalid-feedback,
-.dark-theme .text-danger {
-    color: #ff6b6b !important;
+html.dark-theme .editor-preview-side.editor-preview-active-side {
+    background: #1e1e1e;
 }
 
-/* 按钮组 */
-.dark-theme .btn-group .btn {
-    border-color: #444 !important;
+/* 修复编辑器容器样式 */
+html.dark-theme .CodeMirror-wrap {
+    border-color: #333;
 }
 
-/* 卡片内部内容 */
-.dark-theme .card .card-body {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
+/* 修复文本区域样式 */
+html.dark-theme textarea {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+/* 修复表单控件样式 */
+html.dark-theme .form-control {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+html.dark-theme .form-control:focus {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* 修复标签和分类选择器样式 */
+html.dark-theme .select2-container--bootstrap-5 .select2-selection {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+    background-color: #272727;
+    color: #e0e0e0;
+    border-color: #333;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-search__field {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-results__option {
+    color: #e0e0e0;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+html.dark-theme .select2-container--bootstrap-5 .select2-results__option[aria-selected=true] {
+    background-color: #272727;
+    color: #e0e0e0;
+}
+
+/* 修复按钮样式 */
+html.dark-theme .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+html.dark-theme .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+html.dark-theme .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+}
+
+html.dark-theme .btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #565e64;
+}
+
+/* 修复卡片样式 */
+html.dark-theme .card {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+html.dark-theme .card-header {
+    background-color: #272727;
+    border-bottom-color: #333;
+}
+
+html.dark-theme .card-body {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+}
+
+/* 修复提示文本样式 */
+html.dark-theme .form-text {
+    color: #888;
+}
+
+/* 修复错误提示样式 */
+html.dark-theme .invalid-feedback {
+    color: #dc3545;
+}
+
+/* 修复分隔线样式 */
+html.dark-theme hr {
+    border-top-color: #333;
+}
+
+/* 修复标签页样式 */
+html.dark-theme .nav-tabs {
+    border-bottom-color: #333;
+}
+
+html.dark-theme .nav-tabs .nav-link {
+    color: #e0e0e0;
+}
+
+html.dark-theme .nav-tabs .nav-link:hover {
+    border-color: #333 #333 #333;
+}
+
+html.dark-theme .nav-tabs .nav-link.active {
+    color: #e0e0e0;
+    background-color: #1e1e1e;
+    border-color: #333 #333 #1e1e1e;
 } 

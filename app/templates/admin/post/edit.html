@@ -238,6 +238,82 @@
     html.dark-theme #preview-content.dark-theme .preview-title {
         color: #fff;
     }
+    
+    /* 自定义预览对话框样式 */
+    #custom-preview-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+    }
+    
+    #custom-preview-dialog {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        background-color: white;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #custom-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    #custom-preview-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 65vh;
+    }
+    
+    #custom-preview-footer {
+        padding: 15px;
+        text-align: right;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    #custom-preview-close-x {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+    }
+    
+    html.dark-theme #custom-preview-dialog {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme #custom-preview-header,
+    html.dark-theme #custom-preview-footer {
+        border-color: #333;
+    }
+    
+    html.dark-theme #custom-preview-close-x {
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme #custom-preview-close {
+        background-color: #272727;
+        border-color: #333;
+        color: #e0e0e0;
+    }
 </style>
 {% endblock %}
 
@@ -364,24 +440,22 @@
     </div>
 </div>
 
-<!-- 预览模态框 -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="previewModalLabel">预览</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭" id="previewCloseBtn"></button>
-            </div>
-            <div class="modal-body" id="preview-content">
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">加载中...</span>
-                    </div>
+<!-- 自定义预览对话框 -->
+<div id="custom-preview-overlay">
+    <div id="custom-preview-dialog">
+        <div id="custom-preview-header">
+            <h5 style="margin: 0">预览</h5>
+            <button type="button" id="custom-preview-close-x">&times;</button>
+        </div>
+        <div id="custom-preview-body">
+            <div style="text-align: center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">加载中...</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
-            </div>
+        </div>
+        <div id="custom-preview-footer">
+            <button type="button" id="custom-preview-close" class="btn btn-secondary">关闭</button>
         </div>
     </div>
 </div>
@@ -392,7 +466,72 @@
 <script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
+    var simplemde;
+    
     document.addEventListener('DOMContentLoaded', function() {
+        // 初始化自定义预览
+        var previewOverlay = document.getElementById('custom-preview-overlay');
+        var previewBody = document.getElementById('custom-preview-body');
+        var previewCloseX = document.getElementById('custom-preview-close-x');
+        var previewClose = document.getElementById('custom-preview-close');
+        
+        // 关闭预览函数
+        function closePreview() {
+            previewOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        
+        // 绑定关闭按钮事件
+        previewCloseX.addEventListener('click', closePreview);
+        previewClose.addEventListener('click', closePreview);
+        
+        // 点击背景关闭
+        previewOverlay.addEventListener('click', function(e) {
+            if (e.target === previewOverlay) {
+                closePreview();
+            }
+        });
+        
+        // ESC键关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && previewOverlay.style.display === 'block') {
+                closePreview();
+            }
+        });
+        
+        // 预览按钮事件
+        document.getElementById('preview-btn').addEventListener('click', function() {
+            // 获取编辑器内容
+            var content = simplemde.value();
+            
+            // 如果内容为空，提示用户
+            if (!content.trim()) {
+                alert('请先输入文章内容');
+                return;
+            }
+            
+            // 获取标题
+            var title = document.getElementById('title').value || '无标题';
+            
+            // 使用marked解析Markdown
+            var htmlContent = marked.parse(content);
+            
+            // 设置预览内容
+            previewBody.innerHTML = `
+                <div class="preview-container">
+                    <h1 class="preview-title">${title}</h1>
+                    <hr>
+                    <div class="preview-body">${htmlContent}</div>
+                </div>
+            `;
+            
+            // 显示自定义预览对话框
+            previewOverlay.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 防止背景滚动
+            
+            console.log('预览对话框已显示');
+        });
+        
         // 初始化 Select2
         $('#tags').select2({
             theme: 'bootstrap-5',
@@ -407,7 +546,7 @@
         const isDarkMode = document.documentElement.classList.contains('dark-theme');
         
         // 初始化 SimpleMDE
-        var simplemde = new SimpleMDE({
+        simplemde = new SimpleMDE({
             element: document.getElementById("content"),
             spellChecker: false,
             autosave: {
@@ -467,24 +606,20 @@
             
             // 如果内容为空，显示错误
             if (!content.trim()) {
-                showCustomNotification('文章内容不能为空', 'error');
+                alert('文章内容不能为空');
                 return;
             }
             
             document.getElementById('content').value = content;
-            console.log('直接提交 - 内容已同步到表单，长度:', content.length);
             
             // 显示textarea确保内容被提交
             document.getElementById('content').style.display = 'block';
             
             // 直接提交表单
-            console.log('直接提交表单...');
-            // 查找表单中的原生提交按钮并点击它
             var submitButton = document.querySelector('form .btn-primary[type="submit"]');
             if(submitButton) {
                 submitButton.click();
             } else {
-                // 后备方案：直接提交表单
                 document.getElementById('post-form').submit();
             }
         });
@@ -499,53 +634,12 @@
             // 如果内容为空，阻止表单提交并显示错误
             if (!content.trim()) {
                 e.preventDefault();
-                showCustomNotification('文章内容不能为空', 'error');
+                alert('文章内容不能为空');
                 return false;
             }
             
             // 正常提交表单
             return true;
-        });
-
-        // 预览功能
-        document.getElementById('preview-btn').addEventListener('click', function() {
-            try {
-                // 获取编辑器内容
-                const content = simplemde.value();
-                
-                // 获取标题
-                const title = document.getElementById('title').value || '无标题';
-                
-                // 设置预览内容
-                const previewContent = document.getElementById('preview-content');
-                
-                // 使用marked解析Markdown
-                const htmlContent = marked.parse(content);
-                
-                // 添加到预览区域
-                previewContent.innerHTML = `
-                    <div class="preview-container">
-                        <h1 class="preview-title">${title}</h1>
-                        <hr>
-                        <div class="preview-body">${htmlContent}</div>
-                    </div>
-                `;
-                
-                // 给预览内容添加样式
-                const isDarkMode = document.documentElement.classList.contains('dark-theme');
-                if (isDarkMode) {
-                    previewContent.classList.add('dark-theme');
-                } else {
-                    previewContent.classList.remove('dark-theme');
-                }
-                
-                // 显示预览模态框
-                const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
-                previewModal.show();
-            } catch (error) {
-                console.error('预览生成错误:', error);
-                alert('预览生成失败: ' + error.message);
-            }
         });
     });
 </script>

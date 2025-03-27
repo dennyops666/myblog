@@ -18,10 +18,9 @@ from app.services.post import PostService
 from app.services.category import CategoryService
 from app.services.tag import TagService
 from app.services.comment import CommentService
-from app.services.user import UserService
 from app.services.notification import NotificationService
 from app.services.operation_log import operation_log_service
-from app.services import get_post_service, get_category_service, get_tag_service, get_comment_service, get_user_service
+from app.services import get_post_service, get_category_service, get_tag_service, get_comment_service
 from app.models.post import PostStatus
 
 # 初始化服务实例
@@ -29,34 +28,41 @@ post_service = get_post_service()
 category_service = get_category_service()
 tag_service = get_tag_service()
 comment_service = get_comment_service()
-user_service = get_user_service()
 notification_service = NotificationService()
 
 # 创建蓝图
 admin_bp = Blueprint('admin_dashboard', __name__, template_folder='../../templates')
 
 # 添加调试日志
-import logging
 current_logger = logging.getLogger('current_app')
 current_logger.setLevel(logging.DEBUG)
 current_logger.info("===== 调试信息：admin_dashboard蓝图已创建 =====")
+current_logger.info(f"===== 调试信息：admin_bp.url_prefix = {getattr(admin_bp, 'url_prefix', '未设置')} =====")
+current_logger.info(f"===== 调试信息：admin_bp.name = {admin_bp.name} =====")
+current_logger.info(f"===== 调试信息：admin_bp.template_folder = {admin_bp.template_folder} =====")
 
-# 先导入index模块，确保首页路由先注册
+# 导入各个控制器
 from . import index
+from . import category
+from . import tag
+from . import comment
+from . import settings
+from . import post
+
+# 导入用户管理蓝图
+from app.views.admin.user import bp as user_bp
 
 # 添加调试日志
 current_logger.info("===== 调试信息：admin_dashboard.index已导入 =====")
-
-# 导入各个控制器
-from . import category, post, comment, tag, user, settings
 
 # 注册各个控制器
 admin_bp.register_blueprint(post.post_bp, url_prefix='/post')
 admin_bp.register_blueprint(category.category_bp, url_prefix='/category')
 admin_bp.register_blueprint(tag.tag_bp, url_prefix='/tag')
 admin_bp.register_blueprint(comment.comment_bp, url_prefix='/comment')
-admin_bp.register_blueprint(user.user_bp, url_prefix='/user')
 admin_bp.register_blueprint(settings.settings_bp, url_prefix='/settings')
+# 注册用户管理蓝图
+admin_bp.register_blueprint(user_bp, url_prefix='/user')
 
 # 初始化上下文处理器
 @admin_bp.context_processor
@@ -67,20 +73,30 @@ def inject_template_context():
         'now': datetime.now
     }
 
+def get_user_service():
+    """获取用户服务实例，避免循环导入"""
+    from app.services.user import UserService
+    return UserService()
+
 # 注册请求钩子
 @admin_bp.before_request
 def before_request():
     """所有管理后台请求的预处理"""
+    # 在日志中记录请求信息
+    current_app.logger.debug(f"管理后台请求: endpoint={request.endpoint}, path={request.path}")
+    
     # 排除登录页面的检查
     if request.endpoint == 'admin_dashboard.login' or \
        request.endpoint == 'admin_dashboard.logout' or \
        request.endpoint == 'admin_dashboard.public_stats' or \
        request.path.startswith('/static/') or \
        '/api/stats' in request.path:
+        current_app.logger.debug("请求排除进行权限检查")
         return None
     
     # 检查用户是否已登录
     if not current_user.is_authenticated:
+        current_app.logger.warning("未认证用户尝试访问管理后台")
         # 将以下API请求视为AJAX请求，即使它们没有设置相应的请求头
         is_api_request = (request.is_json or 
                         request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
@@ -99,7 +115,13 @@ def before_request():
         return redirect(url_for('auth.login'))
     
     # 检查用户是否有管理员权限
+    user_service = get_user_service()
     if not user_service.is_admin(current_user):
+        current_app.logger.warning(f"非管理员用户 {current_user.username} 尝试访问管理后台")
+        # 记录用户信息
+        current_app.logger.debug(f"用户角色: {[role.name for role in current_user.roles]}")
+        current_app.logger.debug(f"用户权限: {[role.permissions for role in current_user.roles]}")
+        
         # AJAX请求返回JSON
         if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({
@@ -109,7 +131,10 @@ def before_request():
             }), 403
         
         # 普通请求重定向到首页
+        flash('您没有管理员权限，无法访问管理后台', 'warning')
         return redirect(url_for('blog.index'))
+    
+    current_app.logger.debug(f"管理员用户 {current_user.username} 请求被允许")
 
 # 全局错误处理器
 def handle_error(e, error_code):
@@ -360,6 +385,7 @@ def login():
         password = data.get('password')
         remember_me = data.get('remember_me', False)
         
+        user_service = get_user_service()
         user = user_service.get_user_by_username(username)
         if user is None or not user_service.check_password(user, password):
             return jsonify({
@@ -394,8 +420,8 @@ def login():
             'redirect': url_for('admin_dashboard.dashboard')
         })
     
-    # 处理GET请求
-    return render_template('admin/login.html')
+    # 处理GET请求 - 重定向到主登录页面
+    return redirect(url_for('auth.login'))
 
 # 添加API端点，获取最新统计数据和文章列表
 @admin_bp.route('/get_stats')
@@ -505,8 +531,6 @@ def _get_stats_data():
             'recent_posts': []
         })
 
-# 导入其他模块
-from . import operation_log, upload, test
 
 
 

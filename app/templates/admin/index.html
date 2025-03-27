@@ -148,6 +148,158 @@
     html.dark-theme #recent-posts-table thead tr {
         background-color: #272727 !important;
     }
+    
+    /* 修复暗黑模式下底部底板显示异常 */
+    html.dark-theme .container-fluid {
+        background-color: #121212;
+    }
+    
+    html.dark-theme .row {
+        background-color: transparent;
+    }
+    
+    /* 修复在暗黑模式下底部容器的样式 */
+    html.dark-theme .py-4 {
+        background-color: #121212;
+    }
+    
+    /* 基础样式 */
+    .container-fluid {
+        background-color: transparent;
+    }
+    
+    /* 暗黑模式样式 */
+    html.dark-theme {
+        background-color: #121212;
+    }
+    
+    html.dark-theme body {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .main-content {
+        background-color: #121212;
+    }
+    
+    html.dark-theme .content-container {
+        background-color: #121212;
+    }
+    
+    html.dark-theme .card {
+        background-color: #1e1e1e;
+        border-color: #333;
+    }
+    
+    html.dark-theme .card-header {
+        background-color: #272727;
+        border-bottom-color: #333;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .card-body {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .table {
+        color: #e0e0e0;
+        background-color: #1e1e1e;
+    }
+    
+    html.dark-theme .table thead th {
+        background-color: #272727;
+        border-color: #333;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .table td {
+        border-color: #333;
+        color: #e0e0e0;
+    }
+    
+    html.dark-theme .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    
+    html.dark-theme .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    /* 快速操作卡片样式 */
+    .quick-actions .card {
+        transition: transform 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    html.dark-theme .quick-actions .card {
+        background-color: #1e1e1e;
+        border-color: #333;
+    }
+    
+    .quick-actions .card:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* 最近文章区域样式 */
+    .recent-articles {
+        margin-top: 2rem;
+    }
+    
+    html.dark-theme .recent-articles {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    html.dark-theme .recent-articles .card {
+        background-color: #1e1e1e;
+    }
+    
+    html.dark-theme .recent-articles .table {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+    }
+    
+    /* 状态标签样式 */
+    .badge {
+        padding: 0.5em 0.8em;
+        font-weight: 500;
+        border-radius: 4px;
+    }
+    
+    html.dark-theme .badge-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+    
+    html.dark-theme .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    html.dark-theme .badge-secondary {
+        background-color: #6c757d;
+        color: #fff;
+    }
+    
+    /* 编辑按钮样式 */
+    .btn-edit {
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+    }
+    
+    html.dark-theme .btn-edit {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+    
+    html.dark-theme .btn-edit:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
 </style>
 {% endblock %}
 
@@ -208,7 +360,57 @@ if (document.documentElement.classList.contains('dark-theme')) {
         }
     }, 100);
 }
+
+// 确保页面中的所有变量都有默认值
+document.addEventListener('DOMContentLoaded', function() {
+    // 移除任何错误提示
+    const errorAlert = document.querySelector('.alert-danger');
+    if (errorAlert && errorAlert.textContent.includes('加载管理后台数据失败')) {
+        errorAlert.remove();
+    }
+    
+    // 监听主题变更事件，处理最近文章表格的样式刷新
+    document.addEventListener('themeChanged', function() {
+        const isDark = document.documentElement.classList.contains('dark-theme');
+        
+        // 获取最近文章表格
+        const recentPostsTable = document.getElementById('recent-posts-table');
+        if (!recentPostsTable) return;
+        
+        // 刷新表格样式
+        if (isDark) {
+            // 暗黑模式样式
+            recentPostsTable.classList.add('table-dark');
+            // 确保表格头部颜色正确
+            const tableHeaders = document.querySelectorAll('#recent-posts-table thead tr');
+            tableHeaders.forEach(header => {
+                header.style.backgroundColor = '#272727';
+            });
+        } else {
+            // 明亮模式样式
+            recentPostsTable.classList.remove('table-dark');
+            // 移除可能残留的内联样式
+            const allTableElements = recentPostsTable.querySelectorAll('*');
+            allTableElements.forEach(el => {
+                if (el.style && el.style.backgroundColor) {
+                    el.style.removeProperty('background-color');
+                }
+                if (el.style && el.style.color) {
+                    el.style.removeProperty('color');
+                }
+            });
+        }
+    });
+});
 </script>
+
+{% if error_message is defined and error_message and error_message != '加载管理后台数据失败，请查看日志了解详情' %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ error_message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
@@ -454,6 +656,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         }
+        
+        // 设置底部底板的暗黑模式样式
+        const containerFluid = document.querySelector('.container-fluid.py-4');
+        if (containerFluid) {
+            containerFluid.style.backgroundColor = '#121212';
+        }
+        
+        // 确保底部区域的所有卡片也应用暗黑模式
+        const footerCards = document.querySelectorAll('.container-fluid.py-4 .card');
+        footerCards.forEach(card => {
+            card.style.backgroundColor = '#1e1e1e';
+            card.style.borderColor = '#333';
+        });
     }
     
     function applyLightThemeToTable() {
@@ -515,6 +730,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
+        // 清除底部底板的暗黑模式样式
+        const containerFluid = document.querySelector('.container-fluid.py-4');
+        if (containerFluid) {
+            containerFluid.style.backgroundColor = '';
+        }
+        
+        // 清除底部区域卡片的暗黑模式样式
+        const footerCards = document.querySelectorAll('.container-fluid.py-4 .card');
+        footerCards.forEach(card => {
+            card.style.backgroundColor = '';
+            card.style.borderColor = '';
+        });
+        
         // 添加Bootstrap条纹表格类
         if (table && !table.classList.contains('table-striped')) {
             table.classList.add('table-striped');
@@ -527,4 +755,90 @@ document.addEventListener('DOMContentLoaded', function() {
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+// 修复从暗黑模式切换回正常模式后最近文章区域显示异常的问题
+document.addEventListener('DOMContentLoaded', function() {
+    // 监听主题变更事件
+    document.addEventListener('themeChanged', function(e) {
+        // 强制刷新最近文章表格
+        forceRefreshRecentPostsTable();
+    });
+    
+    // 直接监听主题切换按钮点击
+    const themeToggles = document.querySelectorAll('.theme-toggle');
+    themeToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            // 延迟执行确保DOM更新完成
+            setTimeout(forceRefreshRecentPostsTable, 200);
+        });
+    });
+    
+    // 强制刷新最近文章表格
+    function forceRefreshRecentPostsTable() {
+        const recentPostsTable = document.getElementById('recent-posts-table');
+        if (!recentPostsTable) return;
+        
+        const isDark = document.documentElement.classList.contains('dark-theme');
+        
+        // 清除表格及其所有子元素的内联样式
+        clearTableStyles(recentPostsTable);
+        
+        // 根据当前主题应用合适的类
+        if (isDark) {
+            recentPostsTable.classList.add('table-dark');
+            
+            // 处理底部底板在暗黑模式下的样式
+            applyDarkModeToFooter();
+        } else {
+            recentPostsTable.classList.remove('table-dark');
+            // 确保条纹表格样式被应用
+            if (!recentPostsTable.classList.contains('table-striped')) {
+                recentPostsTable.classList.add('table-striped');
+            }
+            
+            // 移除底部底板的暗黑模式样式
+            removeDarkModeFromFooter();
+        }
+    }
+    
+    // 清除表格样式的辅助函数
+    function clearTableStyles(table) {
+        if (!table) return;
+        
+        // 移除表格自身的背景色和文字颜色
+        table.style.removeProperty('background-color');
+        table.style.removeProperty('color');
+        table.style.removeProperty('border-color');
+        
+        // 清除所有子元素的样式
+        const allElements = table.querySelectorAll('*');
+        allElements.forEach(el => {
+            el.style.removeProperty('background-color');
+            el.style.removeProperty('color');
+            el.style.removeProperty('border-color');
+        });
+    }
+    
+    // 应用暗黑模式到底部底板
+    function applyDarkModeToFooter() {
+        // 获取底部容器元素
+        const containerFluid = document.querySelector('.container-fluid.py-4');
+        if (containerFluid) {
+            containerFluid.style.backgroundColor = '#121212';
+        }
+    }
+    
+    // 移除底部底板的暗黑模式样式
+    function removeDarkModeFromFooter() {
+        // 获取底部容器元素
+        const containerFluid = document.querySelector('.container-fluid.py-4');
+        if (containerFluid) {
+            containerFluid.style.backgroundColor = '';
+        }
+    }
+    
+    // 初始执行一次刷新，确保页面加载时样式正确
+    forceRefreshRecentPostsTable();
+});
+</script>
 {% endblock %} 

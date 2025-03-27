@@ -132,25 +132,36 @@ class RoleService:
         """
         return Role.query.all()
     
-    def get_available_roles(self):
+    def get_available_roles(self, user=None):
         """获取可用的角色列表
         
         如果当前用户不是超级管理员，则超级管理员角色将被排除
+        
+        Args:
+            user: 当前用户对象，如果为None则从flask_login获取
+            
+        Returns:
+            list: 可用的角色列表
         """
         try:
-            from flask_login import current_user
+            # 如果没有传入user参数，则从flask_login获取
+            if user is None:
+                try:
+                    from flask_login import current_user
+                    user = current_user
+                except Exception as e:
+                    current_app.logger.error(f'获取当前用户失败: {str(e)}')
+                    return []
             
             # 默认排除超级管理员角色
             exclude_roles = ['super_admin']
             
-            # 只有admin用户能看到所有角色
-            if hasattr(current_user, 'username') and current_user.username == 'admin':
+            # 如果当前用户是超级管理员，则可以看到所有角色
+            if hasattr(user, 'is_super_admin') and user.is_super_admin:
                 roles = Role.query.order_by(Role.id).all()
-                current_app.logger.debug(f'超级管理员用户 {current_user.username} 获取所有角色，包括 super_admin')
             else:
                 # 非超级管理员用户看不到超级管理员角色
                 roles = Role.query.filter(Role.name.notin_(exclude_roles)).order_by(Role.id).all()
-                current_app.logger.debug(f'非超级管理员用户获取角色，排除 super_admin')
             
             return roles
         except Exception as e:

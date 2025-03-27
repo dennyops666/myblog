@@ -44,7 +44,7 @@ def login():
         
         # 根据用户权限重定向到不同的页面
         if is_admin:
-            return redirect(url_for('admin_dashboard.index'))
+            return redirect(url_for('admin_dashboard.dashboard'))
         else:
             return redirect(url_for('blog.index'))
     
@@ -67,8 +67,9 @@ def login():
                 username = data.get('username', '')
                 password = data.get('password', '')
                 remember_me = data.get('remember_me', False)
+                from_admin = data.get('from_admin', False)
                 
-                current_app.logger.info(f"JSON登录请求: username={username}, remember_me={remember_me}")
+                current_app.logger.info(f"JSON登录请求: username={username}, remember_me={remember_me}, from_admin={from_admin}")
                 
                 # 验证用户名和密码
                 if not username or not password:
@@ -144,11 +145,13 @@ def login():
                                 from_admin = session.get('logout_from_admin', False)
                                 
                                 if from_admin and is_admin:
-                                    next_page = url_for('admin_dashboard.index')
+                                    next_page = url_for('admin_dashboard.dashboard')
                                 elif is_admin:
-                                    next_page = url_for('admin_dashboard.index')
+                                    next_page = url_for('admin_dashboard.dashboard')
                                 else:
                                     next_page = url_for('blog.index')
+                            
+                            current_app.logger.info(f"登录成功后重定向到: {next_page}")
                             
                             # 对于JSON请求，返回JSON响应
                             if is_json_request:
@@ -211,8 +214,13 @@ def login():
                     # 检查用户是否被禁用
                     if not user.is_active:
                         current_app.logger.info(f"用户已被禁用: {username}")
-                        flash('账户已被禁用', 'danger')
-                        return render_template('auth/login.html', form=form, title='登录')
+                        current_app.logger.info(f"用户状态: is_active={user.is_active}")
+                        current_app.logger.info("返回状态: error, 消息: 账户已被禁用")
+                        return jsonify({
+                            'status': 'error',
+                            'message': '账户已被禁用',
+                            'next_url': url_for('auth.login', _external=False)
+                        }), 200
                     
                     # 检查密码是否正确
                     try:
@@ -249,9 +257,9 @@ def login():
                                 from_admin = session.get('logout_from_admin', False)
                                 
                                 if from_admin and is_admin:
-                                    next_page = url_for('admin_dashboard.index')
+                                    next_page = url_for('admin_dashboard.dashboard')
                                 elif is_admin:
-                                    next_page = url_for('admin_dashboard.index')
+                                    next_page = url_for('admin_dashboard.dashboard')
                                 else:
                                     next_page = url_for('blog.index')
                             

@@ -32,14 +32,31 @@ from app.utils.logging import setup_logging
 
 def register_blueprints(app):
     """注册蓝图"""
+    # 注册授权蓝图
     from app.views.auth import bp as auth_bp
-    from app.controllers.admin import admin_bp as admin_dashboard
-    from app.controllers.blog import blog_bp
-    
-    # 注册蓝图
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(admin_dashboard, url_prefix='/admin')
+    
+    # 注册博客蓝图
+    from app.controllers.blog import blog_bp
     app.register_blueprint(blog_bp, url_prefix='/blog')
+    
+    # 注册管理后台蓝图
+    # 确保先加载user模型
+    from app.models.user import User
+    
+    # 确保controllers/admin蓝图被正确注册，并设置URL前缀
+    from app.controllers.admin import admin_bp as admin_dashboard
+    
+    # 显式设置URL前缀，以防蓝图定义中没有设置
+    if 'admin_dashboard' not in app.blueprints:
+        app.logger.info("正在注册controllers/admin中的admin_dashboard蓝图")
+        app.register_blueprint(admin_dashboard, url_prefix='/admin')
+        
+        # 记录已注册的路由用于调试
+        app.logger.info("已注册的controllers/admin路由:")
+        for rule in app.url_map.iter_rules():
+            if 'admin_dashboard' in rule.endpoint:
+                app.logger.info(f"{rule.endpoint}: {rule}")
     
     # 为原始URL路径添加处理函数
     @app.route('/blog/post/<int:post_id>')
@@ -257,7 +274,7 @@ def register_blueprints(app):
     @login_required
     def admin_users_redirect():
         """将旧的用户URL重定向到新的URL"""
-        return redirect(url_for('admin_dashboard.user.index'))
+        return redirect('/admin/user')
     
     # 添加旧的/admin/comments重定向
     @app.route('/admin/comments')
@@ -388,6 +405,11 @@ def create_app(config_class=DevelopmentConfig):
     # 添加 /admin/category/ID/edit 路由重定向到 /admin/categories/ID/edit
     @app.route('/admin/category/<int:category_id>/edit', methods=['GET', 'POST'])
     def category_edit_redirect(category_id):
+        if request.method == 'POST':
+            # 对于POST请求，调用category模块的edit函数处理，保持原始响应
+            from app.controllers.admin.category import edit
+            return edit(category_id)
+        # 对于GET请求，重定向到正确的URL
         return redirect(url_for('admin_dashboard.category.edit', category_id=category_id))
     
     # 添加 /admin/tag/create 路由重定向到 /admin/tags/create
@@ -400,8 +422,8 @@ def create_app(config_class=DevelopmentConfig):
     def comment_reject_redirect(comment_id):
         return redirect(url_for('admin_dashboard.comment.reject', comment_id=comment_id))
     
-    # 添加 /admin/user/ID/edit 路由重定向到 /admin/users/ID/edit
-    @app.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+    # 修正：/admin/users/ID/edit 路由重定向到 /admin/user/ID/edit
+    @app.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
     def user_edit_redirect(user_id):
         return redirect(url_for('admin_dashboard.user.edit', user_id=user_id))
     

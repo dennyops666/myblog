@@ -728,11 +728,14 @@ class UserService:
         Returns:
             bool: 是否是管理员
         """
-        if hasattr(user, 'is_admin') and user.is_admin:
+        if hasattr(user, 'is_admin_user') and user.is_admin_user:
             return True
             
         if hasattr(user, 'roles'):
-            return any(role.name == 'admin' for role in user.roles)
+            from app.models.permission import Permission
+            for role in user.roles:
+                if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
+                    return True
             
         return False
         

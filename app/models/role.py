@@ -7,7 +7,7 @@
 """
 
 from app.extensions import db
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from app.models.permission import Permission
 from flask import current_app
 from sqlalchemy.exc import SQLAlchemyError

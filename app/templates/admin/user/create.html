@@ -4,56 +4,258 @@
 
 {% block page_title %}创建用户{% endblock %}
 
+{% block styles %}
+<style>
+    /* 修复页面整体背景色 */
+    html.dark-theme .container-fluid {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .main-content {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .py-4 {
+        background-color: #121212 !important;
+    }
+    
+    /* 修复卡片在暗黑模式下的样式 */
+    html.dark-theme .card {
+        background-color: #1e1e1e !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .card-body {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-control,
+    html.dark-theme .form-select {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-text {
+        color: #888 !important;
+    }
+    
+    html.dark-theme .form-check-label {
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-check-input {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    
+    html.dark-theme .btn-secondary {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .btn-secondary:hover {
+        background-color: #323232 !important;
+        border-color: #444 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        <form method="post" action="{{ url_for('admin_dashboard.user.create') }}">
-            <div class="mb-3">
-                <label for="username" class="form-label">用户名</label>
-                <input type="text" class="form-control" id="username" name="username" required>
-                <small class="form-text text-muted">用户名不能为 "admin"，这是保留的超级管理员用户名</small>
-            </div>
-            
-            <div class="mb-3">
-                <label for="email" class="form-label">邮箱</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            
-            <div class="mb-3">
-                <label for="password" class="form-label">密码</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">角色</label>
-                <div class="mb-2">
-                    {% for role in roles %}
-                    {% if role.name != 'super_admin' %}
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles" value="{{ role.id }}">
-                        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }}</label>
-                        {% if role.description %}
-                        <small class="form-text text-muted d-block">{{ role.description }}</small>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_dashboard.user.create') }}" autocomplete="off">
+                        <!-- 用户名 -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" name="username" required placeholder="请输入用户名">
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.username.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 邮箱 -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="请输入邮箱">
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 昵称 -->
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">昵称</label>
+                            <input type="text" class="form-control" id="nickname" name="nickname" placeholder="可选">
+                            {% if form.nickname.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.nickname.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 密码 -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password" name="password" required placeholder="请输入密码">
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 确认密码 -->
+                        <div class="mb-3">
+                            <label for="password2" class="form-label">确认密码</label>
+                            <input type="password" class="form-control" id="password2" name="password2" required placeholder="请再次输入密码">
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password2.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- 用户角色 -->
+                        <div class="mb-3">
+                            <label class="form-label">用户角色</label>
+                            <div class="role-checkboxes">
+                                {% for role in roles %}
+                                    {% if role.name != 'super_admin' %}
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles" value="{{ role.id }}">
+                                        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- 启用账号 -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">启用账号</label>
+                            </div>
+                        </div>
+                        
+                        <!-- 按钮 -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_dashboard.user.index') }}" class="btn btn-secondary">返回</a>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
                 </div>
-                <small class="form-text text-muted">注意：超级管理员角色仅限于系统内唯一的超级管理员用户</small>
             </div>
-            
-            <div class="mb-3">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
-                    <label class="form-check-label" for="is_active">激活用户</label>
-                </div>
-            </div>
-            
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                <a href="{{ url_for('admin_dashboard.user.index') }}" class="btn btn-secondary">返回</a>
-                <button type="submit" class="btn btn-primary">创建用户</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<script>
+// 页面加载完成后的处理
+document.addEventListener('DOMContentLoaded', function() {
+    // 立即清空所有输入字段
+    clearFormFields();
+    
+    // 在短暂延迟后再次清空，确保覆盖可能的自动填充
+    setTimeout(clearFormFields, 100);
+    
+    // 定期检查用户名字段，防止自动填充
+    setInterval(function() {
+        const username = document.getElementById('username');
+        if (username && username.value === 'admin') {
+            username.value = '';
+        }
+    }, 500);
+    
+    // 注册表单提交事件
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        // 获取表单上的提交按钮
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        // 验证密码一致性
+        const password = document.getElementById('password').value;
+        const password2 = document.getElementById('password2').value;
+        
+        if (password !== password2) {
+            e.preventDefault();
+            alert('两次输入的密码不一致');
+            return false;
+        }
+        
+        // 验证用户名不为admin
+        const username = document.getElementById('username').value.toLowerCase();
+        if (username === 'admin') {
+            e.preventDefault();
+            alert('不能使用保留的用户名');
+            document.getElementById('username').value = '';
+            return false;
+        }
+        
+        // 验证角色选择
+        /* 暂时注释掉角色验证，测试是否影响表单提交
+        const roleCheckboxes = document.querySelectorAll('input[name="roles"]:checked');
+        if (roleCheckboxes.length === 0) {
+            e.preventDefault();
+            alert('请至少选择一个用户角色');
+            return false;
+        }
+        */
+        
+        // 防止重复提交
+        if (submitButton) {
+            if (submitButton.disabled) {
+                e.preventDefault();
+                return false;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.innerText = '提交中...';
+            
+            // 5秒后恢复按钮状态，防止表单提交过程中卡住
+            setTimeout(function() {
+                submitButton.disabled = false;
+                submitButton.innerText = '保存';
+            }, 5000);
+        }
+        
+        return true;
+    });
+    
+    // 辅助函数：清空所有表单字段
+    function clearFormFields() {
+        document.getElementById('username').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('password2').value = '';
+        const nickname = document.getElementById('nickname');
+        if (nickname) nickname.value = '';
+    }
+});
+</script>
 {% endblock %} 

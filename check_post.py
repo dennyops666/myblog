@@ -12,6 +12,11 @@ from datetime import datetime
 from pprint import pprint
 from app import create_app
 from app.models.post import Post
+from flask import Flask
+from app.extensions import db
+import importlib
+import inspect
+import os
 
 # 连接数据库
 db_path = "/data/myblog/instance/blog-dev.db"
@@ -123,4 +128,62 @@ def check_post(post_id):
             print(f"文章ID {post_id} 不存在")
 
 if __name__ == "__main__":
-    check_post(6) 
+    check_post(6)
+
+app = create_app()
+
+with app.app_context():
+    # 检查文章数量
+    posts = Post.query.all()
+    print(f'系统中的文章数量: {len(posts)}')
+
+    # 检查文章路由
+    try:
+        # 尝试导入控制器模块
+        from app.controllers.admin import post as post_controller
+        
+        # 检查蓝图定义
+        if hasattr(post_controller, 'post_bp'):
+            print("\n文章控制器蓝图信息:")
+            print(f"蓝图名称: {post_controller.post_bp.name}")
+            print(f"URL前缀: {post_controller.post_bp.url_prefix}")
+            
+            # 获取所有路由函数
+            routes = []
+            for name, func in inspect.getmembers(post_controller, inspect.isfunction):
+                # 找到带有route装饰器的函数
+                if hasattr(func, "__route__") or (hasattr(func, "view_class") and hasattr(func.view_class, "methods")):
+                    routes.append(name)
+            
+            if routes:
+                print(f"\n定义的路由: {', '.join(routes)}")
+            else:
+                print("\n未找到定义的路由")
+        else:
+            print("\n未找到文章控制器蓝图")
+    except ImportError as e:
+        print(f"\n导入文章控制器模块失败: {str(e)}")
+    except Exception as e:
+        print(f"\n检查文章路由时出错: {str(e)}")
+        
+    # 检查Flask应用已注册的蓝图
+    print("\n已注册的蓝图:")
+    for blueprint_name, blueprint in app.blueprints.items():
+        print(f"- {blueprint_name} (URL前缀: {blueprint.url_prefix})")
+        
+    # 尝试列出controllers目录
+    controllers_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'controllers')
+    print(f"\n控制器目录内容 ({controllers_path}):")
+    if os.path.exists(controllers_path):
+        for item in os.listdir(controllers_path):
+            item_path = os.path.join(controllers_path, item)
+            if os.path.isdir(item_path):
+                subfiles = os.listdir(item_path)
+                print(f"- {item}/ ({len(subfiles)} 个文件)")
+                for subfile in subfiles:
+                    if subfile.endswith('.py'):
+                        print(f"  - {subfile}")
+            else:
+                print(f"- {item}")
+    else:
+        print(f"控制器目录不存在: {controllers_path}") 

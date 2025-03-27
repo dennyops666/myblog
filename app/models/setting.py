@@ -11,6 +11,7 @@ from datetime import datetime
 class Setting(db.Model):
     """站点设置模型"""
     __tablename__ = 'settings'
+    __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False, index=True)

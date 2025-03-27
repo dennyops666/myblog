@@ -4,126 +4,198 @@
 
 {% block page_title %}{% if is_edit %}编辑用户{% else %}创建用户{% endif %}{% endblock %}
 
+{% block styles %}
+<style>
+    /* 修复页面整体背景色 */
+    html.dark-theme .container-fluid {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .main-content {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .py-4 {
+        background-color: #121212 !important;
+    }
+    
+    /* 修复卡片在暗黑模式下的样式 */
+    html.dark-theme .card {
+        background-color: #1e1e1e !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .card-body {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-control,
+    html.dark-theme .form-select {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-text {
+        color: #888 !important;
+    }
+    
+    html.dark-theme .form-check-label {
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-check-input {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    
+    html.dark-theme .btn-secondary {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .btn-secondary:hover {
+        background-color: #323232 !important;
+        border-color: #444 !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1>{{ '编辑' if is_edit else '创建' }}用户</h1>
-<div class="card">
-    <div class="card-body">
-        <form method="post" action="{{ url_for('admin_dashboard.user.edit', user_id=user.id) if is_edit else url_for('admin_dashboard.user.create') }}" novalidate>
-            <div class="mb-3">
-                {{ form.username.label(class="form-label") }}
-                {% if is_admin_user %}
-                    {{ form.username(class="form-control", readonly=true, title="超级管理员用户名不能修改") }}
-                    <small class="text-muted">超级管理员用户名不能修改</small>
-                {% else %}
-                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
-                    {% if form.username.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.username.errors %}
-                        {{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
-                {% if form.email.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.email.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                {{ form.nickname.label(class="form-label") }}
-                {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else "")) }}
-                {% if form.nickname.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.nickname.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
-                {% if form.password.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.password.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                {% if is_edit %}
-                <small class="form-text text-muted">留空表示不修改密码</small>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                {{ form.password2.label(class="form-label") }}
-                {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else "")) }}
-                {% if form.password2.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.password2.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">角色</label>
-                {% if is_admin_user %}
-                    {% for role in roles %}
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles_display" value="{{ role.id }}" checked disabled title="超级管理员角色不能修改">
-                        <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
-                        <input type="hidden" name="roles" value="{{ role.id }}">
-                    </div>
-                    {% endfor %}
-                    <small class="text-muted">超级管理员角色不能修改</small>
-                {% else %}
-                    <div class="role-checkboxes">
-                        {% for role in roles %}
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles" value="{{ role.id }}" 
-                                {% if user and user.roles %}
-                                    {% for user_role in user.roles %}
-                                        {% if user_role.id == role.id %}
-                                            checked
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1>{{ '编辑' if is_edit else '创建' }}用户</h1>
+                    <form method="post" action="{{ url_for('admin_dashboard.user.edit', user_id=user.id) if is_edit else url_for('admin_dashboard.user.create') }}" novalidate>
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {% if is_admin_user %}
+                                {{ form.username(class="form-control", readonly=true, title="超级管理员用户名不能修改") }}
+                                <small class="text-muted">超级管理员用户名不能修改</small>
+                            {% else %}
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                                {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.nickname.label(class="form-label") }}
+                            {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else "")) }}
+                            {% if form.nickname.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.nickname.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% if is_edit %}
+                            <small class="form-text text-muted">留空表示不修改密码</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.password2.label(class="form-label") }}
+                            {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else "")) }}
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.password2.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">角色</label>
+                            {% if is_admin_user %}
+                                {% for role in roles %}
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles_display" value="{{ role.id }}" checked disabled title="超级管理员角色不能修改">
+                                    <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
+                                    <input type="hidden" name="roles" value="{{ role.id }}">
+                                </div>
+                                {% endfor %}
+                                <small class="text-muted">超级管理员角色不能修改</small>
+                            {% else %}
+                                <div class="role-checkboxes">
+                                    {% for role in roles %}
+                                        {% if role.name != 'super_admin' %}
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="role_{{ role.id }}" name="roles" value="{{ role.id }}" 
+                                                {% if user and user.roles %}
+                                                    {% for user_role in user.roles %}
+                                                        {% if user_role.id == role.id %}
+                                                            checked
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}>
+                                            <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
+                                        </div>
                                         {% endif %}
                                     {% endfor %}
-                                {% endif %}>
-                            <label class="form-check-label" for="role_{{ role.id }}">{{ role.name }} - {{ role.description }}</label>
+                                </div>
+                            {% endif %}
                         </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                        
+                        <div class="mb-3 form-check">
+                            {% if is_admin_user %}
+                                {{ form.is_active(class="form-check-input", checked=true, disabled=true, title="超级管理员用户必须保持激活状态") }}
+                                {{ form.is_active.label(class="form-check-label") }}
+                                <small class="d-block text-muted">超级管理员用户必须保持激活状态</small>
+                                <input type="hidden" name="is_active" value="on">
+                            {% else %}
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {% if user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">启用账号</label>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{{ url_for('admin_dashboard.user.index') }}" class="btn btn-secondary">返回</a>
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
-            <div class="mb-3 form-check">
-                {% if is_admin_user %}
-                    {{ form.is_active(class="form-check-input", checked=true, disabled=true, title="超级管理员用户必须保持激活状态") }}
-                    {{ form.is_active.label(class="form-check-label") }}
-                    <small class="d-block text-muted">超级管理员用户必须保持激活状态</small>
-                    <input type="hidden" name="is_active" value="on">
-                {% else %}
-                    {{ form.is_active(class="form-check-input") }}
-                    {{ form.is_active.label(class="form-check-label") }}
-                {% endif %}
-            </div>
-            
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                <a href="{{ url_for('admin_dashboard.user.index') }}" class="btn btn-secondary">返回</a>
-                <button type="submit" class="btn btn-primary">保存修改</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %} 

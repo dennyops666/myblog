@@ -798,38 +798,40 @@ def archive(date=None):
 
 @blog_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """博客前台登录视图"""
+    """简化的博客前台登录视图"""
     try:
+        # 如果用户已经登录，直接跳转到首页
         if current_user.is_authenticated:
             return redirect(url_for('blog.index'))
         
-        form = LoginForm()
-        if form.validate_on_submit():
-            user = user_service.get_user_by_username(form.username.data)
+        # 处理POST请求
+        if request.method == 'POST':
+            # 获取表单数据
+            username = request.form.get('username', '')
+            password = request.form.get('password', '')
+            remember = request.form.get('remember_me') == 'y'
             
-            if user and user.verify_password(form.password.data):
-                # 检查是否是管理员用户试图从博客前台登录
-                is_admin = False
-                for role in user.roles:
-                    if role.permissions & (Permission.ADMIN.value | Permission.SUPER_ADMIN.value):
-                        is_admin = True
-                        break
-                        
-                if is_admin:
-                    flash('管理员用户请从管理后台登录', 'danger')
-                    return redirect(url_for('blog.login'))
-                    
-                # 普通用户登录成功
-                login_user(user, remember=form.remember_me.data)
+            # 查询用户
+            from app.models.user import User
+            user = User.query.filter_by(username=username).first()
+            
+            # 验证密码
+            if user and user.verify_password(password):
+                # 移除管理员限制检查，允许任何用户登录前台
+                login_user(user, remember=remember)
                 flash('登录成功', 'success')
                 return redirect(url_for('blog.index'))
             else:
                 flash('用户名或密码错误', 'danger')
-                
-        return render_template('blog/login.html', form=form)
+        
+        # 返回登录页面
+        return render_template('blog/login.html')
     except Exception as e:
-        current_app.logger.error(f"用户登录失败: {str(e)}")
-        return render_template('blog/error.html', error_message='服务器内部错误'), 500
+        current_app.logger.error(f"登录失败: {str(e)}")
+        import traceback
+        current_app.logger.error(traceback.format_exc())
+        flash('登录失败，请稍后再试', 'danger')
+        return render_template('blog/login.html')
 
 @blog_bp.route('/logout')
 @login_required
@@ -1582,4 +1584,10 @@ def minimal_post(post_id):
         error_msg = f"访问文章出错: {str(e)}\n{traceback.format_exc()}"
         current_app.logger.error(error_msg)
         return error_msg, 500
+
+@blog_bp.route('/register')
+def register():
+    """博客前台注册视图 - 目前仅做为占位符，防止404错误"""
+    flash('目前不支持自助注册，请联系管理员创建账号', 'warning')
+    return redirect(url_for('blog.login'))
 

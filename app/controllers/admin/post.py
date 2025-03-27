@@ -16,6 +16,12 @@ from app.forms.admin.post import PostForm
 from datetime import datetime
 import traceback
 from sqlalchemy.exc import IntegrityError
+from app.decorators import admin_required
+from app.services.post import PostService
+from app.services.category import CategoryService
+from app.services.tag import TagService
+from app.utils.file import allowed_file, save_file
+import os
 
 post_bp = Blueprint('post', __name__)
 
@@ -363,7 +369,7 @@ def edit(post_id):
     except Exception as e:
         current_app.logger.error(f"加载编辑页面时发生错误: {str(e)}")
         flash(f'加载页面失败: {str(e)}', 'error')
-        return redirect(url_for('admin_view.post_list'))
+        return redirect(url_for('admin_dashboard.post.index'))
 
 @post_bp.route('/<int:post_id>/delete', methods=['POST'])
 @login_required
@@ -540,3 +546,34 @@ def check_title_exists():
         'exists': post is not None,
         'message': '标题已存在' if post else '标题可用'
     })
+
+@post_bp.route('/upload', methods=['GET'])
+@admin_required
+def upload_page():
+    """图片上传页面"""
+    return render_template('admin/post/upload.html')
+
+@post_bp.route('/upload', methods=['POST'])
+@admin_required
+def upload():
+    """处理图片上传"""
+    if 'file' not in request.files:
+        return jsonify({'error': '没有文件被上传'}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': '没有选择文件'}), 400
+        
+    if not allowed_file(file.filename):
+        return jsonify({'error': '不支持的文件类型'}), 400
+        
+    try:
+        filename = save_file(file)
+        file_url = url_for('static', filename=f'uploads/images/{filename}')
+        return jsonify({
+            'url': file_url,
+            'filename': filename
+        })
+    except Exception as e:
+        current_app.logger.error(f'文件上传失败: {str(e)}')
+        return jsonify({'error': str(e)}), 500

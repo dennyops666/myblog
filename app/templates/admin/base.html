@@ -145,13 +145,13 @@
     <!-- 移动设备侧边栏切换按钮 -->
     <button class="btn btn-primary d-md-none" id="sidebarToggle">
         <i class="bi bi-list"></i>
-    </button>
+        </button>
     
     <!-- 侧边栏背景遮罩 -->
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     
     <div class="wrapper d-flex">
-        <!-- 侧边栏 -->
+            <!-- 侧边栏 -->
         <aside class="main-sidebar">
             <!-- 品牌 Logo -->
             <a href="{{ url_for('admin_dashboard.dashboard') }}" class="brand-link">
@@ -266,10 +266,10 @@
                         </li>
                     </ul>
                 </nav>
-            </div>
+                </div>
         </aside>
 
-        <!-- 主内容区 -->
+            <!-- 主内容区 -->
         <main class="main-content">
             <div class="content-header">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -283,10 +283,10 @@
                             <i class="bi bi-moon-fill theme-toggle-icon"></i>
                         </button>
                     </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 消息提示 -->
+                <!-- 消息提示 -->
             {% block messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -306,11 +306,11 @@
                 {% endwith %}
             {% endblock %}
 
-            <!-- 主要内容 -->
+                <!-- 主要内容 -->
             <div class="content-container">
                 {% block content %}{% endblock %}
             </div>
-        </main>
+            </main>
     </div>
 
     <!-- 表单提交确认模态框 -->
