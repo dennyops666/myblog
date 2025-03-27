@@ -1,23 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="{{ 'dark-theme' if request.cookies.get('theme') == 'dark' else '' }}">
+<html lang="zh-CN" {% if 'dark' in request.cookies.get('theme', '') %}class="dark-theme"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}管理后台{% endblock %}</title>
+    <title>{% block title %}管理后台{% endblock %} - MyBlog</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <!-- Bootstrap CSS -->
-    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Font Awesome 图标 -->
-    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-    <!-- Bootstrap 图标 -->
-    <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- 自定义 CSS -->
+    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
     <!-- 主题样式表 -->
     <link href="{{ url_for('static', filename='css/themes/light.css') }}" rel="stylesheet" id="light-theme">
     <link href="{{ url_for('static', filename='css/themes/dark.css') }}" rel="stylesheet" id="dark-theme">
-    <!-- 暗黑模式样式表 -->
-    <link href="{{ url_for('static', filename='css/themes/dark.css') }}" rel="stylesheet">
     <!-- 暗黑模式表格样式覆盖 -->
     <link href="{{ url_for('static', filename='css/override-darkmode.css') }}" rel="stylesheet">
     <!-- SimpleMDE编辑器暗黑模式样式 -->
@@ -25,159 +23,255 @@
     <!-- 管理后台暗黑模式修复 - 放在最后确保最高优先级 -->
     <link href="{{ url_for('static', filename='css/admin-dark-mode-fix.css') }}" rel="stylesheet">
     <style>
+        :root {
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        
         body {
-            padding-top: 20px;
-            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
         }
-        .flash-messages {
+        
+        /* 侧边栏样式 */
+        .main-sidebar {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            max-width: 300px;
-        }
-        .flash-message {
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.5s, fadeOut 0.5s 4.5s;
-            opacity: 0;
-            animation-fill-mode: forwards;
-        }
-        @keyframes fadeIn {
-            from {opacity: 0;}
-            to {opacity: 1;}
-        }
-        @keyframes fadeOut {
-            from {opacity: 1;}
-            to {opacity: 0;}
-        }
-        .sidebar {
-            position: fixed;
+            left: 0;
             top: 0;
             bottom: 0;
-            left: 0;
-            z-index: 100;
-            padding: 0;
-            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
-        }
-        .sidebar-sticky {
-            position: sticky;
-            top: 0;
-            height: calc(100vh);
-            padding-top: 1rem;
-            overflow-x: hidden;
+            width: var(--sidebar-width);
+            background-color: #343a40;
+            color: #fff;
+            z-index: 1030;
+            transition: all 0.3s;
             overflow-y: auto;
         }
-        /* 自定义滚动条样式 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        
+        /* 用户面板样式 */
+        .user-panel {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        
+        .user-panel .image {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            overflow: hidden;
+            border-radius: 50%;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+        
+        .user-panel .image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        
+        .avatar-container {
+            width: 40px;
+            height: 40px;
+            position: relative;
         }
-        .dark-theme ::-webkit-scrollbar-track {
-            background: #333;
+        
+        .avatar-circle {
+            width: 100%;
+            height: 100%;
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .dark-theme ::-webkit-scrollbar-thumb {
-            background: #666;
+        
+        .avatar-text {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .user-panel .info {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .user-panel .info a {
+            color: #fff;
+            text-decoration: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+        
+        /* 处理用户面板可能的文本重复问题 */
+        .user-panel .info a small.text-light {
+            max-height: 20px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        
+        /* 修复深色模式下表格文本颜色 */
+        html.dark-theme .table {
+            color: #e0e0e0 !important;
+        }
+        
+        /* 修复深色模式下表单控件样式 */
+        html.dark-theme .form-control {
+            background-color: #272727 !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+        
+        html.dark-theme .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(66, 70, 73, 0.5) !important;
+        }
+        
+        html.dark-theme .form-control::placeholder {
+            color: #666 !important;
+        }
+        
+        /* 修复表格容器样式 */
+        html.dark-theme .table-responsive {
+            background-color: #1e1e1e !important;
         }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
     <!-- 移动设备侧边栏切换按钮 -->
-    <div class="d-md-none mb-3 px-3">
-        <button class="btn btn-primary" id="sidebarToggle">
-            <i class="bi bi-list"></i> 菜单
-        </button>
-    </div>
+    <button class="btn btn-primary d-md-none" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+    </button>
     
     <!-- 侧边栏背景遮罩 -->
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     
-    <div class="container-fluid">
-        <div class="row">
-            <!-- 侧边栏 -->
-            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
-                <div class="position-sticky pt-3">
-                    <div class="text-center mb-4">
-                        <h5 class="text-white">博客管理系统</h5>
-                    </div>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'admin_dashboard.dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard.dashboard') }}">
-                                <i class="bi bi-house-door"></i> 首页
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'post' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.post.index') }}">
-                                <i class="bi bi-file-earmark-text"></i> 文章管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'category' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.category.index') }}">
-                                <i class="bi bi-folder"></i> 分类管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'tag' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.tag.index') }}">
-                                <i class="bi bi-tags"></i> 标签管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'comment' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.comment.index') }}">
-                                <i class="bi bi-chat-dots"></i> 评论管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'user' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.user.index') }}">
-                                <i class="bi bi-people"></i> 用户管理
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'profile' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.profile') }}">
-                                <i class="bi bi-person"></i> 个人资料
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if 'settings' in request.endpoint %}active{% endif %}" href="{{ url_for('admin_dashboard.settings.index') }}">
-                                <i class="bi bi-gear"></i> 系统设置
-                            </a>
-                        </li>
-                    </ul>
-                    <hr class="text-white">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('blog.index') }}" target="_blank">
-                                <i class="bi bi-box-arrow-up-right"></i> 查看网站
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link theme-toggle" href="javascript:void(0);" title="切换主题">
-                                <i class="bi bi-moon-fill theme-toggle-icon"></i> 切换主题
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                                <i class="bi bi-box-arrow-right"></i> 退出
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+    <div class="wrapper d-flex">
+        <!-- 侧边栏 -->
+        <aside class="main-sidebar">
+            <!-- 品牌 Logo -->
+            <a href="{{ url_for('admin_dashboard.dashboard') }}" class="brand-link">
+                <span class="brand-text">MyBlog</span>
+            </a>
 
-            <!-- 主内容区 -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <!-- 侧边栏内容 -->
+            <div class="sidebar">
+                <!-- 用户面板 -->
+                <div class="user-panel">
+                    <div class="image">
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                            <div class="avatar-circle" style="background-color: #dc3545;">
+                                <span class="avatar-text"><i class="fas fa-user-shield"></i></span>
+                            </div>
+                        {% elif current_user.avatar %}
+                            <img src="{{ current_user.avatar }}" class="img-circle elevation-2" alt="用户头像">
+                        {% else %}
+                            <div class="avatar-circle">
+                                <span class="avatar-text">{{ current_user.username[0]|upper }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="info">
+                        <a href="{{ url_for('admin_dashboard.profile') }}" title="{{ current_user.username }}">
+                            {{ current_user.nickname or current_user.username }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 侧边栏菜单 -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- 仪表盘 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard.dashboard' %}active{% endif %}">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <span>仪表盘</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 文章管理 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.post.index') }}" class="nav-link {% if 'admin_dashboard.post.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-file-alt"></i>
+                                <span>文章管理</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 分类管理 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.category.index') }}" class="nav-link {% if 'admin_dashboard.category.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-folder"></i>
+                                <span>分类管理</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 标签管理 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.tag.index') }}" class="nav-link {% if 'admin_dashboard.tag.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-tags"></i>
+                                <span>标签管理</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 评论管理 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.comment.index') }}" class="nav-link {% if 'admin_dashboard.comment.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-comments"></i>
+                                <span>评论管理</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 用户管理 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.user.index') }}" class="nav-link {% if 'admin_dashboard.user.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-users"></i>
+                                <span>用户管理</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 系统设置 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.settings.index') }}" class="nav-link {% if 'admin_dashboard.settings.' in request.endpoint %}active{% endif %}">
+                                <i class="nav-icon fas fa-cog"></i>
+                                <span>系统设置</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 查看网站 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('blog.index') }}" class="nav-link" target="_blank">
+                                <i class="nav-icon fas fa-globe"></i>
+                                <span>查看网站</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 个人设置 -->
+                        <li class="nav-item">
+                            <a href="{{ url_for('admin_dashboard.profile') }}" class="nav-link {% if request.endpoint == 'admin_dashboard.profile' %}active{% endif %}">
+                                <i class="nav-icon fas fa-user-cog"></i>
+                                <span>个人资料</span>
+                            </a>
+                        </li>
+                        
+                        <!-- 退出 -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" id="logout-btn">
+                                <i class="nav-icon fas fa-sign-out-alt"></i>
+                                <span>退出</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="content-header">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">{% block page_title %}管理后台{% endblock %}</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
@@ -190,74 +284,298 @@
                         </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- 消息提示 -->
+            <!-- 消息提示 -->
+            {% block messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
+                            {% if category == 'error' %}
+                                {% set category = 'danger' %}
+                            {% endif %}
+                            
+                            {% if message != '加载管理后台数据失败，请查看日志了解详情' %}
                             <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                                 {{ message }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
+                            {% endif %}
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+            {% endblock %}
 
-                <!-- 主要内容 -->
+            <!-- 主要内容 -->
+            <div class="content-container">
                 {% block content %}{% endblock %}
-            </main>
+            </div>
+        </main>
+    </div>
+
+    <!-- 表单提交确认模态框 -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">确认操作</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    确定要执行此操作吗？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirmOkBtn">确定</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 退出登录表单 -->
+    <form id="logout-form" action="{{ url_for('admin_dashboard.logout') }}" method="post" style="display: none;"></form>
+
+    <!-- JavaScript 引用 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
-    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
-    <!-- 表单处理脚本 -->
-    <script src="{{ url_for('static', filename='js/admin-forms.js') }}"></script>
-    <!-- 主题切换脚本 -->
-    <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
-    
-    <!-- 侧边栏切换脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-            
-            // 切换侧边栏
-            sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-                sidebarBackdrop.classList.toggle('show');
+        // 主题切换处理函数
+        function applyDarkThemeToElements() {
+            // 处理表格
+            const tables = document.querySelectorAll('.table');
+            tables.forEach(table => {
+                if (table) {
+                    table.style.setProperty('background-color', '#1e1e1e', 'important');
+                    table.style.setProperty('color', '#e0e0e0', 'important');
+                    table.style.setProperty('border-color', '#333', 'important');
+                }
             });
             
-            // 点击背景遮罩关闭侧边栏
-            sidebarBackdrop.addEventListener('click', function() {
-                sidebar.classList.remove('show');
-                sidebarBackdrop.classList.remove('show');
+            // 处理表格容器
+            const tableResponsives = document.querySelectorAll('.table-responsive');
+            tableResponsives.forEach(tableResponsive => {
+                if (tableResponsive) {
+                    tableResponsive.style.setProperty('background-color', '#1e1e1e', 'important');
+                }
             });
             
-            // 点击侧边栏链接后关闭侧边栏（在移动设备上）
-            const sidebarLinks = sidebar.querySelectorAll('a.nav-link');
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth < 768) {
-                        sidebar.classList.remove('show');
-                        sidebarBackdrop.classList.remove('show');
-                    }
+            // 处理卡片
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                if (card) {
+                    card.style.setProperty('background-color', '#1e1e1e', 'important');
+                    card.style.setProperty('border-color', '#333', 'important');
+                }
+            });
+            
+            // 处理卡片内容
+            const cardBodies = document.querySelectorAll('.card-body');
+            cardBodies.forEach(cardBody => {
+                if (cardBody) {
+                    cardBody.style.setProperty('background-color', '#1e1e1e', 'important');
+                    cardBody.style.setProperty('color', '#e0e0e0', 'important');
+                }
+            });
+            
+            // 处理表格单元格
+            const cells = document.querySelectorAll('.table th, .table td');
+            cells.forEach(cell => {
+                cell.style.setProperty('border-color', '#333', 'important');
+                cell.style.setProperty('background-color', 'transparent', 'important');
+            });
+            
+            // 处理表格行
+            const rows = document.querySelectorAll('.table tr');
+            rows.forEach(row => {
+                row.style.setProperty('background-color', 'transparent', 'important');
+            });
+            
+            // 处理表格头部
+            const tableHeaders = document.querySelectorAll('.table thead');
+            tableHeaders.forEach(header => {
+                header.style.setProperty('background-color', '#1e1e1e', 'important');
+            });
+            
+            // 处理表格主体
+            const tableBodies = document.querySelectorAll('.table tbody');
+            tableBodies.forEach(body => {
+                body.style.setProperty('background-color', '#1e1e1e', 'important');
+            });
+            
+            // 处理容器
+            const containers = document.querySelectorAll('.container-fluid');
+            containers.forEach(container => {
+                container.style.setProperty('background-color', '#121212', 'important');
+            });
+            
+            // 处理主内容区
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                mainContent.style.setProperty('background-color', '#121212', 'important');
+            }
+        }
+
+        function removeDarkThemeFromElements() {
+            const elements = document.querySelectorAll(`
+                .table, 
+                .table-responsive, 
+                .card, 
+                .card-body, 
+                .table th, 
+                .table td, 
+                .table tr,
+                .table thead,
+                .table tbody,
+                .container-fluid,
+                .main-content
+            `);
+            
+            elements.forEach(element => {
+                element.style.removeProperty('background-color');
+                element.style.removeProperty('color');
+                element.style.removeProperty('border-color');
+            });
+        }
+
+        // 退出登录
+        document.getElementById('logout-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('logout-form').submit();
+        });
+        
+        // 侧边栏切换
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.querySelector('.main-sidebar').classList.toggle('show');
+            document.getElementById('sidebarBackdrop').classList.toggle('show');
+        });
+        
+        // 点击遮罩关闭侧边栏
+        document.getElementById('sidebarBackdrop').addEventListener('click', function() {
+            document.querySelector('.main-sidebar').classList.remove('show');
+            this.classList.remove('show');
+        });
+        
+        // 主题切换
+        document.querySelectorAll('.theme-toggle').forEach(function(toggle) {
+            toggle.addEventListener('click', function() {
+                const htmlElement = document.documentElement;
+                const isDark = htmlElement.classList.contains('dark-theme');
+                
+                // 切换主题类
+                if (isDark) {
+                    htmlElement.classList.remove('dark-theme');
+                    document.querySelectorAll('.theme-toggle-icon').forEach(icon => {
+                        icon.classList.remove('bi-sun-fill');
+                        icon.classList.add('bi-moon-fill');
+                    });
+                    setCookie('theme', 'light', 365);
+                } else {
+                    htmlElement.classList.add('dark-theme');
+                    document.querySelectorAll('.theme-toggle-icon').forEach(icon => {
+                        icon.classList.remove('bi-moon-fill');
+                        icon.classList.add('bi-sun-fill');
+                    });
+                    setCookie('theme', 'dark', 365);
+                }
+                
+                // 立即应用主题样式
+                if (isDark) {
+                    removeDarkThemeFromElements();
+                } else {
+                    applyDarkThemeToElements();
+                }
+            });
+        });
+        
+        // 设置cookie
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + value + expires + "; path=/";
+        }
+        
+        // 确认操作模态框
+        var confirmCallback = null;
+        
+        function showConfirm(message, callback) {
+            const modal = document.getElementById('confirmModal');
+            const modalBody = modal.querySelector('.modal-body');
+            modalBody.textContent = message || '确定要执行此操作吗？';
+            
+            confirmCallback = callback;
+            
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
+        
+        document.getElementById('confirmOkBtn').addEventListener('click', function() {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+        });
+        
+        // 为需要确认的表单添加确认提示
+        document.querySelectorAll('form[data-confirm]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-confirm');
+                const form = this;
+                
+                showConfirm(message, function() {
+                    form.submit();
                 });
             });
         });
+        
+        // 为需要确认的按钮添加确认提示
+        document.querySelectorAll('[data-confirm-btn]').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-confirm-btn');
+                const link = this.getAttribute('href');
+                
+                showConfirm(message, function() {
+                    window.location.href = link;
+                });
+            });
+        });
+
+        // 监听主题切换事件
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化时检查当前主题
+            if (document.documentElement.classList.contains('dark-theme')) {
+                applyDarkThemeToElements();
+                document.querySelectorAll('.theme-toggle-icon').forEach(icon => {
+                    icon.classList.remove('bi-moon-fill');
+                    icon.classList.add('bi-sun-fill');
+                });
+            }
+        });
+
+        // 使用 MutationObserver 监听主题变化
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    const isDarkTheme = document.documentElement.classList.contains('dark-theme');
+                    if (isDarkTheme) {
+                        applyDarkThemeToElements();
+                    } else {
+                        removeDarkThemeFromElements();
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
     </script>
-    
-    <!-- 引入基础脚本 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/fetch-utils.js') }}"></script>
     {% block scripts %}{% endblock %}
-    
-    <!-- Toast提示容器 -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <!-- 动态添加的Toast消息将显示在这里 -->
-    </div>
 </body>
 </html> 

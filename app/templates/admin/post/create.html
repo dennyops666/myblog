@@ -18,6 +18,135 @@
     .form-check-input {
         margin-top: 0.3rem;
     }
+    
+    /* 修复页面整体背景色 */
+    html.dark-theme .container-fluid {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .main-content {
+        background-color: #121212 !important;
+    }
+    
+    html.dark-theme .py-4 {
+        background-color: #121212 !important;
+    }
+    
+    /* 修复卡片在暗黑模式下的样式 */
+    html.dark-theme .card {
+        background-color: #1e1e1e !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .card-body {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-control,
+    html.dark-theme .form-select {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-text {
+        color: #888 !important;
+    }
+    
+    html.dark-theme .form-check-label {
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .form-check-input {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    
+    html.dark-theme .btn-secondary {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .btn-secondary:hover {
+        background-color: #323232 !important;
+        border-color: #444 !important;
+    }
+    
+    /* 修复编辑器在暗黑模式下的样式 */
+    html.dark-theme .editor-toolbar a {
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .editor-toolbar a:hover,
+    html.dark-theme .editor-toolbar a.active {
+        background: #333 !important;
+        border-color: #444 !important;
+    }
+    
+    html.dark-theme .editor-toolbar {
+        background-color: #272727 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .CodeMirror {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .editor-preview-side {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .editor-statusbar {
+        color: #888 !important;
+        background-color: #272727 !important;
+        border-color: #333 !important;
+    }
+    
+    html.dark-theme .CodeMirror-cursor {
+        border-left-color: #fff !important;
+    }
+    
+    html.dark-theme .CodeMirror-selected {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    html.dark-theme .CodeMirror-line {
+        color: #e0e0e0 !important;
+    }
+    
+    html.dark-theme .cm-header {
+        color: #569cd6 !important;
+    }
+    
+    html.dark-theme .cm-quote {
+        color: #608b4e !important;
+    }
+    
+    html.dark-theme .cm-keyword {
+        color: #569cd6 !important;
+    }
+    
+    html.dark-theme .cm-link {
+        color: #569cd6 !important;
+    }
+    
+    html.dark-theme .cm-string {
+        color: #ce9178 !important;
+    }
+    
+    html.dark-theme .cm-comment {
+        color: #608b4e !important;
+    }
 </style>
 {% endblock %}
 
@@ -33,118 +162,124 @@
     {% endif %}
 {% endwith %}
 
-<div class="card">
-    <div class="card-body">
-        <form method="post" action="{{ url_for('admin_dashboard.post.create') }}" id="post-form">
-            <div class="mb-3">
-                {{ form.title.label(class="form-label") }}
-                {{ form.title(class="form-control") }}
-                {% if form.title.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.title.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="mb-3">
-                {{ form.content.label(class="form-label") }}
-                {{ form.content(class="form-control", rows=10, style="visibility: hidden; position: absolute;") }}
-                {% if form.content.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.content.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <div class="form-text">支持 Markdown 格式</div>
-            </div>
-            
-            <div class="mb-3">
-                {{ form.summary.label(class="form-label") }}
-                {{ form.summary(class="form-control", rows=3) }}
-                {% if form.summary.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.summary.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <div class="form-text">如果不填写，将自动截取正文前 150 个字符作为摘要</div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        {{ form.category_id.label(class="form-label") }}
-                        {{ form.category_id(class="form-select") }}
-                        {% if form.category_id.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.category_id.errors %}
-                            {{ error }}
-                            {% endfor %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('admin_dashboard.post.create') }}" id="post-form">
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control") }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        {{ form.status.label(class="form-label") }}
-                        {{ form.status(class="form-select") }}
-                        {% if form.status.errors %}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.status.errors %}
-                            {{ error }}
-                            {% endfor %}
+                        
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows=10, style="visibility: hidden; position: absolute;") }}
+                            {% if form.content.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.content.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">支持 Markdown 格式</div>
                         </div>
-                        {% endif %}
-                    </div>
+                        
+                        <div class="mb-3">
+                            {{ form.summary.label(class="form-label") }}
+                            {{ form.summary(class="form-control", rows=3) }}
+                            {% if form.summary.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.summary.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">如果不填写，将自动截取正文前 150 个字符作为摘要</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.category_id.label(class="form-label") }}
+                                    {{ form.category_id(class="form-select") }}
+                                    {% if form.category_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.category_id.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.status.label(class="form-label") }}
+                                    {{ form.status(class="form-select") }}
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.tags.label(class="form-label") }}
+                            {{ form.tags(class="form-select", multiple=True) }}
+                            {% if form.tags.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.tags.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">可以选择多个标签，也可以输入新标签</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_sticky(class="form-check-input") }}
+                                    {{ form.is_sticky.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_private(class="form-check-input") }}
+                                    {{ form.is_private.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.can_comment(class="form-check-input") }}
+                                    {{ form.can_comment.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-secondary">取消</a>
+                            <div>
+                                <button type="button" id="direct-submit-btn" class="btn btn-success me-2">直接提交</button>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-            
-            <div class="mb-3">
-                {{ form.tags.label(class="form-label") }}
-                {{ form.tags(class="form-select", multiple=True) }}
-                {% if form.tags.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.tags.errors %}
-                    {{ error }}
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <div class="form-text">可以选择多个标签，也可以输入新标签</div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <div class="form-check">
-                        {{ form.is_sticky(class="form-check-input") }}
-                        {{ form.is_sticky.label(class="form-check-label") }}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        {{ form.is_private(class="form-check-input") }}
-                        {{ form.is_private.label(class="form-check-label") }}
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-check">
-                        {{ form.can_comment(class="form-check-input") }}
-                        {{ form.can_comment.label(class="form-check-label") }}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="d-flex justify-content-between">
-                <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-secondary">取消</a>
-                <div>
-                    <button type="button" id="direct-submit-btn" class="btn btn-success me-2">直接提交</button>
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -164,6 +299,9 @@
             width: '100%'
         });
         
+        // 检查是否为暗黑模式
+        const isDarkMode = document.documentElement.classList.contains('dark-theme');
+        
         // 初始化 SimpleMDE
         var simplemde = new SimpleMDE({
             element: document.getElementById("content"),
@@ -179,7 +317,43 @@
                 "link", "image", "table", "code", "|",
                 "preview", "side-by-side", "fullscreen", "|",
                 "guide"
-            ]
+            ],
+            status: ["autosave", "lines", "words", "cursor"]
+        });
+        
+        // 如果是暗黑模式，强制应用暗黑模式样式
+        if (isDarkMode) {
+            const cmEditor = simplemde.codemirror;
+            cmEditor.getWrapperElement().classList.add('cm-s-dark');
+            document.querySelector('.editor-toolbar').classList.add('dark-theme');
+            document.querySelector('.editor-preview-side').classList.add('dark-theme');
+        }
+        
+        // 监听主题切换
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    const isDark = document.documentElement.classList.contains('dark-theme');
+                    const cmEditor = simplemde.codemirror;
+                    const toolbar = document.querySelector('.editor-toolbar');
+                    const preview = document.querySelector('.editor-preview-side');
+                    
+                    if (isDark) {
+                        cmEditor.getWrapperElement().classList.add('cm-s-dark');
+                        toolbar.classList.add('dark-theme');
+                        preview.classList.add('dark-theme');
+                    } else {
+                        cmEditor.getWrapperElement().classList.remove('cm-s-dark');
+                        toolbar.classList.remove('dark-theme');
+                        preview.classList.remove('dark-theme');
+                    }
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
         });
         
         // 处理直接提交按钮事件
@@ -211,7 +385,7 @@
             }
         });
         
-        // 表单提交前处理 - 简化版
+        // 表单提交前处理
         document.getElementById('post-form').addEventListener('submit', function(e) {
             // 将编辑器内容同步到textarea
             var content = simplemde.value();
