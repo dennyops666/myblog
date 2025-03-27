@@ -7,7 +7,7 @@
 
 import traceback
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.services import get_comment_service
 from app.models.comment import Comment, CommentStatus
 from app.extensions import db
@@ -135,16 +135,33 @@ def reject(comment_id):
         flash(result['message'], 'error')
     return redirect(url_for('admin_dashboard.comment.index'))
 
-@comment_bp.route('/delete/<int:comment_id>', methods=['POST'])
+@comment_bp.route('/delete/<int:comment_id>', methods=['GET', 'POST'])
 @login_required
 def delete(comment_id):
-    """删除评论"""
-    delete_replies = False  # 默认不删除回复
-    result = comment_service.delete_comment(comment_id, delete_replies)
-    if result['status'] == 'success':
-        flash('评论已删除', 'success')
-    else:
-        flash(result['message'], 'error')
+    try:
+        # 获取评论
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # 删除评论
+        db.session.delete(comment)
+        db.session.commit()
+        
+        # 记录操作日志
+        current_app.logger.info(f"管理员 {current_user.username} 删除了评论ID {comment_id}")
+        
+        # 设置成功消息
+        flash("评论删除成功", "success")
+    except Exception as e:
+        # 回滚事务
+        db.session.rollback()
+        
+        # 记录错误
+        current_app.logger.error(f"删除评论失败: {str(e)}")
+        
+        # 设置错误消息
+        flash(f"删除评论失败: {str(e)}", "error")
+    
+    # 重定向到评论列表页
     return redirect(url_for('admin_dashboard.comment.index'))
 
 @comment_bp.route('/batch-delete', methods=['POST'])

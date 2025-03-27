@@ -70,11 +70,9 @@
                                 </form>
                                 {% endif %}
                                 
-                                <form action="{{ url_for('admin_dashboard.comment.delete', comment_id=comment.id) }}" method="post" class="d-inline delete-comment-form">
-                                    <button type="button" class="btn btn-sm btn-danger delete-comment-btn" data-comment-id="{{ comment.id }}">
-                                        <i class="bi bi-trash"></i> 删除
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ comment.id }})">
+                                    <i class="bi bi-trash"></i> 删除
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -132,53 +130,63 @@
         {% endif %}
     </div>
 </div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这条评论吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">确认删除</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
+    let deleteCommentId = null;
+    
+    function confirmDelete(commentId) {
+        console.log('confirmDelete函数被调用, 评论ID:', commentId);
+        
+        // 保存要删除的评论ID
+        deleteCommentId = commentId;
+        
+        // 显示模态框
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        deleteModal.show();
+    }
+    
     $(document).ready(function() {
-        // 删除评论的确认对话框
-        $('.delete-comment-btn').on('click', function() {
-            var commentId = $(this).data('comment-id');
-            var form = $(this).closest('form');
+        console.log('评论管理页面加载完成');
+        
+        // 绑定确认删除按钮点击事件
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            console.log('确认删除按钮被点击');
             
-            // 创建模态框
-            var modalHtml = `
-            <div class="modal fade" id="deleteCommentModal${commentId}" tabindex="-1" aria-labelledby="deleteCommentModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteCommentModalLabel">确认删除</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>确定要删除这条评论吗？</p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                            <button type="button" class="btn btn-danger confirm-delete" data-comment-id="${commentId}">确定删除</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
-            
-            // 添加到页面
-            $('body').append(modalHtml);
-            
-            // 显示模态框
-            var modal = new bootstrap.Modal(document.getElementById(`deleteCommentModal${commentId}`));
-            modal.show();
-            
-            // 确认删除时提交表单
-            $(document).on('click', `.confirm-delete[data-comment-id="${commentId}"]`, function() {
+            if (deleteCommentId) {
+                console.log('提交删除请求，评论ID:', deleteCommentId);
+                
+                // 创建表单并提交
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('admin_dashboard.comment.delete', comment_id=0) }}".replace('0', deleteCommentId);
+                document.body.appendChild(form);
                 form.submit();
-            });
+            }
             
-            // 模态框关闭时移除
-            $(`#deleteCommentModal${commentId}`).on('hidden.bs.modal', function() {
-                $(this).remove();
-            });
+            // 关闭模态框
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
         });
     });
 </script>
