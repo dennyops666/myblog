@@ -71,26 +71,20 @@ def create():
         
         # 验证必填字段
         if not name:
-            return jsonify({
-                'success': False,
-                'message': '分类名称不能为空'
-            })
+            flash('分类名称不能为空', 'error')
+            return redirect(url_for('admin_dashboard.category.create'))
         
         # 检查名称是否已存在
         if Category.query.filter_by(name=name).first():
-            return jsonify({
-                'success': False,
-                'message': '该分类名称已存在'
-            })
+            flash('该分类名称已存在', 'error')
+            return redirect(url_for('admin_dashboard.category.create'))
         
         # 处理 slug
         if slug:
             # 检查 slug 是否已存在
             if Category.query.filter_by(slug=slug).first():
-                return jsonify({
-                    'success': False,
-                    'message': '该分类别名已存在'
-                })
+                flash('该分类别名已存在', 'error')
+                return redirect(url_for('admin_dashboard.category.create'))
         else:
             # 自动生成 slug
             slug = generate_slug(name)
@@ -114,19 +108,14 @@ def create():
         current_app.logger.info(f'分类创建成功：{name}')
         
         # 返回成功响应
-        return jsonify({
-            'success': True,
-            'message': '分类创建成功！',
-            'redirect_url': url_for('admin_dashboard.category.index')
-        })
+        flash('分类创建成功！', 'success')
+        return redirect(url_for('admin_dashboard.category.index'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"创建分类时发生错误: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': '服务器错误，请稍后重试'
-        })
+        flash('服务器错误，请稍后重试', 'error')
+        return redirect(url_for('admin_dashboard.category.index'))
 
 @category_bp.route('/<int:category_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -146,10 +135,8 @@ def edit(category_id):
         
         # 验证必填字段
         if not name:
-            return jsonify({
-                'success': False,
-                'message': '分类名称不能为空'
-            })
+            flash('分类名称不能为空', 'error')
+            return redirect(url_for('admin_dashboard.category.edit', category_id=category_id))
         
         # 检查名称是否已存在（排除当前分类）
         existing_name = Category.query.filter(
@@ -157,10 +144,8 @@ def edit(category_id):
             Category.id != category_id
         ).first()
         if existing_name:
-            return jsonify({
-                'success': False,
-                'message': '该分类名称已存在'
-            })
+            flash('该分类名称已存在', 'error')
+            return redirect(url_for('admin_dashboard.category.edit', category_id=category_id))
         
         # 处理 slug
         if slug:
@@ -170,10 +155,8 @@ def edit(category_id):
                 Category.id != category_id
             ).first()
             if existing_slug:
-                return jsonify({
-                    'success': False,
-                    'message': '该分类别名已存在'
-                })
+                flash('该分类别名已存在', 'error')
+                return redirect(url_for('admin_dashboard.category.edit', category_id=category_id))
         else:
             # 自动生成 slug
             slug = generate_slug(name)
@@ -198,19 +181,14 @@ def edit(category_id):
         current_app.logger.info(f'分类更新成功：{name}')
         
         # 返回成功响应
-        return jsonify({
-            'success': True,
-            'message': '分类更新成功！',
-            'redirect_url': url_for('admin_dashboard.category.index')
-        })
+        flash('分类更新成功！', 'success')
+        return redirect(url_for('admin_dashboard.category.index'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"更新分类时发生错误: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': '服务器错误，请稍后重试'
-        })
+        flash('服务器错误，请稍后重试', 'error')
+        return redirect(url_for('admin_dashboard.category.index'))
 
 @category_bp.route('/<int:category_id>/delete', methods=['POST'])
 @login_required
@@ -221,26 +199,19 @@ def delete(category_id):
     # 检查是否有关联的文章
     post_count = db.session.query(Post).filter_by(category_id=category_id).count()
     if post_count > 0:
-        return jsonify({
-            'success': False,
-            'message': f'该分类下还有{post_count}篇文章，请先删除或移动这些文章后再删除分类。'
-        })
+        flash(f'该分类下还有{post_count}篇文章，请先删除或移动这些文章后再删除分类。', 'error')
+        return redirect(url_for('admin_dashboard.category.index'))
 
     try:
         db.session.delete(category)
         db.session.commit()
-        return jsonify({
-            'success': True,
-            'message': '分类删除成功',
-            'redirect_url': url_for('admin_dashboard.category.index')
-        })
+        flash('分类删除成功', 'success')
+        return redirect(url_for('admin_dashboard.category.index'))
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"删除分类时发生错误: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': '服务器错误，请稍后重试'
-        })
+        flash('服务器错误，请稍后重试', 'error')
+        return redirect(url_for('admin_dashboard.category.index'))
 
 @category_bp.route('/search')
 @login_required
