@@ -317,13 +317,30 @@ class Post(db.Model):
     
     @property
     def is_published(self):
-        """判断文章是否已发布"""
-        return self.status in (PostStatus.PUBLISHED, PostStatus.ARCHIVED)
-    
+        """检查文章是否已发布"""
+        if self.status == PostStatus.PUBLISHED:
+            # 确保published字段与status保持一致
+            if not self.published:
+                self.published = True
+            return True
+        else:
+            # 确保published字段与status保持一致
+            if self.published:
+                self.published = False
+            return False
+
     @property
     def is_archived(self):
-        """判断文章是否已归档"""
+        """检查文章是否已归档"""
         return self.status == PostStatus.ARCHIVED
+    
+    def update_status_consistency(self):
+        """更新status和published字段的一致性"""
+        if self.status == PostStatus.PUBLISHED and not self.published:
+            self.published = True
+        elif self.status != PostStatus.PUBLISHED and self.published:
+            self.published = False
+        return self
     
     def __repr__(self):
         """打印友好的对象表示"""

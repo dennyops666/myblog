@@ -80,6 +80,7 @@ def register_blueprints(app):
             <html>
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src * 'self' data: https:; connect-src 'self'">
                 <title>{post.title}</title>
                 <style>
                     body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; }}
@@ -138,6 +139,7 @@ def register_blueprints(app):
             <html>
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src * 'self' data: https:; connect-src 'self'">
                 <title>{post.title}</title>
                 <style>
                     body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; }}
@@ -330,6 +332,7 @@ def register_blueprints(app):
             <html>
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com; img-src * 'self' data: https:; connect-src 'self'">
                 <title>{post.title}</title>
                 <style>
                     body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; }}
@@ -397,7 +400,7 @@ def create_app(config_class=DevelopmentConfig):
     @app.after_request
     def update_csp_header(response):
         # 直接设置完整的CSP头
-        csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src 'self' data:"
+        csp = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; font-src 'self' https://cdn.jsdelivr.net https://maxcdn.bootstrapcdn.com https://cdnjs.cloudflare.com; img-src * 'self' data: https:; connect-src 'self'"
         response.headers['Content-Security-Policy'] = csp
         return response
     

@@ -39,8 +39,9 @@ def index():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         status = request.args.get('status', 'all')
+        search_query = request.args.get('q', '').strip()
         
-        current_app.logger.debug(f"请求参数: page={page}, per_page={per_page}, status={status}")
+        current_app.logger.debug(f"请求参数: page={page}, per_page={per_page}, status={status}, q={search_query}")
         
         # 强制刷新数据库会话
         db.session.expire_all()
@@ -53,12 +54,18 @@ def index():
             db.joinedload(Post.tags)  # 使用 joinedload 加载标签
         )
         
+        # 添加搜索过滤
+        if search_query:
+            query = query.filter(Post.title.ilike(f'%{search_query}%'))
+            current_app.logger.info(f"应用搜索过滤: '{search_query}'")
+        
         # 添加状态过滤
         if status != 'all':
             try:
                 for status_enum in PostStatus:
                     if status_enum.value == status:
                         query = query.filter(Post.status == status_enum)
+                        current_app.logger.info(f"应用状态过滤: {status}")
                         break
             except Exception as e:
                 current_app.logger.error(f"处理状态过滤时出错: {str(e)}")
@@ -152,6 +159,9 @@ def create():
                 
                 # 设置标签
                 post.tags = selected_tags
+                
+                # 确保status和published字段一致
+                post.update_status_consistency()
                 
                 # 保存到数据库
                 db.session.add(post)
@@ -262,6 +272,12 @@ def edit(post_id):
                         post.category = new_category
                         post.tags = selected_tags
                         post.status = status
+                        post.is_sticky = form.is_sticky.data
+                        post.is_private = form.is_private.data
+                        post.can_comment = form.can_comment.data
+                        
+                        # 确保status和published字段一致
+                        post.update_status_consistency()
                         
                         # 记录内容更新
                         current_app.logger.info(f"文章内容被更新 - 长度: {len(post.content)}")
@@ -452,21 +468,27 @@ def change_status(post_id):
         if not status:
             return jsonify({'success': False, 'message': '状态不能为空'}), 400
             
-        post = post_service.update_post(
-            post_id=post_id,
-            status=PostStatus(status)
-        )
+        # 获取文章并更新状态
+        post = Post.query.get_or_404(post_id)
+        post.status = PostStatus(status)
         
-        if post:
-            return jsonify({
-                'success': True,
-                'message': '状态更新成功',
-                'status': post.status.value
-            })
-        return jsonify({'success': False, 'message': '文章不存在'}), 404
+        # 确保status和published字段一致
+        post.update_status_consistency()
+        
+        # 保存到数据库
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': '状态更新成功',
+            'status': post.status.value
+        })
     except ValueError:
         return jsonify({'success': False, 'message': '无效的状态值'}), 400
     except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"更改文章状态失败: {str(e)}")
+        current_app.logger.exception(e)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @post_bp.route('/preview', methods=['POST'])
