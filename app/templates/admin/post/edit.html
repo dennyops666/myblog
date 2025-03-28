@@ -11,13 +11,13 @@
 <style>
     .CodeMirror {
         height: 400px;
-    }
-    .editor-toolbar {
-        border-radius: 0;
-    }
+}
+.editor-toolbar {
+    border-radius: 0;
+}
     .form-check-input {
         margin-top: 0.3rem;
-    }
+}
     
     /* 修复页面整体背景色 */
     html.dark-theme .container-fluid {
@@ -321,52 +321,52 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <form method="post" action="{{ url_for('admin_dashboard.post.edit', post_id=post.id) }}" id="post-form" novalidate>
-                        <div class="mb-3">
-                            {{ form.title.label(class="form-label") }}
-                            {{ form.title(class="form-control") }}
-                            {% if form.title.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.title.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        <div class="card">
+                            <div class="card-body">
+        <form method="post" action="{{ url_for('admin_dashboard.post.edit', post_id=post.id) }}" id="post-form" novalidate>
+            <div class="mb-3">
+                                    {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control") }}
+                                    {% if form.title.errors %}
+                <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
 
-                        <div class="mb-3">
-                            {{ form.content.label(class="form-label") }}
-                            {{ form.content(class="form-control", rows=10) }}
-                            {% if form.content.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.content.errors %}
-                                {{ error }}
-                                {% endfor %}
+            <div class="mb-3">
+                                    {{ form.content.label(class="form-label") }}
+                {{ form.content(class="form-control", rows=10) }}
+                                    {% if form.content.errors %}
+                <div class="invalid-feedback d-block">
+                                        {% for error in form.content.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                <div class="form-text">支持 Markdown 格式</div>
+                                </div>
+            
+            <div class="mb-3">
+                {{ form.summary.label(class="form-label") }}
+                {{ form.summary(class="form-control", rows=3) }}
+                {% if form.summary.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.summary.errors %}
+                    {{ error }}
+                    {% endfor %}
                             </div>
-                            {% endif %}
-                            <div class="form-text">支持 Markdown 格式</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form.summary.label(class="form-label") }}
-                            {{ form.summary(class="form-control", rows=3) }}
-                            {% if form.summary.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.summary.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <div class="form-text">如果不填写，将自动截取正文前 150 个字符作为摘要</div>
-                        </div>
+                {% endif %}
+                <div class="form-text">如果不填写，将自动截取正文前 150 个字符作为摘要</div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
                                     {{ form.category_id.label(class="form-label") }}
-                                    {{ form.category_id(class="form-select") }}
+                        {{ form.category_id(class="form-select") }}
                                     {% if form.category_id.errors %}
                                     <div class="invalid-feedback d-block">
                                         {% for error in form.category_id.errors %}
@@ -375,70 +375,70 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
+                                    </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
                                     {{ form.status.label(class="form-label") }}
-                                    {{ form.status(class="form-select") }}
+                        {{ form.status(class="form-select") }}
                                     {% if form.status.errors %}
-                                    <div class="invalid-feedback d-block">
+                        <div class="invalid-feedback d-block">
                                         {% for error in form.status.errors %}
                                         {{ error }}
                                         {% endfor %}
                                     </div>
                                     {% endif %}
+                    </div>
+                </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            {{ form.tags.label(class="form-label") }}
-                            {{ form.tags(class="form-select", multiple=True) }}
-                            {% if form.tags.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.tags.errors %}
-                                {{ error }}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                            <div class="form-text">可以选择多个标签，也可以输入新标签</div>
-                        </div>
+            <div class="mb-3">
+                {{ form.tags.label(class="form-label") }}
+                {{ form.tags(class="form-select", multiple=True) }}
+                {% if form.tags.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.tags.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                <div class="form-text">可以选择多个标签，也可以输入新标签</div>
+                                </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.is_sticky(class="form-check-input") }}
-                                    {{ form.is_sticky.label(class="form-check-label") }}
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        {{ form.is_sticky(class="form-check-input") }}
+                        {{ form.is_sticky.label(class="form-check-label") }}
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.is_private(class="form-check-input") }}
-                                    {{ form.is_private.label(class="form-check-label") }}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.can_comment(class="form-check-input") }}
-                                    {{ form.can_comment.label(class="form-check-label") }}
-                                </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        {{ form.is_private(class="form-check-input") }}
+                        {{ form.is_private.label(class="form-check-label") }}
                             </div>
                         </div>
-                        
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-secondary">取消</a>
-                            <div>
-                                <button type="button" id="preview-btn" class="btn btn-outline-secondary me-2">预览</button>
-                                <button type="button" id="direct-submit-btn" class="btn btn-success me-2">直接提交</button>
-                                {{ form.submit(class="btn btn-primary") }}
-                            </div>
-                        </div>
-                    </form>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        {{ form.can_comment(class="form-check-input") }}
+                        {{ form.can_comment.label(class="form-check-label") }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('admin_dashboard.post.index') }}" class="btn btn-secondary">取消</a>
+                <div>
+                    <button type="button" id="preview-btn" class="btn btn-outline-secondary me-2">预览</button>
+                    <button type="button" id="direct-submit-btn" class="btn btn-success me-2">直接提交</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </div>
+            </form>
                 </div>
             </div>
         </div>
+        </div>
     </div>
-</div>
 
 <!-- 自定义预览对话框 -->
 <div id="custom-preview-overlay">
@@ -446,14 +446,14 @@
         <div id="custom-preview-header">
             <h5 style="margin: 0">预览</h5>
             <button type="button" id="custom-preview-close-x">&times;</button>
-        </div>
+            </div>
         <div id="custom-preview-body">
             <div style="text-align: center">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">加载中...</span>
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
                 </div>
             </div>
-        </div>
         <div id="custom-preview-footer">
             <button type="button" id="custom-preview-close" class="btn btn-secondary">关闭</button>
         </div>
@@ -548,13 +548,13 @@
         // 初始化 SimpleMDE
         simplemde = new SimpleMDE({
             element: document.getElementById("content"),
-            spellChecker: false,
+        spellChecker: false,
             autosave: {
                 enabled: true,
                 uniqueId: "post-edit-" + {{ post.id }},
                 delay: 1000,
-            },
-            toolbar: [
+        },
+        toolbar: [
                 "bold", "italic", "heading", "|",
                 "quote", "unordered-list", "ordered-list", "|",
                 {
@@ -999,6 +999,9 @@
             const content = document.getElementById('content');
             
             if (fullscreen) {
+                // 添加全屏激活类到body
+                document.body.classList.add('CodeMirror-fullscreen-active');
+                
                 // 进入全屏模式，隐藏所有侧边栏相关元素
                 if (sidebar) sidebar.style.display = 'none';
                 if (mainSidebar) {
@@ -1038,6 +1041,9 @@
                 // 防止页面滚动
                 document.body.style.overflow = 'hidden';
             } else {
+                // 移除全屏激活类
+                document.body.classList.remove('CodeMirror-fullscreen-active');
+                
                 // 退出全屏模式，恢复所有元素
                 if (sidebar) sidebar.style.display = '';
                 if (mainSidebar && mainSidebar._originalDisplay) {
@@ -1201,6 +1207,6 @@
             // 正常提交表单
             return true;
         });
-    });
+});
 </script>
 {% endblock %} 

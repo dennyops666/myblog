@@ -1358,6 +1358,10 @@ body {
     right: 0 !important;
     bottom: 0 !important;
     margin: 0 !important;
+    padding: 0 !important;
+    background-color: #fff !important;
+    border-radius: 0 !important;
+    border: none !important;
 }
 
 .editor-toolbar.fullscreen {
@@ -1369,8 +1373,45 @@ body {
     right: 0 !important;
     margin: 0 !important;
     padding: 10px !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 .editor-preview-side.editor-preview-active-side {
-    z-index: 9999 !important; 
+    z-index: 9999 !important;
+}
+
+/* 暗黑模式下的全屏样式增强 */
+html.dark-theme .CodeMirror-fullscreen {
+    background-color: #1a1a1a !important;
+    color: #e0e0e0 !important;
+}
+
+html.dark-theme .editor-toolbar.fullscreen {
+    background-color: #212529 !important;
+    border-bottom: 1px solid #333 !important;
+}
+
+html.dark-theme .editor-toolbar.fullscreen a {
+    color: #e0e0e0 !important;
+}
+
+html.dark-theme .editor-toolbar.fullscreen a:hover,
+html.dark-theme .editor-toolbar.fullscreen a.active {
+    background-color: #444 !important;
+    color: #fff !important;
+}
+
+/* 全屏模式下隐藏所有其他元素 */
+body.CodeMirror-fullscreen-active {
+    overflow: hidden !important;
+}
+
+body.CodeMirror-fullscreen-active .main-sidebar,
+body.CodeMirror-fullscreen-active .navbar,
+body.CodeMirror-fullscreen-active .sidebar,
+body.CodeMirror-fullscreen-active .sidebar-backdrop {
+    display: none !important;
 } 
