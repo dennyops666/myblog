@@ -990,6 +990,34 @@
             document.querySelector('.editor-preview-side').classList.add('dark-theme');
         }
         
+        // 监听全屏模式变化，处理侧边栏显示/隐藏
+        simplemde.codemirror.on("fullScreen", function(cm, fullscreen) {
+            const sidebar = document.querySelector('.sidebar');
+            const content = document.getElementById('content');
+            
+            if (fullscreen) {
+                // 进入全屏模式，隐藏侧边栏
+                if (sidebar) {
+                    sidebar.style.display = 'none';
+                }
+                // 将内容区域的左边距调整为0
+                if (content) {
+                    content._originalMarginLeft = content.style.marginLeft;
+                    content.style.marginLeft = '0';
+                }
+            } else {
+                // 退出全屏模式，恢复侧边栏
+                if (sidebar) {
+                    sidebar.style.display = '';
+                }
+                // 恢复内容区域的左边距
+                if (content && content._originalMarginLeft !== undefined) {
+                    content.style.marginLeft = content._originalMarginLeft;
+                    delete content._originalMarginLeft;
+                }
+            }
+        });
+        
         // 监听主题切换
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
