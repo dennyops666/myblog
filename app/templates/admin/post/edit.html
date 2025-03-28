@@ -992,29 +992,92 @@
         
         // 监听全屏模式变化，处理侧边栏显示/隐藏
         simplemde.codemirror.on("fullScreen", function(cm, fullscreen) {
+            // 侧边栏和相关元素
             const sidebar = document.querySelector('.sidebar');
+            const mainSidebar = document.querySelector('.main-sidebar');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
             const content = document.getElementById('content');
             
             if (fullscreen) {
-                // 进入全屏模式，隐藏侧边栏
-                if (sidebar) {
-                    sidebar.style.display = 'none';
+                // 进入全屏模式，隐藏所有侧边栏相关元素
+                if (sidebar) sidebar.style.display = 'none';
+                if (mainSidebar) {
+                    mainSidebar.style.display = 'none';
+                    // 记录原始状态以便恢复
+                    mainSidebar._originalDisplay = 'block';
                 }
-                // 将内容区域的左边距调整为0
+                if (sidebarBackdrop) sidebarBackdrop.style.display = 'none';
+                
+                // 调整内容区域
                 if (content) {
+                    // 保存原始样式以便恢复
                     content._originalMarginLeft = content.style.marginLeft;
+                    content._originalWidth = content.style.width;
+                    content._originalMaxWidth = content.style.maxWidth;
+                    
+                    // 设置内容区域样式
                     content.style.marginLeft = '0';
+                    content.style.width = '100%';
+                    content.style.maxWidth = '100%';
                 }
+                
+                // 设置编辑器容器样式，确保它正确撑满屏幕
+                const editorContainer = cm.getWrapperElement().parentNode;
+                if (editorContainer) {
+                    editorContainer._originalWidth = editorContainer.style.width;
+                    editorContainer.style.width = '100vw';
+                }
+                
+                // 处理CodeMirror容器样式
+                const cmWrapper = cm.getWrapperElement();
+                if (cmWrapper) {
+                    cmWrapper._originalWidth = cmWrapper.style.width;
+                    cmWrapper.style.width = '100%';
+                }
+                
+                // 防止页面滚动
+                document.body.style.overflow = 'hidden';
             } else {
-                // 退出全屏模式，恢复侧边栏
-                if (sidebar) {
-                    sidebar.style.display = '';
+                // 退出全屏模式，恢复所有元素
+                if (sidebar) sidebar.style.display = '';
+                if (mainSidebar && mainSidebar._originalDisplay) {
+                    mainSidebar.style.display = '';
+                    delete mainSidebar._originalDisplay;
                 }
-                // 恢复内容区域的左边距
-                if (content && content._originalMarginLeft !== undefined) {
-                    content.style.marginLeft = content._originalMarginLeft;
-                    delete content._originalMarginLeft;
+                if (sidebarBackdrop) sidebarBackdrop.style.display = '';
+                
+                // 恢复内容区域
+                if (content) {
+                    if (content._originalMarginLeft !== undefined) {
+                        content.style.marginLeft = content._originalMarginLeft;
+                        delete content._originalMarginLeft;
+                    }
+                    if (content._originalWidth !== undefined) {
+                        content.style.width = content._originalWidth;
+                        delete content._originalWidth;
+                    }
+                    if (content._originalMaxWidth !== undefined) {
+                        content.style.maxWidth = content._originalMaxWidth;
+                        delete content._originalMaxWidth;
+                    }
                 }
+                
+                // 恢复编辑器容器样式
+                const editorContainer = cm.getWrapperElement().parentNode;
+                if (editorContainer && editorContainer._originalWidth !== undefined) {
+                    editorContainer.style.width = editorContainer._originalWidth;
+                    delete editorContainer._originalWidth;
+                }
+                
+                // 恢复CodeMirror容器样式
+                const cmWrapper = cm.getWrapperElement();
+                if (cmWrapper && cmWrapper._originalWidth !== undefined) {
+                    cmWrapper.style.width = cmWrapper._originalWidth;
+                    delete cmWrapper._originalWidth;
+                }
+                
+                // 恢复页面滚动
+                document.body.style.overflow = '';
             }
         });
         

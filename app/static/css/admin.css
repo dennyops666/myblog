@@ -1345,4 +1345,32 @@ body {
     font-size: 20px;
     font-weight: bold;
     text-transform: uppercase;
+}
+
+/* SimpleMDE 全屏模式样式 */
+.CodeMirror-fullscreen {
+    z-index: 10000 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    margin: 0 !important;
+}
+
+.editor-toolbar.fullscreen {
+    z-index: 10001 !important;
+    width: 100% !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+    padding: 10px !important;
+}
+
+.editor-preview-side.editor-preview-active-side {
+    z-index: 9999 !important; 
 } 
