@@ -10,6 +10,11 @@ from datetime import timedelta
 
 class Config:
     """基础配置类"""
+    # 版本信息
+    VERSION = "1.0.0"
+    VERSION_DATE = "2025-03-28"
+    VERSION_NAME = "功能完整测试版本"
+    
     # 基本配置
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev'
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
