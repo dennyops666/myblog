@@ -2,7 +2,6 @@
 文件名：config.py
 描述：应用配置
 作者：denny
-创建日期：2024-03-21
 """
 
 import os
