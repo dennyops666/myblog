@@ -2,7 +2,6 @@
 文件名：markdown.py
 描述：Markdown 相关的工具函数
 作者：denny
-创建日期：2024-03-21
 """
 
 import markdown

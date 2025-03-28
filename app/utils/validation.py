@@ -2,7 +2,6 @@
 文件名：validation.py
 描述：数据验证工具模块
 作者：denny
-创建日期：2024-03-09
 """
 import re
 from typing import Tuple

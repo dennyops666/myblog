@@ -2,7 +2,6 @@
 文件名：comment.py
 描述：评论API控制器
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, jsonify, request, current_app

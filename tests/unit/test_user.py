@@ -2,7 +2,6 @@
 文件名：test_user.py
 描述：用户模型测试用例
 作者：denny
-创建日期：2025-02-16
 """
 
 import pytest

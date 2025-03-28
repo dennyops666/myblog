@@ -990,102 +990,175 @@
             document.querySelector('.editor-preview-side').classList.add('dark-theme');
         }
         
-        // 监听全屏模式变化，处理侧边栏显示/隐藏
-        simplemde.codemirror.on("fullScreen", function(cm, fullscreen) {
-            // 侧边栏和相关元素
-            const sidebar = document.querySelector('.sidebar');
-            const mainSidebar = document.querySelector('.main-sidebar');
-            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-            const content = document.getElementById('content');
+        // 增强全屏模式处理
+        var simplemdeFullScreenHandler = function() {
+            var sidebar = document.querySelector('.sidebar');
+            var navbar = document.querySelector('.navbar');
+            var topnav = document.querySelector('.top-nav');
+            var themeSwitcher = document.querySelector('.theme-switcher');
+            var header = document.querySelector('.content-header');
+            var contentWrapper = document.querySelector('.content-wrapper');
+            var mainContainer = document.querySelector('.main-content-container');
             
-            if (fullscreen) {
-                // 添加全屏激活类到body
-                document.body.classList.add('CodeMirror-fullscreen-active');
-                
-                // 进入全屏模式，隐藏所有侧边栏相关元素
-                if (sidebar) sidebar.style.display = 'none';
-                if (mainSidebar) {
-                    mainSidebar.style.display = 'none';
-                    // 记录原始状态以便恢复
-                    mainSidebar._originalDisplay = 'block';
-                }
-                if (sidebarBackdrop) sidebarBackdrop.style.display = 'none';
-                
-                // 调整内容区域
-                if (content) {
-                    // 保存原始样式以便恢复
-                    content._originalMarginLeft = content.style.marginLeft;
-                    content._originalWidth = content.style.width;
-                    content._originalMaxWidth = content.style.maxWidth;
+            // 监听主题切换
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        var isDarkMode = document.documentElement.classList.contains('dark-theme');
+                        var isFullScreen = document.body.classList.contains('CodeMirror-fullscreen-active');
+                        
+                        if (isFullScreen) {
+                            // 应用全屏模式下的暗黑模式样式
+                            if (isDarkMode) {
+                                var editorElement = document.querySelector('.CodeMirror-fullscreen');
+                                var toolbarElement = document.querySelector('.editor-toolbar.fullscreen');
+                                
+                                if (editorElement) {
+                                    editorElement.style.backgroundColor = '#1a1a1a';
+                                    editorElement.style.color = '#f8f9fa';
+                                }
+                                
+                                if (toolbarElement) {
+                                    toolbarElement.style.backgroundColor = '#1a1a1a';
+                                    toolbarElement.style.borderBottom = '1px solid #2c2c2c';
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            
+            // 监听编辑器全屏模式
+            simplemde.codemirror.on('fullScreen', function(cm, isFullScreen) {
+                if (isFullScreen) {
+                    // 添加全屏模式标识类
+                    document.body.classList.add('CodeMirror-fullscreen-active');
+                    document.documentElement.classList.add('CodeMirror-fullscreen-active');
                     
-                    // 设置内容区域样式
-                    content.style.marginLeft = '0';
-                    content.style.width = '100%';
-                    content.style.maxWidth = '100%';
-                }
-                
-                // 设置编辑器容器样式，确保它正确撑满屏幕
-                const editorContainer = cm.getWrapperElement().parentNode;
-                if (editorContainer) {
-                    editorContainer._originalWidth = editorContainer.style.width;
-                    editorContainer.style.width = '100vw';
-                }
-                
-                // 处理CodeMirror容器样式
-                const cmWrapper = cm.getWrapperElement();
-                if (cmWrapper) {
-                    cmWrapper._originalWidth = cmWrapper.style.width;
-                    cmWrapper.style.width = '100%';
-                }
-                
-                // 防止页面滚动
-                document.body.style.overflow = 'hidden';
-            } else {
-                // 移除全屏激活类
-                document.body.classList.remove('CodeMirror-fullscreen-active');
-                
-                // 退出全屏模式，恢复所有元素
-                if (sidebar) sidebar.style.display = '';
-                if (mainSidebar && mainSidebar._originalDisplay) {
-                    mainSidebar.style.display = '';
-                    delete mainSidebar._originalDisplay;
-                }
-                if (sidebarBackdrop) sidebarBackdrop.style.display = '';
-                
-                // 恢复内容区域
-                if (content) {
-                    if (content._originalMarginLeft !== undefined) {
-                        content.style.marginLeft = content._originalMarginLeft;
-                        delete content._originalMarginLeft;
+                    // 隐藏所有其他元素
+                    if (sidebar) sidebar.style.display = 'none';
+                    if (navbar) navbar.style.display = 'none';
+                    if (topnav) topnav.style.display = 'none';
+                    if (themeSwitcher) themeSwitcher.style.display = 'none';
+                    if (header) header.style.display = 'none';
+                    
+                    // 确保所有z-index正确
+                    if (sidebar) sidebar.style.zIndex = '-1';
+                    if (navbar) navbar.style.zIndex = '-1';
+                    if (topnav) topnav.style.zIndex = '-1';
+                    if (header) header.style.zIndex = '-1';
+                    
+                    // 在短暂延迟后应用编辑器和工具栏样式
+                    setTimeout(function() {
+                        var isDarkMode = document.documentElement.classList.contains('dark-theme');
+                        var editorElement = document.querySelector('.CodeMirror-fullscreen');
+                        var toolbarElement = document.querySelector('.editor-toolbar.fullscreen');
+                        var scrollElement = document.querySelector('.CodeMirror-fullscreen .CodeMirror-scroll');
+                        
+                        if (editorElement) {
+                            // 确保编辑器可以滚动
+                            editorElement.style.overflow = 'hidden';
+                            editorElement.style.height = '100vh'; 
+                            
+                            if (isDarkMode) {
+                                editorElement.style.backgroundColor = '#1a1a1a';
+                                editorElement.style.color = '#f8f9fa';
+                            } else {
+                                editorElement.style.backgroundColor = '#fff';
+                            }
+                        }
+                        
+                        if (scrollElement) {
+                            scrollElement.style.height = 'calc(100vh - 50px)';
+                            scrollElement.style.maxHeight = 'calc(100vh - 50px)';
+                            scrollElement.style.overflow = 'auto';
+                            scrollElement.style.overflowY = 'scroll';
+                            scrollElement.style.overflowX = 'auto';
+                            scrollElement.style.display = 'block';
+                            scrollElement.style.visibility = 'visible';
+                            
+                            // 强制滚动条显示
+                            setTimeout(function() {
+                                var scrollbarWidth = getScrollbarWidth();
+                                // 设置右侧边距确保滚动条显示
+                                scrollElement.style.width = 'calc(100% - ' + scrollbarWidth + 'px)';
+                                scrollElement.style.paddingRight = scrollbarWidth + 'px';
+                                
+                                // 强制触发滚动事件以显示滚动条
+                                scrollElement.scrollTop = 1;
+                                setTimeout(function() {
+                                    scrollElement.scrollTop = 0;
+                                }, 10);
+                            }, 200);
+                        }
+                        
+                        if (toolbarElement) {
+                            toolbarElement.style.width = '100%';
+                            
+                            if (isDarkMode) {
+                                toolbarElement.style.backgroundColor = '#1a1a1a';
+                                toolbarElement.style.borderBottom = '1px solid #2c2c2c';
+                            } else {
+                                toolbarElement.style.backgroundColor = '#fff';
+                                toolbarElement.style.borderBottom = '1px solid #ddd';
+                            }
+                        }
+                        
+                        // 确保内容区域正确计算高度
+                        var contentArea = editorElement.querySelector('.CodeMirror-sizer');
+                        if (contentArea) {
+                            contentArea.style.minHeight = 'calc(100vh - 50px)';
+                        }
+                        
+                        // 强制浏览器重新计算布局
+                        window.dispatchEvent(new Event('resize'));
+                    }, 100);
+                } else {
+                    // 移除全屏模式标识类
+                    document.body.classList.remove('CodeMirror-fullscreen-active');
+                    document.documentElement.classList.remove('CodeMirror-fullscreen-active');
+                    
+                    // 恢复所有元素
+                    if (sidebar) {
+                        sidebar.style.display = '';
+                        sidebar.style.zIndex = '';
                     }
-                    if (content._originalWidth !== undefined) {
-                        content.style.width = content._originalWidth;
-                        delete content._originalWidth;
+                    
+                    if (navbar) {
+                        navbar.style.display = '';
+                        navbar.style.zIndex = '';
                     }
-                    if (content._originalMaxWidth !== undefined) {
-                        content.style.maxWidth = content._originalMaxWidth;
-                        delete content._originalMaxWidth;
+                    
+                    if (topnav) {
+                        topnav.style.display = '';
+                        topnav.style.zIndex = '';
                     }
+                    
+                    if (themeSwitcher) {
+                        themeSwitcher.style.display = '';
+                    }
+                    
+                    if (header) {
+                        header.style.display = '';
+                        header.style.zIndex = '';
+                    }
+                    
+                    // 重置编辑器样式
+                    var editorElement = document.querySelector('.CodeMirror');
+                    if (editorElement) {
+                        editorElement.style.height = '400px';
+                    }
+                    
+                    // 强制浏览器重新计算布局
+                    window.dispatchEvent(new Event('resize'));
                 }
-                
-                // 恢复编辑器容器样式
-                const editorContainer = cm.getWrapperElement().parentNode;
-                if (editorContainer && editorContainer._originalWidth !== undefined) {
-                    editorContainer.style.width = editorContainer._originalWidth;
-                    delete editorContainer._originalWidth;
-                }
-                
-                // 恢复CodeMirror容器样式
-                const cmWrapper = cm.getWrapperElement();
-                if (cmWrapper && cmWrapper._originalWidth !== undefined) {
-                    cmWrapper.style.width = cmWrapper._originalWidth;
-                    delete cmWrapper._originalWidth;
-                }
-                
-                // 恢复页面滚动
-                document.body.style.overflow = '';
-            }
-        });
+            });
+        };
+
+        // 在编辑器初始化后执行全屏处理逻辑
+        simplemdeFullScreenHandler();
         
         // 监听主题切换
         const observer = new MutationObserver(function(mutations) {
@@ -1207,6 +1280,22 @@
             // 正常提交表单
             return true;
         });
+
+        // 获取浏览器滚动条宽度
+        function getScrollbarWidth() {
+            var outer = document.createElement("div");
+            outer.style.visibility = "hidden";
+            outer.style.overflow = "scroll";
+            document.body.appendChild(outer);
+            
+            var inner = document.createElement("div");
+            outer.appendChild(inner);
+            
+            var scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+            outer.parentNode.removeChild(outer);
+            
+            return scrollbarWidth;
+        }
 });
 </script>
 {% endblock %} 

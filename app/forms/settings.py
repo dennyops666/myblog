@@ -2,7 +2,6 @@
 文件名：settings.py
 描述：系统设置表单
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask_wtf import FlaskForm

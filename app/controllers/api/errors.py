@@ -2,7 +2,6 @@
 文件名：errors.py
 描述：API错误处理
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import jsonify

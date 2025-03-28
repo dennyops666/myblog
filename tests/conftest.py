@@ -2,7 +2,6 @@
 文件名：conftest.py
 描述：测试配置文件
 作者：denny
-创建日期：2024-03-21
 """
 
 import os

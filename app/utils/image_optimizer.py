@@ -2,7 +2,6 @@
 文件名：image_optimizer.py
 描述：图片优化工具类
 作者：denny
-创建日期：2025-02-16
 """
 
 import os

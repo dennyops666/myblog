@@ -2,7 +2,6 @@
 文件名：tag.py
 描述：标签管理控制器
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app

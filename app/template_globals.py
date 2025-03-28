@@ -2,7 +2,6 @@
 文件名：template_globals.py
 描述：模板全局函数
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import url_for, current_app

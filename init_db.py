@@ -2,7 +2,6 @@
 文件名：init_db.py
 描述：初始化数据库
 作者：denny
-创建日期：2024-03-21
 """
 
 from app import create_app

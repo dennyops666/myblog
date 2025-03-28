@@ -2,7 +2,6 @@
 文件名：cache.py
 描述：缓存工具模块
 作者：denny
-创建日期：2024-03-21
 """
 
 from functools import wraps

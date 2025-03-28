@@ -2,7 +2,6 @@
 文件名：views.py
 描述：管理后台视图
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import render_template, redirect, url_for, flash, request, current_app, jsonify

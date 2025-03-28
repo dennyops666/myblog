@@ -2,7 +2,6 @@
 文件名：associations.py
 描述：数据库关联表定义
 作者：denny
-创建日期：2024-03-21
 """
 
 from app.extensions import db

@@ -2,7 +2,6 @@
 文件名：test_performance.py
 描述：性能测试
 作者：denny
-创建日期：2024-03-20
 """
 
 import time

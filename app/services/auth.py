@@ -2,7 +2,6 @@
 文件名：auth.py
 描述：认证服务
 作者：denny
-创建日期：2024-03-21
 """
 
 from datetime import datetime, timedelta, UTC

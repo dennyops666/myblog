@@ -2,7 +2,6 @@
 文件名：test_password_reset_simple.py
 描述：简化的密码重置功能测试
 作者：denny
-创建日期：2024-03-21
 """
 
 import pytest

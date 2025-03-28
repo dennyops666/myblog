@@ -2,7 +2,6 @@
 文件名：security.py
 描述：安全相关的工具函数
 作者：denny
-创建日期：2024-03-21
 """
 
 import os

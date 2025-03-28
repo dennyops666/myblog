@@ -2,7 +2,6 @@
 文件名：post.py
 描述：文章管理视图
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, flash, current_app, make_response
@@ -592,6 +591,7 @@ def upload():
     try:
         filename = save_file(file)
         file_url = url_for('static', filename=f'uploads/images/{filename}')
+        current_app.logger.info(f'文件上传成功: {filename}, URL: {file_url}')
         return jsonify({
             'url': file_url,
             'filename': filename

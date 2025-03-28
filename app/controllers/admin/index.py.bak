@@ -2,7 +2,6 @@
 文件名：index.py
 描述：管理后台首页控制器
 作者：denny
-创建日期：2025-02-16
 """
 
 from flask import render_template, redirect, url_for, current_app

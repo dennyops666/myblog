@@ -2,7 +2,6 @@
 文件名：markdown_service.py
 描述：Markdown 服务
 作者：denny
-创建日期：2024-03-21
 """
 
 import markdown

@@ -2,7 +2,6 @@
 文件名：test_csrf_disabled.py
 描述：测试CSRF保护是否已经被禁用
 作者：denny
-创建日期：2025-03-15
 """
 
 import pytest

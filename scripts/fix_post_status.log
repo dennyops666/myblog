@@ -1,0 +1,199 @@
+2025-03-28 13:51:54,600 - INFO - 扩展初始化完成
+2025-03-28 13:51:54,648 - INFO - ===== 调试信息：admin_dashboard蓝图已创建 =====
+2025-03-28 13:51:54,648 - INFO - ===== 调试信息：admin_bp.url_prefix = None =====
+2025-03-28 13:51:54,648 - INFO - ===== 调试信息：admin_bp.name = admin_dashboard =====
+2025-03-28 13:51:54,648 - INFO - ===== 调试信息：admin_bp.template_folder = ../../templates =====
+2025-03-28 13:51:54,653 - INFO - ===== 调试信息：admin_dashboard.index已导入 =====
+2025-03-28 13:51:54,653 - INFO - 正在注册controllers/admin中的admin_dashboard蓝图
+2025-03-28 13:51:54,664 - INFO - 已注册的controllers/admin路由:
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.dashboard: /admin/
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.dashboard: /admin/dashboard
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.index: /admin/index
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.logout: /admin/logout
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.profile: /admin/profile
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.login: /admin/login
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.get_stats: /admin/get_stats
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.public_stats: /admin/api/stats
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.index: /admin/post/
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.create: /admin/post/create
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.edit: /admin/post/<int:post_id>/edit
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.delete: /admin/post/<int:post_id>/delete
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.view: /admin/post/<int:post_id>/view
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.change_status: /admin/post/<int:post_id>/status
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.preview: /admin/post/preview
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.search_tags: /admin/post/search_tags
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.check_title_exists: /admin/post/api/check-title
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.upload_page: /admin/post/upload
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.post.upload: /admin/post/upload
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.category.index: /admin/category/
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.category.create: /admin/category/create
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.category.edit: /admin/category/<int:category_id>/edit
+2025-03-28 13:51:54,664 - INFO - admin_dashboard.category.delete: /admin/category/<int:category_id>/delete
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.category.search: /admin/category/search
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.tag.index: /admin/tag/
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.tag.create: /admin/tag/create
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.tag.edit: /admin/tag/<int:tag_id>/edit
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.tag.delete: /admin/tag/<int:tag_id>/delete
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.index: /admin/comment/
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.edit: /admin/comment/<int:comment_id>/edit
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.approve: /admin/comment/approve/<int:comment_id>
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.reject: /admin/comment/reject/<int:comment_id>
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.delete: /admin/comment/delete/<int:comment_id>
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.comment.batch_delete: /admin/comment/batch-delete
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.settings.index: /admin/settings/
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.user.index: /admin/user/
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.user.create: /admin/user/create
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.user.edit: /admin/user/<int:user_id>/edit
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.user.delete: /admin/user/<int:user_id>/delete
+2025-03-28 13:51:54,665 - INFO - admin_dashboard.user.toggle_status: /admin/user/<int:user_id>/toggle-status
+2025-03-28 13:51:54,674 - INFO - BEGIN (implicit)
+2025-03-28 13:51:54,674 - INFO - PRAGMA main.table_info("user_roles")
+2025-03-28 13:51:54,675 - INFO - [raw sql] ()
+2025-03-28 13:51:54,675 - INFO - PRAGMA main.table_info("roles")
+2025-03-28 13:51:54,676 - INFO - [raw sql] ()
+2025-03-28 13:51:54,676 - INFO - PRAGMA main.table_info("users")
+2025-03-28 13:51:54,676 - INFO - [raw sql] ()
+2025-03-28 13:51:54,676 - INFO - PRAGMA main.table_info("comments")
+2025-03-28 13:51:54,676 - INFO - [raw sql] ()
+2025-03-28 13:51:54,676 - INFO - PRAGMA main.table_info("post_tags")
+2025-03-28 13:51:54,677 - INFO - [raw sql] ()
+2025-03-28 13:51:54,677 - INFO - PRAGMA main.table_info("posts")
+2025-03-28 13:51:54,677 - INFO - [raw sql] ()
+2025-03-28 13:51:54,677 - INFO - PRAGMA main.table_info("categories")
+2025-03-28 13:51:54,677 - INFO - [raw sql] ()
+2025-03-28 13:51:54,677 - INFO - PRAGMA main.table_info("tags")
+2025-03-28 13:51:54,677 - INFO - [raw sql] ()
+2025-03-28 13:51:54,678 - INFO - PRAGMA main.table_info("operation_logs")
+2025-03-28 13:51:54,678 - INFO - [raw sql] ()
+2025-03-28 13:51:54,678 - INFO - PRAGMA main.table_info("notifications")
+2025-03-28 13:51:54,678 - INFO - [raw sql] ()
+2025-03-28 13:51:54,678 - INFO - PRAGMA main.table_info("settings")
+2025-03-28 13:51:54,678 - INFO - [raw sql] ()
+2025-03-28 13:51:54,678 - INFO - COMMIT
+2025-03-28 13:51:54,679 - INFO - 开始处理角色: super_admin
+2025-03-28 13:51:54,759 - INFO - BEGIN (implicit)
+2025-03-28 13:51:54,762 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,762 - INFO - [generated in 0.00024s] ('super_admin', 1, 0)
+2025-03-28 13:51:54,764 - INFO - UPDATE roles SET permissions=?, updated_at=? WHERE roles.id = ?
+2025-03-28 13:51:54,764 - INFO - [generated in 0.00019s] (63, '2025-03-28 05:51:54.679213', 1)
+2025-03-28 13:51:54,765 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ? AND roles.id != ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,765 - INFO - [generated in 0.00018s] ('super_admin', 1, 1, 0)
+2025-03-28 13:51:54,766 - INFO - 角色名称验证通过: super_admin
+2025-03-28 13:51:54,766 - INFO - 角色 super_admin 的描述有效
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 32 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 16 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 8 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 16 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 8 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 4 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 8 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 2 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 4 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 2 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 2 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 1 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 1 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 32 -> Yes
+2025-03-28 13:51:54,766 - DEBUG - 检查角色 super_admin 的权限: 1 -> Yes
+2025-03-28 13:51:54,767 - DEBUG - 检查角色 super_admin 的权限: 2 -> Yes
+2025-03-28 13:51:54,767 - DEBUG - 检查角色 super_admin 的权限: 4 -> Yes
+2025-03-28 13:51:54,767 - DEBUG - 检查角色 super_admin 的权限: 8 -> Yes
+2025-03-28 13:51:54,767 - DEBUG - 检查角色 super_admin 的权限: 16 -> Yes
+2025-03-28 13:51:54,767 - DEBUG - 检查角色 super_admin 的权限: 32 -> Yes
+2025-03-28 13:51:54,767 - INFO - 角色 super_admin 的权限设置验证通过:
+- 权限值: 63
+- 权限列表: ['VIEW', 'COMMENT', 'POST', 'MODERATE', 'ADMIN', 'SUPER_ADMIN']
+2025-03-28 13:51:54,771 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password_hash AS users_password_hash, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.is_admin_user AS users_is_admin_user, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users, user_roles 
+WHERE ? = user_roles.role_id AND users.id = user_roles.user_id ORDER BY users.username) AS anon_1
+2025-03-28 13:51:54,771 - INFO - [generated in 0.00035s] (1,)
+2025-03-28 13:51:54,772 - INFO - 角色 super_admin 关联的用户数量: 1
+2025-03-28 13:51:54,775 - INFO - SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password_hash AS users_password_hash, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.is_admin_user AS users_is_admin_user, users.created_at AS users_created_at, users.updated_at AS users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM user_roles, users LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON users.id = user_roles_1.user_id 
+WHERE ? = user_roles.role_id AND users.id = user_roles.user_id ORDER BY users.username, roles_1.name
+2025-03-28 13:51:54,775 - INFO - [generated in 0.00029s] (1,)
+2025-03-28 13:51:54,776 - INFO - 角色 super_admin 的用户关联验证通过
+2025-03-28 13:51:54,776 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ? AND roles.id != ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,777 - INFO - [cached since 0.01127s ago] ('super_admin', 1, 1, 0)
+2025-03-28 13:51:54,777 - DEBUG - 检查角色 super_admin 的权限: 32 -> Yes
+2025-03-28 13:51:54,778 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE (roles.permissions & ?) = ? AND roles.id != ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,778 - INFO - [generated in 0.00016s] (32, 32, 1, 1, 0)
+2025-03-28 13:51:54,779 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.permissions = ? AND roles.id != ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,779 - INFO - [generated in 0.00016s] (63, 1, 1, 0)
+2025-03-28 13:51:54,779 - INFO - 角色 super_admin 的唯一性验证通过
+2025-03-28 13:51:54,779 - ERROR - 角色 super_admin 的创建时间缺少时区信息
+2025-03-28 13:51:54,779 - ERROR - 角色 super_admin 的时间戳验证失败
+2025-03-28 13:51:54,780 - ERROR - 处理角色 super_admin 时发生错误:
+- 错误类型: ValueError
+- 错误信息: 角色 super_admin 的新配置无效
+2025-03-28 13:51:54,780 - INFO - 开始处理角色: admin
+2025-03-28 13:51:54,780 - INFO - UPDATE roles SET permissions=?, updated_at=? WHERE roles.id = ?
+2025-03-28 13:51:54,780 - INFO - [generated in 0.00022s] (255, '2025-03-28 05:51:54.780723', 1)
+2025-03-28 13:51:54,781 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,781 - INFO - [cached since 0.01933s ago] ('admin', 1, 0)
+2025-03-28 13:51:54,781 - INFO - 角色 admin 配置无变化，跳过更新
+2025-03-28 13:51:54,781 - INFO - 开始处理角色: editor
+2025-03-28 13:51:54,782 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,782 - INFO - [cached since 0.02004s ago] ('editor', 1, 0)
+2025-03-28 13:51:54,782 - INFO - 角色 editor 配置无变化，跳过更新
+2025-03-28 13:51:54,782 - INFO - 开始处理角色: user
+2025-03-28 13:51:54,782 - INFO - SELECT roles.id AS roles_id, roles.name AS roles_name, roles.description AS roles_description, roles.permissions AS roles_permissions, roles.is_default AS roles_is_default, roles.created_at AS roles_created_at, roles.updated_at AS roles_updated_at 
+FROM roles 
+WHERE roles.name = ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,782 - INFO - [cached since 0.02065s ago] ('user', 1, 0)
+2025-03-28 13:51:54,782 - INFO - 角色 user 配置无变化，跳过更新
+2025-03-28 13:51:54,783 - INFO - 确认默认角色: user
+2025-03-28 13:51:54,783 - INFO - COMMIT
+2025-03-28 13:51:54,785 - WARNING - 角色初始化部分完成:
+- 成功: 3/4
+- 失败: 1/4
+2025-03-28 13:51:54,785 - INFO - BEGIN (implicit)
+2025-03-28 13:51:54,789 - INFO - SELECT anon_1.users_id AS anon_1_users_id, anon_1.users_username AS anon_1_users_username, anon_1.users_email AS anon_1_users_email, anon_1.users_password_hash AS anon_1_users_password_hash, anon_1.users_nickname AS anon_1_users_nickname, anon_1.users_avatar AS anon_1_users_avatar, anon_1.users_bio AS anon_1_users_bio, anon_1.users_is_active AS anon_1_users_is_active, anon_1.users_is_admin_user AS anon_1_users_is_admin_user, anon_1.users_created_at AS anon_1_users_created_at, anon_1.users_updated_at AS anon_1_users_updated_at, roles_1.id AS roles_1_id, roles_1.name AS roles_1_name, roles_1.description AS roles_1_description, roles_1.permissions AS roles_1_permissions, roles_1.is_default AS roles_1_is_default, roles_1.created_at AS roles_1_created_at, roles_1.updated_at AS roles_1_updated_at 
+FROM (SELECT users.id AS users_id, users.username AS users_username, users.email AS users_email, users.password_hash AS users_password_hash, users.nickname AS users_nickname, users.avatar AS users_avatar, users.bio AS users_bio, users.is_active AS users_is_active, users.is_admin_user AS users_is_admin_user, users.created_at AS users_created_at, users.updated_at AS users_updated_at 
+FROM users 
+WHERE users.is_admin_user = 1
+ LIMIT ? OFFSET ?) AS anon_1 LEFT OUTER JOIN (user_roles AS user_roles_1 JOIN roles AS roles_1 ON roles_1.id = user_roles_1.role_id) ON anon_1.users_id = user_roles_1.user_id ORDER BY roles_1.name
+2025-03-28 13:51:54,790 - INFO - [generated in 0.00034s] (1, 0)
+2025-03-28 13:51:54,796 - INFO - SELECT settings.id AS settings_id, settings.blog_name AS settings_blog_name, settings.blog_description AS settings_blog_description, settings.posts_per_page AS settings_posts_per_page, settings.allow_registration AS settings_allow_registration, settings.allow_comments AS settings_allow_comments, settings.created_at AS settings_created_at, settings.updated_at AS settings_updated_at, settings."key" AS settings_key, settings.value AS settings_value, settings.description AS settings_description 
+FROM settings 
+WHERE settings."key" = ?
+ LIMIT ? OFFSET ?
+2025-03-28 13:51:54,796 - INFO - [generated in 0.00031s] ('site_name', 1, 0)
+2025-03-28 13:51:54,796 - INFO - ROLLBACK
+2025-03-28 13:51:54,796 - ERROR - 确保默认站点设置存在失败: (sqlite3.OperationalError) no such column: settings.key
+[SQL: SELECT settings.id AS settings_id, settings.blog_name AS settings_blog_name, settings.blog_description AS settings_blog_description, settings.posts_per_page AS settings_posts_per_page, settings.allow_registration AS settings_allow_registration, settings.allow_comments AS settings_allow_comments, settings.created_at AS settings_created_at, settings.updated_at AS settings_updated_at, settings."key" AS settings_key, settings.value AS settings_value, settings.description AS settings_description 
+FROM settings 
+WHERE settings."key" = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('site_name', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-03-28 13:51:54,796 - INFO - 开始检查文章状态一致性...
+2025-03-28 13:51:54,797 - INFO - BEGIN (implicit)
+2025-03-28 13:51:54,800 - INFO - SELECT posts.id AS posts_id, posts.title AS posts_title, posts.content AS posts_content, posts.html_content AS posts_html_content, posts.toc AS posts_toc, posts.highlight_css AS posts_highlight_css, posts.summary AS posts_summary, posts.category_id AS posts_category_id, posts.author_id AS posts_author_id, posts.status AS posts_status, posts.is_sticky AS posts_is_sticky, posts.view_count AS posts_view_count, posts.comments_count AS posts_comments_count, posts.created_at AS posts_created_at, posts.updated_at AS posts_updated_at, posts.is_private AS posts_is_private, posts.published AS posts_published, posts.can_comment AS posts_can_comment, tags_1.id AS tags_1_id, tags_1.name AS tags_1_name, tags_1.slug AS tags_1_slug, tags_1.description AS tags_1_description, tags_1.created_at AS tags_1_created_at, tags_1.updated_at AS tags_1_updated_at 
+FROM posts LEFT OUTER JOIN (post_tags AS post_tags_1 JOIN tags AS tags_1 ON tags_1.id = post_tags_1.tag_id) ON posts.id = post_tags_1.post_id
+2025-03-28 13:51:54,800 - INFO - [generated in 0.00029s] ()
+2025-03-28 13:51:54,802 - INFO - 所有文章状态一致，无需修复。
+2025-03-28 13:51:54,802 - INFO - ROLLBACK

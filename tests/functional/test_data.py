@@ -2,7 +2,6 @@
 文件名：test_data.py
 描述：测试数据初始化
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import current_app

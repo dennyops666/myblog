@@ -2,7 +2,6 @@
 文件名：test_comment.py
 描述：评论单元测试
 作者：denny
-创建日期：2024-03-21
 """
 
 import pytest

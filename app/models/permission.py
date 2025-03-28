@@ -2,7 +2,6 @@
 文件名：permission.py
 描述：权限模型
 作者：denny
-创建日期：2024-03-21
 """
 
 from enum import Flag, auto

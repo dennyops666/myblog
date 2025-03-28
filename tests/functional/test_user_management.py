@@ -2,7 +2,6 @@
 文件名：test_user_management.py
 描述：用户管理功能测试
 作者：系统
-创建日期：2025-03-26
 """
 
 import os

@@ -2,7 +2,6 @@
 文件名：__init__.py
 描述：管理后台蓝图
 作者：denny
-创建日期：2024-03-26
 """
 
 from flask import Blueprint

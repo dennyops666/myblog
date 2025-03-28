@@ -2,7 +2,6 @@
 文件名：test_auth_api.py
 描述：认证API测试用例
 作者：denny
-创建日期：2025-03-15
 """
 
 import pytest

@@ -2,7 +2,6 @@
 文件名：cli.py
 描述：CLI命令
 作者：denny
-创建日期：2024-03-21
 """
 
 import click

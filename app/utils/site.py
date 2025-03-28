@@ -2,7 +2,6 @@
 文件名：site.py
 描述：站点设置工具
 作者：denny
-创建日期：2024-03-25
 """
 
 from flask import current_app

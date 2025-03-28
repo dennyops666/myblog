@@ -2,7 +2,6 @@
 文件名：test_admin.py
 描述：管理后台功能测试
 作者：denny
-创建日期：2024-03-21
 """
 
 import pytest

@@ -2,7 +2,6 @@
 文件名：test_tag.py
 描述：标签模块单元测试
 作者：denny
-创建日期：2025-02-16
 """
 
 import pytest

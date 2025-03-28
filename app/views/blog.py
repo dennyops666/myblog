@@ -2,7 +2,6 @@
 文件名：blog.py
 描述：博客视图
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, render_template, request, jsonify, abort, current_app, url_for, flash, redirect, make_response

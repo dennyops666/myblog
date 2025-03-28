@@ -2,7 +2,6 @@
 文件名：decorators.py
 描述：装饰器函数
 作者：denny
-创建日期：2024-03-21
 """
 
 from functools import wraps

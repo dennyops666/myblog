@@ -2,7 +2,6 @@
 文件名：views.py
 描述：博客前台视图
 作者：denny
-创建日期：2025-02-16
 """
 
 from flask import (

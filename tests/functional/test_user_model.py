@@ -2,7 +2,6 @@
 文件名：test_user_model.py
 描述：User 模型测试
 作者：denny
-创建日期：2024-03-10
 """
 
 def test_user_model_methods(app):

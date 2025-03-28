@@ -2,7 +2,6 @@
 文件名：pagination.py
 描述：分页工具类
 作者：denny
-创建日期：2025-02-16
 """
 
 from math import ceil

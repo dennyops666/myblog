@@ -1,7 +1,6 @@
 """
 文件名：utils.py
 描述：测试辅助工具函数
-创建日期：2025-03-26
 """
 
 def login(client, username, password):

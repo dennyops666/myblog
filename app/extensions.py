@@ -2,7 +2,6 @@
 文件名：extensions.py
 描述：Flask扩展初始化
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask_sqlalchemy import SQLAlchemy

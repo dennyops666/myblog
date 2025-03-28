@@ -2,7 +2,6 @@
 文件名：test.py
 描述：测试控制器
 作者：denny
-创建日期：2025-03-23
 """
 
 from flask import render_template, jsonify, current_app

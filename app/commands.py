@@ -2,7 +2,6 @@
 文件名：commands.py
 描述：Flask CLI 命令
 作者：denny
-创建日期：2024-03-21
 """
 
 import click

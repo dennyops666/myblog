@@ -2,7 +2,6 @@
 文件名：comment.py
 描述：评论表单
 作者：denny
-创建日期：2024-03-21
 """
 
 from wtforms import StringField, TextAreaField, HiddenField, SubmitField

@@ -2,7 +2,6 @@
 文件名：test.py
 描述：测试视图
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for, flash, current_app

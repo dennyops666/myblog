@@ -2,7 +2,6 @@
 文件名：operation_log.py
 描述：操作日志模型
 作者：denny
-创建日期：2025-02-16
 """
 
 from datetime import datetime, UTC

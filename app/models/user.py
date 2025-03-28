@@ -2,7 +2,6 @@
 文件名：user.py
 描述：用户模型
 作者：denny
-创建日期：2024-03-21
 """
 
 from app.extensions import db

@@ -2,7 +2,6 @@
 文件名：category.py
 描述：分类管理控制器
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app

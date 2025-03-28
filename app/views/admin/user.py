@@ -2,7 +2,6 @@
 文件名：user.py
 描述：用户管理视图
 作者：denny
-创建日期：2024-03-26
 """
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app

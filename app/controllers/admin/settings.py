@@ -2,7 +2,6 @@
 文件名：settings.py
 描述：系统设置控制器
 作者：denny
-创建日期：2024-03-22
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, flash

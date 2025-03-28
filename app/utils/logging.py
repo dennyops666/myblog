@@ -2,7 +2,6 @@
 文件名：logging.py
 描述：日志记录工具模块
 作者：denny
-创建日期：2024-03-09
 """
 import logging
 import traceback

@@ -2,7 +2,6 @@
 文件名：test_markdown_service.py
 描述：Markdown服务集成测试
 作者：denny
-创建日期：2024-03-21
 """
 
 import pytest

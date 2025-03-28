@@ -2,7 +2,6 @@
 文件名：test_models.py
 描述：模型单元测试
 作者：denny
-创建日期：2025-02-16
 """
 
 from app.models import User, Post, Category, Tag, Comment

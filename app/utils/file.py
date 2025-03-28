@@ -1,74 +1,52 @@
 """
 文件名：file.py
-描述：文件处理工具
+描述：文件处理工具函数
 作者：denny
-创建日期：2024-03-21
 """
 
 import os
-import secrets
-from datetime import datetime
-from flask import current_app
+import datetime
+import random
+import string
 from werkzeug.utils import secure_filename
-from PIL import Image
+from flask import current_app
+
+# 允许的文件扩展名
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 def allowed_file(filename):
-    """检查文件扩展名是否允许"""
+    """检查文件扩展名是否在允许列表中"""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file):
-    """保存文件
-    
-    Args:
-        file: 要保存的文件对象
-        
-    Returns:
-        str: 保存后的文件名
-    """
-    # 生成安全的文件名
+    """保存上传的文件并返回保存后的文件名"""
+    # 确保文件名安全
     filename = secure_filename(file.filename)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    random_hex = secrets.token_hex(8)
-    _, ext = os.path.splitext(filename)
-    new_filename = f"{timestamp}_{random_hex}{ext}"
     
-    # 确保上传目录存在
-    os.makedirs(current_app.config['IMAGE_UPLOAD_FOLDER'], exist_ok=True)
+    # 创建带时间戳的唯一文件名
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    random_string = ''.join(random.choices(string.hexdigits, k=16))
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    new_filename = f"{timestamp}_{random_string}.{ext}"
+    
+    # 确保目标目录存在
+    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'images')
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # 设置文件路径并保存
+    file_path = os.path.join(upload_dir, new_filename)
+    
+    # 记录保存路径
+    current_app.logger.info(f"保存文件到: {file_path}")
     
     # 保存文件
-    filepath = os.path.join(current_app.config['IMAGE_UPLOAD_FOLDER'], new_filename)
+    file.save(file_path)
     
-    # 如果是图片，进行处理
-    if ext.lower() in ['.jpg', '.jpeg', '.png', '.gif']:
-        image = Image.open(file)
-        processed_image = process_image(image)
-        processed_image.save(filepath, quality=85, optimize=True)
-    else:
-        file.save(filepath)
+    # 设置文件权限
+    try:
+        os.chmod(file_path, 0o666)  # rw-rw-rw-
+    except Exception as e:
+        current_app.logger.warning(f"无法设置文件权限: {str(e)}")
     
-    return new_filename
-
-def process_image(image, max_size=2048):
-    """处理图片（调整大小、优化质量）
-    
-    Args:
-        image: PIL Image对象
-        max_size: 最大尺寸
-        
-    Returns:
-        PIL Image: 处理后的图片
-    """
-    # 转换RGBA图片为RGB
-    if image.mode in ('RGBA', 'LA'):
-        background = Image.new('RGB', image.size, 'white')
-        background.paste(image, mask=image.split()[-1])
-        image = background
-    
-    # 调整图片大小
-    if max(image.size) > max_size:
-        ratio = max_size / max(image.size)
-        new_size = tuple(int(dim * ratio) for dim in image.size)
-        image = image.resize(new_size, Image.Resampling.LANCZOS)
-    
-    return image 
+    return new_filename 

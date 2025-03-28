@@ -2,7 +2,6 @@
 文件名：page.py
 描述：页面控制器
 作者：denny
-创建日期：2024-03-21
 """
 
 from flask import Blueprint, render_template, request, jsonify
