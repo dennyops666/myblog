@@ -58,6 +58,11 @@ def register_blueprints(app):
             if 'admin_dashboard' in rule.endpoint:
                 app.logger.info(f"{rule.endpoint}: {rule}")
     
+    # 注册上传文件蓝图
+    from app.controllers.admin.upload import upload_bp
+    app.register_blueprint(upload_bp, url_prefix='/admin/upload')
+    app.logger.info("已注册上传文件蓝图: /admin/upload")
+    
     # 为原始URL路径添加处理函数
     @app.route('/blog/post/<int:post_id>')
     def original_post_detail(post_id):
@@ -368,6 +373,34 @@ def register_blueprints(app):
             error_msg = f"访问文章出错: {str(e)}\n{traceback.format_exc()}"
             app.logger.error(error_msg)
             return error_msg, 500
+
+    # 添加一个路由来提供上传的图片文件
+    @app.route('/uploads/images/<filename>')
+    def uploaded_images(filename):
+        """提供上传的图片文件"""
+        try:
+            # 从配置的目录中提供文件
+            upload_folder = app.config.get('IMAGE_UPLOAD_FOLDER')
+            return send_from_directory(upload_folder, filename)
+        except Exception as e:
+            app.logger.error(f"访问上传图片出错: {str(e)}")
+            return f"图片不存在或无法访问: {filename}", 404
+            
+    # 兼容旧版上传路径
+    @app.route('/uploads/<filename>')
+    def uploaded_files(filename):
+        """提供旧版上传路径的文件访问"""
+        try:
+            # 检查是否为图片文件
+            if '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config.get('ALLOWED_EXTENSIONS', {'png', 'jpg', 'jpeg', 'gif'}):
+                # 尝试从图片上传目录提供文件
+                return send_from_directory(app.config.get('IMAGE_UPLOAD_FOLDER'), filename)
+            
+            # 从通用上传目录提供文件
+            return send_from_directory(app.config.get('UPLOAD_FOLDER'), filename)
+        except Exception as e:
+            app.logger.error(f"访问上传文件出错: {str(e)}")
+            return f"文件不存在或无法访问: {filename}", 404
 
 def create_app(config_class=DevelopmentConfig):
     """创建并返回一个Flask应用实例"""
