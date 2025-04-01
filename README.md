@@ -66,41 +66,72 @@ MyBlog 是一个基于 Python Flask 开发的个人博客系统，采用传统�
 
 ## 安装与部署
 
-### 开发环境部署
+### 方法一：使用脚本自动部署（推荐）
 
-1. **克隆代码仓库**
+项目提供了自动部署脚本，可以一键完成整个部署过程：
+
 ```bash
+# 克隆仓库
 git clone git@github.com:dennyops666/myblog.git
-cd /data/myblog
+cd myblog
+
+# 使用部署脚本
+./deploy.sh
 ```
 
-2. **创建并激活虚拟环境**
+部署脚本会自动完成以下操作：
+- 检查环境依赖
+- 创建并激活虚拟环境
+- 安装所需依赖
+- 创建必要目录
+- 初始化数据库
+- 创建管理员账号
+- 启动应用服务
+
+### 方法二：Docker部署（适合容器化环境）
+
+如果您的环境支持Docker，可以使用Docker部署：
+
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+# 克隆仓库
+git clone git@github.com:dennyops666/myblog.git
+cd myblog
+
+# 使用Docker部署脚本
+./docker_deploy.sh
 ```
 
-3. **安装依赖**
+Docker部署脚本会自动完成以下操作：
+- 检查Docker环境
+- 创建必要的目录结构
+- 构建Docker镜像
+- 启动容器
+- 初始化应用
+
+您也可以手动使用Docker Compose命令：
+
 ```bash
-pip install -r requirements.txt
+# 构建并启动
+docker-compose up -d
+
+# 查看容器状态
+docker-compose ps
+
+# 查看应用日志
+docker-compose logs -f
+
+# 停止应用
+docker-compose down
 ```
 
-4. **初始化数据库**
-```bash
-python init_db.py
-```
+### 方法三：传统手动部署
 
-5. **运行开发服务器**
-```bash
-python run.py
-```
-
-### 生产环境部署
+如果您希望手动控制部署过程，可以按照以下步骤操作：
 
 1. **环境准备**
 ```bash
 sudo mkdir -p /data/myblog
-sudo chown -R ops:ops /data/myblog
+sudo chown -R your_user:your_group /data/myblog
 ```
 
 2. **部署项目**
@@ -110,12 +141,38 @@ cd /data/myblog
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install gunicorn
 ```
 
-3. **使用管理脚本启动服务**
+3. **初始化数据库**
 ```bash
-/data/myblog/manage.sh restart
+flask db upgrade
+flask create-admin
+```
+
+4. **使用管理脚本启动服务**
+```bash
+./manage.sh start
+```
+
+## 应用管理
+
+无论使用哪种部署方式，都可以使用以下命令管理应用：
+
+```bash
+# 启动应用
+./manage.sh start
+
+# 停止应用
+./manage.sh stop
+
+# 重启应用
+./manage.sh restart
+
+# 查看应用状态
+./manage.sh status
+
+# 重载应用配置
+./manage.sh reload
 ```
 
 ## 使用说明
@@ -156,30 +213,14 @@ myblog/
 ├── logs/                  # 日志文件
 ├── instance/              # 实例配置
 ├── migrations/            # 数据库迁移
+├── deploy.sh              # 自动部署脚本
+├── docker_deploy.sh       # Docker部署脚本
+├── Dockerfile             # Docker镜像定义
+├── docker-compose.yml     # Docker Compose配置
 ├── requirements.txt       # 依赖列表
-├── init_db.py             # 数据库初始化
 ├── run.py                 # 应用入口
 └── manage.sh              # 管理脚本
 ```
-
-## 开发指南
-
-1. **开发流程**
-   - 创建功能分支
-   - 编写代码和测试
-   - 运行测试
-   - 提交代码
-   - 创建 Pull Request
-
-2. **代码规范**
-   - 遵循 PEP 8 规范
-   - 使用 Black 进行代码格式化
-   - 添加适当的注释
-
-3. **测试**
-   - 编写单元测试
-   - 测试文件命名：`test_*.py`
-   - 运行测试：`pytest tests/`
 
 ## 系统维护
 
@@ -190,8 +231,25 @@ myblog/
 2. **数据库文件**
    - 开发数据库：`/data/myblog/instance/blog-dev.db`
 
-3. **重启应用**
-   - 使用管理脚本：`/data/myblog/manage.sh restart`
+3. **备份还原**
+   对于数据备份，可以使用以下方法：
+   ```bash
+   # 备份数据库
+   cp /data/myblog/instance/blog-dev.db /path/to/backup/blog-backup-$(date +%Y%m%d).db
+   
+   # 还原数据库
+   cp /path/to/backup/blog-backup-YYYYMMDD.db /data/myblog/instance/blog-dev.db
+   ```
+
+4. **故障排除**
+   如果遇到问题，请检查日志文件：
+   ```bash
+   # 查看最新的应用日志
+   tail -f /data/myblog/logs/myblog.log
+   
+   # 查看错误日志
+   tail -f /data/myblog/logs/error.log
+   ```
 
 ## 项目开发团队
 
