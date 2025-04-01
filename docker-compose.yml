@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  myblog:
+    build: .
+    container_name: myblog
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-mysecretkey}
+    command: >
+      bash -c "flask db upgrade &&
+               flask create-admin &&
+               gunicorn wsgi:application --bind 0.0.0.0:5000 --workers 1 --timeout 120 
+               --log-file /app/logs/myblog.log 
+               --error-logfile /app/logs/error.log 
+               --log-level debug 
+               --capture-output 
+               --enable-stdio-inheritance" 
