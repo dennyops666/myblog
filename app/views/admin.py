@@ -7,7 +7,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.models import User, db, Category, Tag, Post, PostStatus, Role, Comment
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 import os
 from werkzeug.utils import secure_filename
 from PIL import Image
@@ -231,7 +231,7 @@ def category_edit(category_id):
         category.name = name
         category.slug = slug
         category.description = description
-        category.updated_at = datetime.now(UTC)
+        category.updated_at = datetime.now(timezone.utc)
         
         db.session.commit()
         
@@ -353,7 +353,7 @@ def user_profile():
         user.email = email
         user.nickname = nickname
         user.bio = bio
-        user.updated_at = datetime.now(UTC)
+        user.updated_at = datetime.now(timezone.utc)
         
         try:
             db.session.commit()
@@ -694,42 +694,123 @@ def comment_reject(comment_id):
 @login_required
 def settings():
     """系统设置"""
-    if request.method == 'POST':
-        # 获取表单数据
-        blog_name = request.form.get('blog_name')
-        blog_description = request.form.get('blog_description')
-        posts_per_page = request.form.get('posts_per_page', type=int)
-        allow_comments = request.form.get('allow_comments') == 'on'
-        allow_registration = request.form.get('allow_registration') == 'on'
-        
-        # 更新设置
-        current_app.config['BLOG_NAME'] = blog_name
-        current_app.config['BLOG_DESCRIPTION'] = blog_description
-        current_app.config['POSTS_PER_PAGE'] = posts_per_page
-        current_app.config['ALLOW_COMMENTS'] = allow_comments
-        current_app.config['ALLOW_REGISTRATION'] = allow_registration
-        
-        # 保存到数据库
-        settings = {
-            'blog_name': blog_name,
-            'blog_description': blog_description,
-            'posts_per_page': posts_per_page,
-            'allow_comments': allow_comments,
-            'allow_registration': allow_registration
-        }
-        
-        # 这里可以添加将设置保存到数据库的代码
-        
-        flash('系统设置已更新', 'success')
-        return redirect(url_for('admin_dashboard.settings'))
+    # 只有管理员才能访问此页面
+    if not current_user.is_admin_user:
+        flash('您没有权限访问此页面', 'danger')
+        return redirect(url_for('admin_dashboard.index'))
     
-    # 获取当前设置
-    settings = {
-        'blog_name': current_app.config.get('BLOG_NAME', '我的博客'),
-        'blog_description': current_app.config.get('BLOG_DESCRIPTION', ''),
-        'posts_per_page': current_app.config.get('POSTS_PER_PAGE', 10),
-        'allow_comments': current_app.config.get('ALLOW_COMMENTS', True),
-        'allow_registration': current_app.config.get('ALLOW_REGISTRATION', True)
-    }
+    from app.forms.settings import SettingsForm
+    from app.models.setting import Setting
     
-    return render_template('admin/settings.html', title='系统设置', settings=settings) 
+    # 创建一个表单实例
+    form = SettingsForm()
+    
+    # 如果是POST请求且表单验证通过
+    if form.validate_on_submit():
+        try:
+            # 从数据库中获取设置或创建新的设置
+            site_name = Setting.query.filter_by(key='site_name').first()
+            if not site_name:
+                site_name = Setting(key='site_name', value=form.blog_name.data, description='站点名称')
+                db.session.add(site_name)
+            else:
+                site_name.value = form.blog_name.data
+                site_name.blog_name = form.blog_name.data
+            
+            site_description = Setting.query.filter_by(key='site_description').first()
+            if not site_description:
+                site_description = Setting(key='site_description', value=form.blog_description.data, description='站点描述')
+                db.session.add(site_description)
+            else:
+                site_description.value = form.blog_description.data
+                site_description.blog_description = form.blog_description.data
+            
+            posts_per_page = Setting.query.filter_by(key='posts_per_page').first()
+            if not posts_per_page:
+                posts_per_page = Setting(key='posts_per_page', value=str(form.posts_per_page.data), description='每页文章数')
+                db.session.add(posts_per_page)
+            else:
+                posts_per_page.value = str(form.posts_per_page.data)
+                posts_per_page.posts_per_page = form.posts_per_page.data
+            
+            allow_registration = Setting.query.filter_by(key='allow_registration').first()
+            if not allow_registration:
+                allow_registration = Setting(key='allow_registration', value='true' if form.allow_registration.data else 'false', description='允许注册')
+                db.session.add(allow_registration)
+            else:
+                allow_registration.value = 'true' if form.allow_registration.data else 'false'
+                allow_registration.allow_registration = form.allow_registration.data
+            
+            enable_comments = Setting.query.filter_by(key='enable_comments').first()
+            if not enable_comments:
+                enable_comments = Setting(key='enable_comments', value='true' if form.allow_comments.data else 'false', description='允许评论')
+                db.session.add(enable_comments)
+            else:
+                enable_comments.value = 'true' if form.allow_comments.data else 'false'
+                enable_comments.allow_comments = form.allow_comments.data
+            
+            # 提交到数据库
+            db.session.commit()
+            
+            # 更新应用配置
+            current_app.config['BLOG_NAME'] = form.blog_name.data
+            current_app.config['BLOG_DESCRIPTION'] = form.blog_description.data
+            current_app.config['POSTS_PER_PAGE'] = form.posts_per_page.data
+            current_app.config['ALLOW_REGISTRATION'] = form.allow_registration.data
+            current_app.config['ALLOW_COMMENTS'] = form.allow_comments.data
+            
+            flash('系统设置已更新', 'success')
+            return redirect(url_for('admin_dashboard.settings'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"更新设置时出错: {str(e)}")
+            flash(f'保存设置失败: {str(e)}', 'danger')
+    
+    # GET请求 - 从数据库加载当前设置
+    if request.method == 'GET':
+        try:
+            # 直接从数据库查询
+            site_name = Setting.query.filter_by(key='site_name').first()
+            site_description = Setting.query.filter_by(key='site_description').first()
+            posts_per_page = Setting.query.filter_by(key='posts_per_page').first()
+            allow_registration = Setting.query.filter_by(key='allow_registration').first()
+            enable_comments = Setting.query.filter_by(key='enable_comments').first()
+            
+            # 填充表单 - 首先检查blog_xxx列，如果为空则使用value列
+            if site_name:
+                form.blog_name.data = site_name.blog_name if site_name.blog_name else site_name.value
+            
+            if site_description:
+                form.blog_description.data = site_description.blog_description if site_description.blog_description else site_description.value
+            
+            if posts_per_page:
+                try:
+                    if posts_per_page.posts_per_page:
+                        form.posts_per_page.data = posts_per_page.posts_per_page
+                    else:
+                        form.posts_per_page.data = int(posts_per_page.value)
+                except (ValueError, TypeError):
+                    form.posts_per_page.data = 10
+            else:
+                form.posts_per_page.data = 10
+            
+            if allow_registration:
+                if allow_registration.allow_registration is not None:
+                    form.allow_registration.data = allow_registration.allow_registration
+                else:
+                    form.allow_registration.data = allow_registration.value.lower() == 'true' if allow_registration.value else True
+            else:
+                form.allow_registration.data = True
+            
+            if enable_comments:
+                if enable_comments.allow_comments is not None:
+                    form.allow_comments.data = enable_comments.allow_comments
+                else:
+                    form.allow_comments.data = enable_comments.value.lower() == 'true' if enable_comments.value else True
+            else:
+                form.allow_comments.data = True
+        except Exception as e:
+            current_app.logger.error(f"加载设置时出错: {str(e)}")
+            flash(f'加载设置失败: {str(e)}', 'danger')
+    
+    return render_template('admin/settings.html', title='系统设置', form=form) 
